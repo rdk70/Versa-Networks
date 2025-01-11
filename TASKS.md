@@ -5,6 +5,7 @@ ___
 - [Versa Configuration Translator - Tasks](#versa-configuration-translator---tasks)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
+    - [\[F-098\] Improve Logging](#f-098-improve-logging)
     - [\[F-099\] Add support for zone/interface extraction, transformation, load](#f-099-add-support-for-zoneinterface-extraction-transformation-load)
     - [\[F-102\] DOS Profile Support](#f-102-dos-profile-support)
     - [\[F-103\] Sub-Element Verification Enhancement](#f-103-sub-element-verification-enhancement)
@@ -28,9 +29,32 @@ ___
     - [\[F-101\] Flexible Service Template Naming](#f-101-flexible-service-template-naming)
   - [Contributing](#contributing)
 
+
 ___
 
 ## Features
+
+### [F-098] Improve Logging
+- **Description**: Implement more consistent logging messages
+- **Priority**: High
+- **Status**: In Progress
+- **Owner**: RobK
+- **Due Date**: 
+- **Tasks:**
+  - [X] Extraction
+  - [ ] Deduplication
+  - [ ] Transformation
+  - [ ] Loading
+
+
+- **Dependencies:**
+
+
+- **References**:
+  - Branch: `feature/F-098-improve-logging`
+  - Related Issues:
+  - Related Docs: 
+
 
 ### [F-099] Add support for zone/interface extraction, transformation, load
 - **Description**: Implement complete support for zone and interface configuration translation from PAN to Versa format.
