@@ -122,6 +122,35 @@ uploaders:
   profile.url-filtering: false 
   profile.vulnerability: false
 
+uploaders:
+  address: true
+  address_group: true
+  application: true
+  application_filter: true
+  application_group: true
+  rules: true
+  schedule: true
+  service: true
+  service_group: false  # Service groups are not supported at this time.
+  zone: true
+  profiles:
+    enabled: false
+    types:
+      antivirus: true
+      url-filtering: true
+      vulnerability: true
+      file-blocking: true
+      wildfire-analysis: true
+      data-filtering: true
+      dos: true
+      spyware: true
+      sctp-protection: true
+      mobile-security: true
+      decryption: true
+      dns-security: true
+      pcap: true
+      ips: true
+
 # The following parsers are not currently in use but may be implemented in future updates.
 parsers:
   address: true
