@@ -1,5 +1,39 @@
 # Versa Configuration Translator - Tasks
 
+# Table of Contents
+
+# Table of Contents
+
+- [Versa Configuration Translator - Tasks](#versa-configuration-translator---tasks)
+- [Table of Contents](#table-of-contents)
+- [Table of Contents](#table-of-contents-1)
+  - [Features](#features)
+    - [\[F-099\] Add support for zone/interface extraction, transformation, load](#f-099-add-support-for-zoneinterface-extraction-transformation-load)
+    - [\[F-102\] DOS Profile Support](#f-102-dos-profile-support)
+    - [\[F-103\] Sub-Element Verification Enhancement](#f-103-sub-element-verification-enhancement)
+    - [\[F-103\] Decryption profile support](#f-103-decryption-profile-support)
+  - [Features](#features-1)
+    - [\[F-105\] Add support for Log-Settings](#f-105-add-support-for-log-settings)
+    - [\[F-106\] Add support for External-list](#f-106-add-support-for-external-list)
+    - [\[F-107\] Add support for Tag configurations](#f-107-add-support-for-tag-configurations)
+    - [\[F-108\] Add support for Reports](#f-108-add-support-for-reports)
+    - [\[F-109\] Add support for Profiles](#f-109-add-support-for-profiles)
+    - [\[F-110\] Add support for SNMP Settings](#f-110-add-support-for-snmp-settings)
+    - [\[F-111\] Add support for NTP Servers](#f-111-add-support-for-ntp-servers)
+    - [\[F-112\] Add support for Threats](#f-112-add-support-for-threats)
+    - [\[F-113\] Add support for Users](#f-113-add-support-for-users)
+    - [\[F-114\] Add support for Admin Roles](#f-114-add-support-for-admin-roles)
+    - [\[F-115\] Add support for Regions](#f-115-add-support-for-regions)
+    - [\[F-199\] Template for TASKS.md](#f-199-template-for-tasksmd)
+  - [Known Issues](#known-issues)
+    - [\[I-201\] Memory Optimization for Large Configs](#i-201-memory-optimization-for-large-configs)
+    - [\[I-202\] API Rate Limiting](#i-202-api-rate-limiting)
+  - [Completed](#completed)
+    - [\[F-101\] Flexible Service Template Naming](#f-101-flexible-service-template-naming)
+  - [Contributing](#contributing)
+
+
+
 ## Features
 ### [F-099] Add support for zone/interface extraction, transformation, load
 - **Description**: Implement complete support for zone and interface configuration translation from PAN to Versa format.
@@ -75,8 +109,246 @@
   - Related Issues:
   - Related Docs:
 
-### [F-104] 
-### [F-108] 
+### [F-103] Decryption profile support
+- **Description**: Add support for decryption profile configuration migration.
+  - **Priority:** High
+  - **Status:** Planning  
+  - **Owner:** Unassigned
+  - **Due Date**: 
+
+- **Tasks:**
+  - [ ] Before uploading Decryption Policy a Default-Policy most be made.
+    - https://cloud-demo.versa-networks.com/versa/ncs-services/api/config/devices/template/Deleteme_shared_device.shared_group/config/orgs/org-services/RobK/security/decryption-policies
+    - {"decryption-policy-group":{"name":"Default-Policy","description":"Desc","tag":["Tag"]}}
+  - [ ] Add validation checks
+  - [ ] Create error reporting
+  - [ ] Add recovery mechanisms
+
+- **References**:
+  - Branch: `feature/F-103-SubElem-verification-enhancement`
+  - Related Issues:
+  - Related Docs:
+
+## Features
+
+### [F-105] Add support for Log-Settings
+- **Priority**: Medium
+- **Status**: Planned
+- **Owner**: Unassigned
+- **Due Date**: TBD
+
+**Description**:  
+Develop functionality to migrate and transform PAN Log-Settings to Versa-compatible configurations.
+
+**Tasks:**
+- [ ] Analyze PAN Log-Settings structure
+- [ ] Design Versa-compatible schema
+- [ ] Implement extraction and transformation logic
+- [ ] Add validation rules
+- [ ] Test implementation
+- [ ] Update documentation
+
+---
+
+### [F-106] Add support for External-list
+- **Priority**: Medium
+- **Status**: Planned
+- **Owner**: Unassigned
+- **Due Date**: TBD
+
+**Description**:  
+Enable migration of External-List configurations to Versa with appropriate mapping and transformation.
+
+**Tasks:**
+- [ ] Research External-List handling in PAN
+- [ ] Design mapping for Versa compatibility
+- [ ] Implement extraction logic
+- [ ] Create transformation rules
+- [ ] Add unit tests
+- [ ] Document changes
+
+---
+
+### [F-107] Add support for Tag configurations
+- **Priority**: Low
+- **Status**: Planned
+- **Owner**: Unassigned
+- **Due Date**: TBD
+
+**Description**:  
+Add support for translating and validating Tag configurations between PAN and Versa.
+
+**Tasks:**
+- [ ] Review PAN Tag structures
+- [ ] Design Versa-compatible schema
+- [ ] Implement extraction and transformation logic
+- [ ] Write unit tests
+- [ ] Document the implementation
+
+---
+
+### [F-108] Add support for Reports
+- **Priority**: Low
+- **Status**: Planned
+- **Owner**: Unassigned
+- **Due Date**: TBD
+
+**Description**:  
+Introduce functionality for translating PAN report configurations into Versa-compatible formats.
+
+**Tasks:**
+- [ ] Investigate PAN report structures
+- [ ] Create Versa-compatible schema
+- [ ] Develop transformation rules
+- [ ] Write and validate tests
+- [ ] Document the changes
+
+---
+
+### [F-109] Add support for Profiles
+- **Priority**: High
+- **Status**: Planned
+- **Owner**: Unassigned
+- **Due Date**: TBD
+
+**Description**:  
+Develop comprehensive migration support for security and configuration profiles from PAN to Versa.
+
+**Tasks:**
+- [ ] Analyze PAN Profiles
+- [ ] Design transformation and mapping
+- [ ] Implement extraction module
+- [ ] Add validation logic
+- [ ] Test thoroughly
+- [ ] Document the process
+
+---
+
+### [F-110] Add support for SNMP Settings
+- **Priority**: Medium
+- **Status**: Planned
+- **Owner**: Unassigned
+- **Due Date**: TBD
+
+**Description**:  
+Enable migration of SNMP settings, including communities and traps, to Versa configurations.
+
+**Tasks:**
+- [ ] Analyze SNMP settings in PAN
+- [ ] Design compatible Versa schema
+- [ ] Implement transformation logic
+- [ ] Add tests and validations
+- [ ] Document the implementation
+
+---
+
+### [F-111] Add support for NTP Servers
+- **Priority**: Low
+- **Status**: Planned
+- **Owner**: Unassigned
+- **Due Date**: TBD
+
+**Description**:  
+Implement migration support for NTP server configurations.
+
+**Tasks:**
+- [ ] Review NTP server configuration in PAN
+- [ ] Design Versa-compatible schema
+- [ ] Implement transformation rules
+- [ ] Write and validate tests
+- [ ] Document changes
+
+---
+
+### [F-112] Add support for Threats
+- **Priority**: High
+- **Status**: Planned
+- **Owner**: Unassigned
+- **Due Date**: TBD
+
+**Description**:  
+Add support for translating threat intelligence and prevention configurations to Versa.
+
+**Tasks:**
+- [ ] Analyze PAN threat configurations
+- [ ] Develop Versa-compatible schema
+- [ ] Implement extraction and transformation modules
+- [ ] Add validation rules
+- [ ] Test thoroughly
+- [ ] Document the process
+
+---
+
+### [F-113] Add support for Users
+- **Priority**: Medium
+- **Status**: Planned
+- **Owner**: Unassigned
+- **Due Date**: TBD
+
+**Description**:  
+Introduce functionality for migrating user configurations, including roles and permissions.
+
+**Tasks:**
+- [ ] Review PAN user structures
+- [ ] Design compatible Versa schema
+- [ ] Implement extraction and transformation logic
+- [ ] Add validation and error handling
+- [ ] Test implementation
+- [ ] Document changes
+
+---
+
+### [F-114] Add support for Admin Roles
+- **Priority**: Medium
+- **Status**: Planned
+- **Owner**: Unassigned
+- **Due Date**: TBD
+
+**Description**:  
+Support migration of admin roles, including permissions and access controls, to Versa.
+
+**Tasks:**
+- [ ] Analyze PAN admin role configurations
+- [ ] Develop Versa-compatible role mappings
+- [ ] Implement extraction and transformation logic
+- [ ] Add validation rules
+- [ ] Write unit tests
+- [ ] Document changes
+
+---
+
+### [F-115] Add support for Regions
+- **Priority**: Low
+- **Status**: Planned
+- **Owner**: Unassigned
+- **Due Date**: TBD
+
+**Description**:  
+Introduce support for region-based configurations, including geolocation mapping.
+
+**Tasks:**
+- [ ] Investigate PAN region settings
+- [ ] Design Versa-compatible schema
+- [ ] Implement mapping and transformation logic
+- [ ] Test thoroughly
+- [ ] Document implementation
+
+### [F-199] Template for TASKS.md
+- **Description**: 
+  - **Priority:** 
+  - **Status:**   
+  - **Owner:** Unassigned
+  - **Due Date**: 
+
+- **Tasks:**
+  - [ ] 
+  - [ ] 
+
+
+- **References**:
+  - Branch: `feature/F-199-
+  - Related Issues:
+  - Related Docs:
 
 ## Known Issues
 

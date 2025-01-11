@@ -10,21 +10,29 @@ This script attempts to convert a Palo Alto Firewall configuration as completely
 ___
 
 ## Table of Contents
-- [Features](#features)
-- [Requirements](#requirements)
-- [Recommended Tools](#recommended-tools)
-- [Installation](#installation)
-- [Configuration](#configuration)
-  - [Environment Variables](#environment-variables)
-  - [YAML Configuration](#yaml-configuration)
-- [Usage](#usage)
-- [Exporting PAN Configurations](#exporting-pan-configurations)
-- [Supported Configuration Elements](#supported-configuration-elements)
-- [Architecture](#architecture)
-- [Troubleshooting & FAQ](#troubleshooting--faq)
-- [Contributing](#contributing)
-- [Maintainers](#maintainers)
-- [To-Do](#to-do)
+- [PAN to Versa Configuration Translator](#pan-to-versa-configuration-translator)
+  - [NOTICE!](#notice)
+  - [Table of Contents](#table-of-contents)
+  - [**Features**](#features)
+  - [**Requirements**](#requirements)
+    - [System Requirements](#system-requirements)
+    - [Python Dependencies](#python-dependencies)
+  - [**Recommended Tools**](#recommended-tools)
+  - [**Installation**](#installation)
+  - [**Configuration**](#configuration)
+    - [Environment Variables](#environment-variables)
+    - [YAML Configuration](#yaml-configuration)
+  - [**Usage**](#usage)
+  - [**Exporting PAN Configurations**](#exporting-pan-configurations)
+  - [**Supported Configuration Elements**](#supported-configuration-elements)
+  - [**Architecture**](#architecture)
+  - [**Troubleshooting \& FAQ**](#troubleshooting--faq)
+    - [Common Issues](#common-issues)
+    - [Logging](#logging)
+  - [**Contributing**](#contributing)
+    - [Development Guidelines](#development-guidelines)
+  - [**Maintainers**](#maintainers)
+    - [Support](#support)
 
 ---
 
@@ -219,42 +227,3 @@ For issues and feature requests, please:
    - Steps to reproduce
    - Expected vs actual behavior
    - Logs and configuration (sanitized)
-
-## **To-Do**
-
-### Add support for zones/interfaces
-### DOS policies
-### Add more configuration elements
-(Not in order of importance)
-- dos
-- Log-Settings
-- External-list
-- tag
-- reports
-- profiles
-- snmp-setting
-- ntp-servers
-- threats
-- users
-- admin-role
-- region
-- profiles
-
-### Verify the order of the rule is correct
-### Improved Verification of Sub-Elements
-
-| **Element**            | **Sub-Elements**                                                                 |
-|-------------------------|----------------------------------------------------------------------------------|
-| `address_group`         | address                                                                          |
-| `service_group`         | service                                                                          |
-| `application`           | address, service, address_group                                                 |
-| `application_group`     | application                                                                      |
-| `application_filter`    | application_group                                                               |
-| `rules`                 | address, service, address_group, application, application_group, application_filter, zone, schedule |
-
-### ~~Device Name add or not add~~
-
-
-### Before uploading Decryption Policy a Default-Policy most be made.
-https://cloud-demo.versa-networks.com/versa/ncs-services/api/config/devices/template/Deleteme_shared_device.shared_group/config/orgs/org-services/RobK/security/decryption-policies
-{"decryption-policy-group":{"name":"Default-Policy","description":"Desc","tag":["Tag"]}}
