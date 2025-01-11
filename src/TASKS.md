@@ -1,18 +1,14 @@
 # Versa Configuration Translator - Tasks
-
-# Table of Contents
-
-# Table of Contents
+___
+## Table of Contents
 
 - [Versa Configuration Translator - Tasks](#versa-configuration-translator---tasks)
-- [Table of Contents](#table-of-contents)
-- [Table of Contents](#table-of-contents-1)
+  - [Table of Contents](#table-of-contents)
   - [Features](#features)
     - [\[F-099\] Add support for zone/interface extraction, transformation, load](#f-099-add-support-for-zoneinterface-extraction-transformation-load)
     - [\[F-102\] DOS Profile Support](#f-102-dos-profile-support)
     - [\[F-103\] Sub-Element Verification Enhancement](#f-103-sub-element-verification-enhancement)
-    - [\[F-103\] Decryption profile support](#f-103-decryption-profile-support)
-  - [Features](#features-1)
+    - [\[F-104\] Decryption profile support](#f-104-decryption-profile-support)
     - [\[F-105\] Add support for Log-Settings](#f-105-add-support-for-log-settings)
     - [\[F-106\] Add support for External-list](#f-106-add-support-for-external-list)
     - [\[F-107\] Add support for Tag configurations](#f-107-add-support-for-tag-configurations)
@@ -32,9 +28,10 @@
     - [\[F-101\] Flexible Service Template Naming](#f-101-flexible-service-template-naming)
   - [Contributing](#contributing)
 
-
+___
 
 ## Features
+
 ### [F-099] Add support for zone/interface extraction, transformation, load
 - **Description**: Implement complete support for zone and interface configuration translation from PAN to Versa format.
 - **Priority**: High
@@ -109,7 +106,7 @@
   - Related Issues:
   - Related Docs:
 
-### [F-103] Decryption profile support
+### [F-104] Decryption profile support
 - **Description**: Add support for decryption profile configuration migration.
   - **Priority:** High
   - **Status:** Planning  
@@ -125,11 +122,9 @@
   - [ ] Add recovery mechanisms
 
 - **References**:
-  - Branch: `feature/F-103-SubElem-verification-enhancement`
+  - Branch: `feature/F-104-SubElem-verification-enhancement`
   - Related Issues:
   - Related Docs:
-
-## Features
 
 ### [F-105] Add support for Log-Settings
 - **Priority**: Medium
@@ -350,6 +345,8 @@ Introduce support for region-based configurations, including geolocation mapping
   - Related Issues:
   - Related Docs:
 
+___
+
 ## Known Issues
 
 ### [I-201] Memory Optimization for Large Configs
@@ -360,7 +357,7 @@ Introduce support for region-based configurations, including geolocation mapping
 - **Priority:** High  
 - **Status:** Under Investigation
 
-
+___
 ## Completed
 ### [F-101] Flexible Service Template Naming
 - **Status:** Completed  
@@ -371,8 +368,12 @@ Introduce support for region-based configurations, including geolocation mapping
   - Added support for multiple template formats
   - Created validation system for template names
 
+
+___
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Submit a pull request
+
+___
