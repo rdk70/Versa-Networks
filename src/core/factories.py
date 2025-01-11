@@ -6,8 +6,8 @@ from src.parsers.address_parser import AddressParser
 from src.parsers.application_filter_parser import ApplicationFilterParser
 from src.parsers.application_group_parser import ApplicationGroupParser
 from src.parsers.application_parser import ApplicationParser
-from src.parsers.profile_parser import ProfileParser
-from src.parsers.rules_parser import FirewallRuleParser
+from src.parsers.profile.profile_parser import ProfileParser
+from src.parsers.rule_parser import FirewallRuleParser
 from src.parsers.schedule_parser import ScheduleParser
 from src.parsers.service_group_parser import ServiceGroupParser
 from src.parsers.service_parser import ServiceParser
@@ -17,7 +17,7 @@ from src.transformers.address_transformer import AddressTransformer
 from src.transformers.application_filter_transformer import ApplicationFilterTransformer
 from src.transformers.application_group_transformer import ApplicationGroupTransformer
 from src.transformers.application_transformer import ApplicationTransformer
-from src.transformers.profile_transformer import ProfileTransformer
+from src.transformers.profile.profile_transformer import ProfileTransformer
 from src.transformers.rule_transformer import RulesTransformer
 from src.transformers.schedule_transformer import ScheduleTransformer
 from src.transformers.service_group_transformer import ServiceGroupTransformer

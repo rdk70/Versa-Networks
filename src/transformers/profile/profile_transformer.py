@@ -1,4 +1,4 @@
-from .base_transformer import BaseTransformer
+from src.transformers.base_transformer import BaseTransformer
 
 
 class ProfileTransformer(BaseTransformer):
