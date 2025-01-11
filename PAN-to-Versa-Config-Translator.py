@@ -1,0 +1,155 @@
+import asyncio
+import sys
+from typing import Dict
+
+from src.core.api_handler import APIHandler
+from src.core.config_manager import Config
+from src.core.data_processor import DataProcessor
+from src.core.dependency_manager import DependencyManager, ProcessingStage
+from src.core.factories import ParserFactory, TransformerFactory
+from src.core.template_manager import TemplateManager
+from src.core.xml_loader import XMLLoader
+from src.utils.logger import setup_logging
+
+
+async def process_template(
+    template: Dict,
+    xml_content: str,
+    config: Dict,
+    logger,
+    api_handler: APIHandler,
+    access_token: str,
+) -> None:
+    """Process a single template."""
+    logger.info(
+        f"Starting processing for template '{template['name']}'"
+        + (
+            f" with device_name='{template['device_name']}', device_group='{template['device_group']}'"
+            if "_shared" not in template["name"] and "shared_" not in template["name"]
+            else ""
+        )
+        + f", include_shared={template['include_shared']}, shared_only={template.get('shared_only', False)}."
+    )
+
+    try:
+        # Create service template
+        template_response = await api_handler.create_service_template(
+            access_token,
+            template["name"],
+            config["template"]["tenant"],
+        )
+        if not template_response:
+            raise Exception(f"Failed to create service template: '{template['name']}'.")
+
+        # Initialize processors
+        logger.debug("Initializing parsers and transformers.")
+        parser_factory = ParserFactory()
+        transformer_factory = TransformerFactory()
+        dependency_manager = DependencyManager()
+
+        # Initialize data processor
+        logger.debug(
+            "Initializing for shared items only."
+            if template["shared_only"]
+            else f"Initializing for device '{template['device_name']}', group '{template['device_group']}'."
+        )
+        processor = DataProcessor(
+            xml_content=xml_content,
+            device_name=template["device_name"],
+            device_group=template["device_group"],
+            include_shared=template["include_shared"],
+            shared_only=template.get("shared_only", False),
+            logger=logger,
+            parser_factory=parser_factory,
+            transformer_factory=transformer_factory,
+        )
+
+        # Parsing data
+        logger.info(f"\nStarting data parsing for '{template["name"]}'...")
+        parsed_data = await processor.parse_all_async()
+        logger.info(
+            f"Parsing completed for '{template["name"]}'. Parsed items summary: "
+            f"{', '.join([f'{k}: {len(v)}' for k,v in parsed_data.items()])}."
+        )
+
+        # Deduplication
+        logger.info(f"\nStarting deduplication for '{template["name"]}'...")
+        deduped_data = processor.deduplicate_all(parsed_data)
+        logger.info(
+            f"Deduplication completed. Deduplicated items summary: "
+            f"{', '.join([f'{k}: {len(v)}' for k,v in deduped_data.items()])}."
+        )
+
+        # Transformation
+        logger.info("\nStarting data transformation...")
+        transformed_data = await dependency_manager.process_stage(
+            deduped_data, processor.transform_item, ProcessingStage.TRANSFORM
+        )
+        logger.info(
+            f"Transformation completed. Transformed items summary: "
+            f"{', '.join([f'{k}: {len(v)}' for k,v in transformed_data.items()])}."
+        )
+
+        # Upload transformed data
+        logger.info(f"\nUploading transformed data to template '{template['name']}'...")
+        await dependency_manager.process_stage(
+            transformed_data,
+            lambda item_type, data: api_handler.batch_upload(
+                data,
+                item_type,
+                access_token,
+                template["name"],
+            ),
+            ProcessingStage.UPLOAD,
+        )
+        logger.info(f"Upload completed for template '{template['name']}'.")
+
+    except Exception as e:
+        logger.error(f"Error processing template '{template['name']}': {str(e)}")
+        raise
+
+
+async def main():
+    try:
+        # Initialize configuration and logging
+        config = Config().config
+        logger = setup_logging(
+            console_level=config["logging"]["console_level"],
+            file_level=config["logging"]["file_level"],
+        )
+        logger.info("Starting PAN-to-Versa configuration translation process.")
+
+        # Load XML content
+        logger.info("Loading XML content from source file...")
+        xml_content = XMLLoader.load_xml(config["files"]["xml_source_file"], logger)
+
+        # Initialize template manager
+        logger.info("\nInitializing template manager...")
+        template_manager = TemplateManager(xml_content, config, logger)
+        templates = template_manager.get_template_targets()
+
+        # Initialize API handler and get OAuth token
+        logger.info("\nInitializing API handler...")
+        api_handler = APIHandler(config, logger)
+        logger.debug("Requesting OAuth token.")
+        access_token = await api_handler.get_oauthtoken()
+        if not access_token:
+            raise Exception("Failed to obtain OAuth token.")
+
+        # Process each template
+        logger.info(f"\nFound {len(templates)} templates to process.")
+        for template in templates:
+            await process_template(
+                template, xml_content, config, logger, api_handler, access_token
+            )
+
+        logger.info("PAN-to-Versa configuration translation completed successfully.")
+        sys.exit(0)
+
+    except Exception as e:
+        logger.error(f"Fatal error during execution: {str(e)}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
