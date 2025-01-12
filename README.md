@@ -167,7 +167,9 @@ project_root/                                 # Root directory of the project
 ├── src/                                      # Source code directory
 │   ├── core/                                 # Core functionality modules
 │   ├── parsers/                              # XML parsing modules
+│   |    └──profile                           # XML parsing modules for profile elements
 │   ├── transformers/                         # Data transformation modules
+│   |    └──profile                           # Data transformaton modules for profile elements
 │   └── utils/                                # Utilities
 │       └── logger.py                         # Logging utility
 ├── logs/                                     # Log files
