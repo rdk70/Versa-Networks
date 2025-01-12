@@ -26,17 +26,43 @@ from src.transformers.zone_transformer import ZoneTransformer
 
 
 class ParserFactory:
-    @staticmethod
+    def __init__(self, logger: Logger):
+        """
+        Initialize the ParserFactory with a logger.
+
+        Args:
+            logger (Logger): Logger instance to be used for logging.
+        """
+        self.logger = logger
+
     def create_parsers(
+        self,
         xml_content: str,
         device_name: str,
         device_group: str,
-        logger: Logger,
         include_shared: bool,
         shared_only: bool,
     ) -> Dict:
-        logger.info(
-            f"Creating parsers for {'shared' if device_name is None and device_group is None else f'device {device_name}/{device_group}'} "
+        """
+        Create and return a dictionary of parser instances.
+
+        Args:
+            xml_content (str): The XML data to be parsed.
+            device_name (str): The device name.
+            device_group (str): The device group.
+            include_shared (bool): Whether to include shared elements.
+            shared_only (bool): Whether to only process shared elements.
+
+        Returns:
+            Dict: A dictionary of parser instances keyed by their type.
+        """
+        parser_target = (
+            "shared"
+            if device_name is None and device_group is None
+            else f"device {device_name}/{device_group}"
+        )
+        self.logger.info(
+            f"Creating parsers for {parser_target} "
             f"(include_shared: {include_shared}, shared_only: {shared_only})."
         )
 
@@ -45,7 +71,7 @@ class ParserFactory:
                 xml_content,
                 device_name,
                 device_group,
-                logger,
+                self.logger,
                 include_shared,
                 shared_only,
             ),
@@ -53,7 +79,7 @@ class ParserFactory:
                 xml_content,
                 device_name,
                 device_group,
-                logger,
+                self.logger,
                 include_shared,
                 shared_only,
             ),
@@ -61,7 +87,7 @@ class ParserFactory:
                 xml_content,
                 device_name,
                 device_group,
-                logger,
+                self.logger,
                 include_shared,
                 shared_only,
             ),
@@ -69,7 +95,7 @@ class ParserFactory:
                 xml_content,
                 device_name,
                 device_group,
-                logger,
+                self.logger,
                 include_shared,
                 shared_only,
             ),
@@ -77,7 +103,7 @@ class ParserFactory:
                 xml_content,
                 device_name,
                 device_group,
-                logger,
+                self.logger,
                 include_shared,
                 shared_only,
             ),
@@ -85,7 +111,7 @@ class ParserFactory:
                 xml_content,
                 device_name,
                 device_group,
-                logger,
+                self.logger,
                 include_shared,
                 shared_only,
             ),
@@ -93,7 +119,7 @@ class ParserFactory:
                 xml_content,
                 device_name,
                 device_group,
-                logger,
+                self.logger,
                 include_shared,
                 shared_only,
             ),
@@ -101,7 +127,7 @@ class ParserFactory:
                 xml_content,
                 device_name,
                 device_group,
-                logger,
+                self.logger,
                 include_shared,
                 shared_only,
             ),
@@ -109,7 +135,7 @@ class ParserFactory:
                 xml_content,
                 device_name,
                 device_group,
-                logger,
+                self.logger,
                 include_shared,
                 shared_only,
             ),
@@ -117,7 +143,7 @@ class ParserFactory:
                 xml_content,
                 device_name,
                 device_group,
-                logger,
+                self.logger,
                 include_shared,
                 shared_only,
             ),
@@ -125,7 +151,7 @@ class ParserFactory:
                 xml_content,
                 device_name,
                 device_group,
-                logger,
+                self.logger,
                 include_shared,
                 shared_only,
             ),
@@ -133,8 +159,24 @@ class ParserFactory:
 
 
 class TransformerFactory:
-    @staticmethod
-    def create_transformers(logger: Logger) -> Dict:
+    def __init__(self, logger: Logger):
+        """
+        Initialize the TransformerFactory with a logger.
+
+        Args:
+            logger (Logger): Logger instance to be used for logging.
+        """
+        self.logger = logger
+
+    def create_transformers(self) -> Dict:
+        """
+        Create and return a dictionary of transformer instances.
+
+        Returns:
+            Dict: A dictionary of transformer instances keyed by their type.
+        """
+        # You can log a message here if needed, e.g.:
+        self.logger.info("Creating transformers.")
         return {
             "address": AddressTransformer(),
             "address_group": AddressGroupTransformer(),

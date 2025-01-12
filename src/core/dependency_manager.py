@@ -1,6 +1,6 @@
 import asyncio
 from enum import Enum
-from typing import Dict
+from typing import Any, Awaitable, Callable, Dict, Set
 
 
 class ProcessingStage(Enum):
@@ -10,8 +10,16 @@ class ProcessingStage(Enum):
 
 
 class DependencyManager:
-    def __init__(self):
-        self.transform_dependencies = {
+    def __init__(self, logger):
+        """
+        Initialize the DependencyManager with a logger.
+
+        Args:
+            logger: Logger instance for logging messages.
+        """
+        self.logger = logger
+
+        self.transform_dependencies: Dict[str, Set[str]] = {
             "address_group": {"address"},
             "service_group": {"service"},
             "application_group": {"application", "service"},
@@ -29,7 +37,7 @@ class DependencyManager:
             },
         }
 
-        self.upload_dependencies = {
+        self.upload_dependencies: Dict[str, Set[str]] = {
             "address_group": {"address"},
             "service_group": {"service"},
             "application": {"address", "service", "address_group"},
@@ -49,8 +57,25 @@ class DependencyManager:
         }
 
     async def process_stage(
-        self, items: Dict, process_func, stage: ProcessingStage, logger
+        self,
+        items: Dict,
+        process_func: Callable[[str, Any], Awaitable[Any]],
+        stage: ProcessingStage,
     ) -> Dict:
+        """
+        Process items based on dependencies for a given stage using an asynchronous processing function.
+
+        Args:
+            items (Dict): A dictionary of items to process.
+            process_func (Callable): An asynchronous function that processes an item.
+            stage (ProcessingStage): The processing stage (TRANSFORM or UPLOAD).
+
+        Returns:
+            Dict: A dictionary with processed results.
+
+        Raises:
+            ValueError: If a circular dependency is detected.
+        """
         results = {}
         dependencies = (
             self.transform_dependencies
@@ -58,7 +83,7 @@ class DependencyManager:
             else self.upload_dependencies
         )
 
-        logger.debug(f"Verifying dependencies for stage '{stage.name}'")
+        self.logger.debug(f"Verifying dependencies for stage '{stage.name}'")
         while items:
             ready_items = {
                 item: data
@@ -75,7 +100,6 @@ class DependencyManager:
                 asyncio.create_task(process_func(name, data))
                 for name, data in ready_items.items()
             ]
-
             completed = await asyncio.gather(*tasks)
             results.update(dict(zip(ready_items.keys(), completed)))
             items = {k: v for k, v in items.items() if k not in ready_items}
