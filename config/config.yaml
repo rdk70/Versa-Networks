@@ -102,27 +102,6 @@ token:
   refresh_url: "/auth/refresh"
 
 uploaders:
-  # Flags to enable or disable uploaders for specific object types.
-  address: true
-  address_group: true
-  application: true
-  application_filter: true
-  application_group: true
-  rules: true
-  schedule: true
-  service: true
-  service_group: false  # Service groups are not supported at this time.
-  zone: true
-  profile.antivirus: false
-  profile.dos-classified: false
-  profile.dos-aggregate: false
-  profile.decryption: false
-  profile.file-blocking: false
-  profile.ips: false
-  profile.url-filtering: false 
-  profile.vulnerability: false
-
-uploaders:
   address: true
   address_group: true
   application: true
