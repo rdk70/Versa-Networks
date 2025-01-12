@@ -1,29 +1,42 @@
+from logging import Logger
+from typing import Any, Dict
+
 from .base_transformer import BaseTransformer
 
 
 class ServiceTransformer(BaseTransformer):
-    @staticmethod
-    def transform(service: dict, logger) -> dict:
-        """Transform a service entry to the desired format."""
+    """Transforms PAN service configurations to Versa format."""
 
+    def transform(
+        self, data: Dict[str, Any], logger: Logger, **kwargs: Any
+    ) -> Dict[str, Any]:
+        """
+        Transform service entry to Versa format.
+
+        Args:
+            data: Service configuration with name, protocol, port
+            logger: Logger instance
+            kwargs: Additional parameters (unused)
+
+        Returns:
+            Dict[str, Any]: Transformed service configuration
+        """
+        service = data
         logger.debug(
-            f"Initial service details: (Name={service['name']}, Protocol={service['protocol']}, Port={service['port']})."
+            f"Processing service '{service['name']}': {service['protocol']}/{service['port']}"
         )
 
         transformed = {
             "service": {
-                "name": BaseTransformer.clean_string(service["name"], logger),
-                "description": BaseTransformer.clean_string(
+                "name": self.clean_string(service["name"], logger),
+                "description": self.clean_string(
                     service.get("description", ""), logger
                 ),
                 "tag": [],
-                "protocol": BaseTransformer.clean_string(service["protocol"], logger),
+                "protocol": self.clean_string(service["protocol"], logger),
                 "port": service["port"],
             }
         }
 
-        logger.debug(
-            f"Transformation complete for service '{service['name']}' to '{transformed['service']['name']}'."
-        )
-
+        logger.debug(f"Transformed service '{service['name']}'")
         return transformed

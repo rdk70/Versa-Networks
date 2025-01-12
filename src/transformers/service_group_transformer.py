@@ -1,85 +1,74 @@
+from logging import Logger
+from typing import Any, Dict, List
+
 from .base_transformer import BaseTransformer
 
 
 class ServiceGroupTransformer(BaseTransformer):
-    @staticmethod
-    def transform(service_group: dict, existing_services: list, logger=None) -> dict:
+    """Transforms PAN service group configurations to Versa format."""
+
+    def transform(
+        self, data: Dict[str, Any], logger: Logger, **kwargs: Any
+    ) -> Dict[str, Any]:
         """
-        Transform a service group entry to the desired format.
-        Ensures all members exist in the services list and removes duplicates.
+        Transform service group entry to Versa format.
 
         Args:
-            service_group (dict): The source service group to transform
-            existing_services (list): List of already transformed services to validate against
-            logger: Logger instance for debug output
+            data: Service group data
+            logger: Logger instance
+            kwargs: Additional parameters:
+                - existing_services: List of valid service configurations
 
         Returns:
-            dict: Transformed service group in Versa format
+            Dict[str, Any]: Transformed service group
         """
+        service_group = data
+        existing_services = kwargs.get("existing_services", [])
+
         logger.debug(
-            f"Initial service group details: (Name={service_group['name']}, "
-            f"Members={service_group['members']}, Available services={len(existing_services)})."
+            f"Processing group '{service_group['name']}' with {len(service_group['members'])} members"
         )
 
-        # Extract service names from existing services for validation
         service_names = [
-            service.get("name")
-            for service in existing_services
-            if service.get("name") is not None
+            service.get("name") for service in existing_services if service.get("name")
         ]
 
-        logger.debug(f"Extracted {len(service_names)} service names for validation.")
+        cleaned_members, skipped = self._process_members(
+            service_group["members"], service_names, service_group["name"], logger
+        )
 
-        # Process and validate members
-        cleaned_members = []
-        skipped_members = []
-        invalid_members = []
-
-        for member in service_group["members"]:
-            cleaned_member = BaseTransformer.clean_string(member, logger)
-
-            if not cleaned_member:
-                logger.warning(
-                    f"Service group '{service_group['name']}': "
-                    f"Member '{member}' was cleaned to an empty string - skipping."
-                )
-                invalid_members.append(member)
-                continue
-
-            if cleaned_member not in service_names:
-                logger.debug(
-                    f"Service group '{service_group['name']}': "
-                    f"Member '{cleaned_member}' not found in existing services - skipping."
-                )
-                skipped_members.append(cleaned_member)
-                continue
-
-            cleaned_members.append(cleaned_member)
-            logger.debug(
-                f"Service group '{service_group['name']}': "
-                f"Added validated member '{cleaned_member}'."
-            )
-
-        # Create transformed service group
         transformed = {
-            "name": BaseTransformer.clean_string(service_group["name"], logger),
+            "name": self.clean_string(service_group["name"], logger),
             "members": cleaned_members,
         }
 
-        # Log transformation results
-        logger.debug(
-            f"Transformation complete for service group '{service_group['name']}' to '{transformed['name']}'."
-        )
-
-        if skipped_members:
-            logger.debug(f"Skipped members: {skipped_members}.")
-
-        if invalid_members:
-            logger.debug(f"Invalid members: {invalid_members}.")
-
-        if not cleaned_members:
+        if skipped:
             logger.warning(
-                f"Service group '{transformed['name']}' has no valid members after transformation."
+                f"Skipped invalid members in {service_group['name']}: {skipped}"
             )
 
         return transformed
+
+    def _process_members(
+        self,
+        members: List[str],
+        valid_services: List[str],
+        group_name: str,
+        logger: Logger,
+    ) -> tuple[List[str], List[str]]:
+        """Process and validate group members."""
+        cleaned_members = []
+        skipped_members = []
+
+        for member in members:
+            cleaned = self.clean_string(member, logger)
+            if cleaned in valid_services:
+                cleaned_members.append(cleaned)
+                logger.debug(f"Added member '{cleaned}' to group '{group_name}'")
+            else:
+                skipped_members.append(cleaned)
+                logger.debug(
+                    f"Skipping invalid member '{cleaned}' in group '{group_name}'"
+                )
+
+        return cleaned_members, skipped_members
