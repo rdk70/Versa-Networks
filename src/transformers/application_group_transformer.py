@@ -11,12 +11,8 @@ class ApplicationGroupTransformer(BaseTransformer):
     ) -> dict:
         """Transform an application group entry to the desired format."""
         logger.debug(
-            f"Starting transformation for application group '{application_group['name']}'."
-        )
-
-        logger.debug(
-            f"Initial group details: Members={application_group['members']}, Description={application_group.get('description', 'None')}, "
-            f"Available applications={len(existing_applications)}, Available services={len(existing_services)}."
+            f"Initial application group details: (Name={application_group['name']}, Members={application_group['members']}, Description={application_group.get('description', 'None')}, "
+            f"Available applications={len(existing_applications)}, Available services={len(existing_services)})."
         )
 
         application_names = [
@@ -64,8 +60,7 @@ class ApplicationGroupTransformer(BaseTransformer):
         }
 
         logger.debug(
-            f"Transformation complete for application group '{application_group['name']}': "
-            f"Total members processed={len(application_group['members'])}, Skipped members={len(skipped_members)}."
+            f"Transformation complete for application group '{application_group['name']}' to '{transformed['application-group']['group-name']}'."
         )
 
         if skipped_members:

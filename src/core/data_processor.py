@@ -40,7 +40,7 @@ class DataProcessor:
         """Parse all configuration elements concurrently."""
         try:
             self.logger.debug(
-                f"Starting parallel parsing for {'\'shared\' configurations' if self.shared_only else f'device {self.device_name} in group {self.device_group}'}..."
+                f"Starting parallel parsing for {"'shared' configurations" if self.shared_only else f'device {self.device_name} in group {self.device_group}'}..."
             )
             parse_tasks = {
                 name: asyncio.create_task(self._parse_item(name, parser))
@@ -74,7 +74,7 @@ class DataProcessor:
         """Parse a single configuration element."""
         try:
             self.logger.debug(
-                f"Parsing '{name}' element from section {'\'shared\'' if self.device_name is None and self.device_group is None else f'\'device {self.device_name}/{self.device_group}\''} "
+                f"Parsing '{name}' elements in the {"'shared'" if self.device_name is None and self.device_group is None else f"'device {self.device_name}/{self.device_group}' section"} "
             )
             return parser.parse()
         except Exception as e:
@@ -84,10 +84,16 @@ class DataProcessor:
     def deduplicate_all(self, parsed_data: Dict[str, List]) -> Dict[str, List]:
         """Remove duplicates from parsed data."""
         deduped_data = {}
-        self.logger.debug("Starting deduplication of parsed data...")
+        section_type = (
+            "shared"
+            if self.device_name is None and self.device_group is None
+            else f"device {self.device_name}/{self.device_group}"
+        )
+        self.logger.debug(f"Deduplicating parsed data from section '{section_type}'")
+
         for name, data in parsed_data.items():
             self.logger.debug(
-                f"Deduplicating data for '{name}' with {len(data)} items."
+                f"Deduplicating parsed data type '{name}' with {len(data)} items from '{section_type}' section."
             )
             transformer = self.transformers.get(name)
             if hasattr(transformer, "remove_duplicates"):
@@ -95,13 +101,13 @@ class DataProcessor:
                     data, self.logger, name
                 )
                 self.logger.debug(
-                    f"'{name}' deduplication complete. {len(deduped_data[name])} unique items retained."
+                    f"Deduplicating completed for parsed data type '{name}' with {len(deduped_data[name])} unique items retained from '{section_type}' section."
                 )
             else:
                 deduped_data[name] = data
 
         self.logger.debug(
-            f"Deduplication completed. Deduplicated data summary: "
+            f"Deduplicating completed from from '{section_type}' section. Deduplicated data summary: "
             f"{', '.join([f'{k}: {len(v)}' for k, v in deduped_data.items()])}."
         )
         self._deduped_data = deduped_data

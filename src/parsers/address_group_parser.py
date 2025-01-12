@@ -45,8 +45,11 @@ class AddressGroupParser(BaseParser):
                     f"Validation failed: Field '{field}' is missing or not of type {field_type.__name__}."
                 )
                 return False
+        self.logger.debug(
+            f"Address group '{data['name']}' validated with {len(data['members'])} members: "
+            f"{', '.join(str(member) for member in data['members'])}"
+        )
 
-        self.logger.debug(f"Validation successful for data: {data}")
         return True
 
     def _parse_members(self, group_entry: ET.Element, group_name: str) -> List[str]:
@@ -137,7 +140,7 @@ class AddressGroupParser(BaseParser):
         """Parse address group entries from XML."""
         try:
             self.logger.debug(
-                f"Parsing '{self.element_type}' element from section {'\'shared\'' if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
+                f"Parsing '{self.element_type}' element from section {"'shared'" if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
             )
             groups = self.get_parseable_content()
 

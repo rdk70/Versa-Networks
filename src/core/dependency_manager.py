@@ -49,7 +49,7 @@ class DependencyManager:
         }
 
     async def process_stage(
-        self, items: Dict, process_func, stage: ProcessingStage
+        self, items: Dict, process_func, stage: ProcessingStage, logger
     ) -> Dict:
         results = {}
         dependencies = (
@@ -58,6 +58,7 @@ class DependencyManager:
             else self.upload_dependencies
         )
 
+        logger.debug(f"Verifying dependencies for stage '{stage.name}'")
         while items:
             ready_items = {
                 item: data
@@ -66,7 +67,9 @@ class DependencyManager:
             }
 
             if not ready_items:
-                raise ValueError("Circular dependency detected")
+                raise ValueError(
+                    f"Circular dependency detected in stage '{stage.name}'"
+                )
 
             tasks = [
                 asyncio.create_task(process_func(name, data))

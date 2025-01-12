@@ -75,5 +75,5 @@ class TokenCache:
         self.expiry_time = time.time() + expires_in
 
         api_handler.logger.debug(
-            f"Tokens updated. Access token expires in {expires_in} seconds.  Refresh token {'available' if self.refresh_token else 'not available'}"
+            f"Token updated (expires={expires_in}sec, refresh={self.refresh_token})"
         )

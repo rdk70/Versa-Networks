@@ -5,12 +5,9 @@ class ApplicationFilterTransformer(BaseTransformer):
     @staticmethod
     def transform(application_filter: dict, logger) -> dict:
         """Transform an application filter entry to the desired format."""
-        logger.debug(
-            f"Starting transformation for application filter '{application_filter['name']}'."
-        )
 
         logger.debug(
-            f"Initial application filter details: Categories={application_filter.get('category', [])}, "
+            f"Initial application filter details: (Name={application_filter['name']}, Categories={application_filter.get('category', [])}, "
             f"Subcategories={application_filter.get('subcategories', [])}, "
             f"Technologies={application_filter.get('technologies', [])}, "
             f"Disable override={application_filter.get('disable_override', 'no')}"
@@ -43,15 +40,7 @@ class ApplicationFilterTransformer(BaseTransformer):
         }
 
         logger.debug(
-            f"Transformation complete for application filter '{application_filter['name']}': "
-            f"Categories={len(cleaned_categories)}, Subcategories={len(cleaned_subcategories)}, "
-            f"Technologies={len(cleaned_technologies)}."
-        )
-
-        logger.debug(
-            f"Transformed application filter details: Name='{transformed['application-filter']['filter-name']}', "
-            f"Description='{transformed['application-filter']['description']}', "
-            f"Categories={cleaned_categories}, Subcategories={cleaned_subcategories}."
+            f"Transformation complete for application filter '{application_filter['name']}' to '{transformed['application-filter']['filter-name']}'."
         )
 
         return transformed

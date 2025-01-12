@@ -5,10 +5,9 @@ class ServiceTransformer(BaseTransformer):
     @staticmethod
     def transform(service: dict, logger) -> dict:
         """Transform a service entry to the desired format."""
-        logger.debug(f"Starting transformation for service '{service['name']}'.")
 
         logger.debug(
-            f"Initial service details: Name='{service['name']}', Protocol='{service['protocol']}', Port='{service['port']}'."
+            f"Initial service details: (Name={service['name']}, Protocol={service['protocol']}, Port={service['port']})."
         )
 
         transformed = {
@@ -24,8 +23,7 @@ class ServiceTransformer(BaseTransformer):
         }
 
         logger.debug(
-            f"Transformation complete for service '{service['name']}': "
-            f"Protocol={transformed['service']['protocol']}, Port={transformed['service']['port']}."
+            f"Transformation complete for service '{service['name']}' to '{transformed['service']['name']}'."
         )
 
         return transformed

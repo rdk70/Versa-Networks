@@ -32,15 +32,6 @@ async def process_template(
     )
 
     try:
-        # Create service template
-        template_response = await api_handler.create_service_template(
-            access_token,
-            template["name"],
-            config["template"]["tenant"],
-        )
-        if not template_response:
-            raise Exception(f"Failed to create service template: '{template['name']}'.")
-
         # Initialize processors
         logger.debug("Initializing parsers and transformers.")
         parser_factory = ParserFactory()
@@ -65,33 +56,48 @@ async def process_template(
         )
 
         # Parsing data
-        logger.info(f"\nStarting data parsing for '{template["name"]}'...")
+        print("")  # Added a newline for better readability on the console
+        logger.info(f"Starting data parsing for '{template['name']}'...")
         parsed_data = await processor.parse_all_async()
         logger.info(
-            f"Parsing completed for '{template["name"]}'. Parsed items summary: "
-            f"{', '.join([f'{k}: {len(v)}' for k,v in parsed_data.items()])}."
+            f"Completed parsing for '{template['name']}'. Summary: "
+            f"{', '.join([f'{k}: {len(v)}' for k, v in parsed_data.items()])}."
         )
 
         # Deduplication
-        logger.info(f"\nStarting deduplication for '{template["name"]}'...")
+        print("")  # Added a newline for better readability on the console
+        logger.info(f"Starting deduplication for '{template['name']}'...")
         deduped_data = processor.deduplicate_all(parsed_data)
         logger.info(
-            f"Deduplication completed. Deduplicated items summary: "
-            f"{', '.join([f'{k}: {len(v)}' for k,v in deduped_data.items()])}."
+            f"Completed deduplicating for '{template['name']}'. Summary: "
+            f"{', '.join([f'{k}: {len(v)}' for k, v in deduped_data.items()])}."
         )
 
         # Transformation
-        logger.info("\nStarting data transformation...")
+        print("")  # Added a newline for better readability on the console
+        logger.info(f"Starting data transformation for '{template['name']}'...")
         transformed_data = await dependency_manager.process_stage(
-            deduped_data, processor.transform_item, ProcessingStage.TRANSFORM
+            deduped_data, processor.transform_item, ProcessingStage.TRANSFORM, logger
         )
         logger.info(
-            f"Transformation completed. Transformed items summary: "
-            f"{', '.join([f'{k}: {len(v)}' for k,v in transformed_data.items()])}."
+            f"Completed data transformation for '{template['name']}'. Summary:"
+            f"{', '.join([f'{k}: {len(v)}' for k, v in transformed_data.items()])}."
         )
 
+        # Create service template
+        template_response = await api_handler.create_service_template(
+            access_token,
+            template["name"],
+            config["template"]["tenant"],
+        )
+        if not template_response:
+            raise Exception(f"Failed to create service template: '{template['name']}'.")
+
         # Upload transformed data
-        logger.info(f"\nUploading transformed data to template '{template['name']}'...")
+        print("")  # Added a newline for better readability on the console
+        logger.info(
+            f"Starting uploading transformed data to template '{template['name']}'..."
+        )
         await dependency_manager.process_stage(
             transformed_data,
             lambda item_type, data: api_handler.batch_upload(
@@ -101,8 +107,11 @@ async def process_template(
                 template["name"],
             ),
             ProcessingStage.UPLOAD,
+            logger,
         )
-        logger.info(f"Upload completed for template '{template['name']}'.")
+        logger.info(
+            f"Completed data upload for template '{template['name']}'. Summary:"
+        )
 
     except Exception as e:
         logger.error(f"Error processing template '{template['name']}': {str(e)}")
@@ -120,16 +129,18 @@ async def main():
         logger.info("Starting PAN-to-Versa configuration translation process.")
 
         # Load XML content
-        logger.info("Loading XML content from source file...")
+        logger.info("Loading XML content from the source file.")
         xml_content = XMLLoader.load_xml(config["files"]["xml_source_file"], logger)
 
         # Initialize template manager
-        logger.info("\nInitializing template manager...")
+        print("")  # Added a newline for better readability on the console
+        logger.info("Initializing template manager...")
         template_manager = TemplateManager(xml_content, config, logger)
         templates = template_manager.get_template_targets()
 
         # Initialize API handler and get OAuth token
-        logger.info("\nInitializing API handler...")
+        print("")  # Added a newline for better readability on the console
+        logger.info("Initializing API handler...")
         api_handler = APIHandler(config, logger)
         logger.debug("Requesting OAuth token.")
         access_token = await api_handler.get_oauthtoken()
@@ -137,7 +148,8 @@ async def main():
             raise Exception("Failed to obtain OAuth token.")
 
         # Process each template
-        logger.info(f"\nFound {len(templates)} templates to process.")
+        print("")  # Added a newline for better readability on the console
+        logger.info(f"Found {len(templates)} templates to process.")
         for template in templates:
             await process_template(
                 template, xml_content, config, logger, api_handler, access_token

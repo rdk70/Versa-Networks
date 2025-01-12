@@ -89,7 +89,7 @@ class FirewallRuleParser(BaseParser):
                         rules.append(rule)
 
             self.logger.info(
-                f"Parsed {len(rules)} rules from '{source_type}' section{f' \'{self.device_name}.{self.device_group}\'' if self.device_name and self.device_group else ''}."
+                f"Parsing successful for {len(rules)} rules from '{source_type}' section{f" '{self.device_name}.{self.device_group}'" if self.device_name and self.device_group else ''}."
             )
 
             return rules
@@ -156,7 +156,7 @@ class FirewallRuleParser(BaseParser):
         """Parse firewall rules from both PRE and POST rulebases."""
         rules = []
         self.logger.debug(
-            f"Parsing '{self.element_type}' element from section {'\'shared\'' if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
+            f"Parsing '{self.element_type}' element from section {"'shared'" if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
         )
         try:
             for rulebase in RulebaseType:

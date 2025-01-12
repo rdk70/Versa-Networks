@@ -8,10 +8,8 @@ class RulesTransformer(BaseTransformer):
     def transform(palo_rule: Dict, logger) -> Dict:
         """Transform a PaloAlto rule to Versa NGFW format."""
         rule_name = palo_rule.get("name", "unnamed_rule")
-        logger.debug(f"Starting transformation for rule '{rule_name}'.")
-
         logger.debug(
-            f"Initial rule details: Source zones={palo_rule.get('from', [])}, "
+            f"Initial rule details: (Name={palo_rule['name']}, Source zones={palo_rule.get('from', [])}, "
             f"Destination zones={palo_rule.get('to', [])}, Source addresses={palo_rule.get('source', [])}, "
             f"Destination addresses={palo_rule.get('destination', [])}, Applications={palo_rule.get('application', [])}, "
             f"Services={palo_rule.get('service', [])}, Action={palo_rule.get('action', 'deny')}."
@@ -68,10 +66,7 @@ class RulesTransformer(BaseTransformer):
             }
 
             logger.debug(
-                f"Transformation complete for rule '{rule_name}': "
-                f"Status={'Disabled' if versa_rule['access-policy']['rule-disable'] == 'true' else 'Enabled'}, "
-                f"Action={versa_rule['access-policy']['set']['action']}, "
-                f"Logging={'Enabled' if versa_rule['access-policy']['set']['lef']['event'] else 'Disabled'}."
+                f"Transformation complete for rule '{rule_name}' to {versa_rule['access-policy']['name']}. "
             )
 
             return versa_rule

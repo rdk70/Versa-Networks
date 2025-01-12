@@ -17,12 +17,8 @@ class ServiceGroupTransformer(BaseTransformer):
             dict: Transformed service group in Versa format
         """
         logger.debug(
-            f"Starting transformation for service group '{service_group['name']}'."
-        )
-
-        logger.debug(
-            f"Initial service group details: Name='{service_group['name']}', "
-            f"Members={service_group['members']}, Available services={len(existing_services)}."
+            f"Initial service group details: (Name={service_group['name']}, "
+            f"Members={service_group['members']}, Available services={len(existing_services)})."
         )
 
         # Extract service names from existing services for validation
@@ -72,9 +68,7 @@ class ServiceGroupTransformer(BaseTransformer):
 
         # Log transformation results
         logger.debug(
-            f"Transformation complete for service group '{service_group['name']}': "
-            f"Final member count={len(cleaned_members)}, Skipped members={len(skipped_members)}, "
-            f"Invalid members={len(invalid_members)}."
+            f"Transformation complete for service group '{service_group['name']}' to '{transformed['name']}'."
         )
 
         if skipped_members:

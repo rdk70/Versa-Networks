@@ -5,10 +5,8 @@ class AddressTransformer(BaseTransformer):
     @staticmethod
     def transform(address: dict, logger) -> dict:
         """Transform an address entry to the desired format."""
-        logger.debug(f"Starting transformation for address '{address['name']}'.")
-
         logger.debug(
-            f"Initial address details: IP/Netmask={address['ip-netmask']}, Description={address.get('description', 'None')}"
+            f"Initial address details: (Name={address['name']}, IP/Netmask={address['ip-netmask']}, Description={address.get('description', '')}"
         )
 
         transformed = {
@@ -24,8 +22,7 @@ class AddressTransformer(BaseTransformer):
         }
 
         logger.debug(
-            f"Transformation complete for address '{address['name']}': "
-            f"Name='{transformed['address']['name']}', IP/Netmask='{transformed['address']['ipv4-prefix']}'."
+            f"Transformation complete for address '{address['name']}' to '{transformed['address']['name']}'."
         )
 
         return transformed

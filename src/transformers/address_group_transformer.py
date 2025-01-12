@@ -5,11 +5,9 @@ class AddressGroupTransformer(BaseTransformer):
     @staticmethod
     def transform(group: dict, existing_addresses: list, logger) -> dict:
         """Transform an address group entry and add missing members to addresses."""
-        logger.debug(f"Starting transformation for address group '{group['name']}'.")
-
         logger.debug(
-            f"Initial group details: Members={group['members']}, Description={group.get('description', 'None')}, "
-            f"Existing addresses count={len(existing_addresses)}."
+            f"Initial address group details: (Members={group['members']}, Description={group.get('description', 'None')}, "
+            f"Existing addresses count={len(existing_addresses)})."
         )
 
         cleaned_members = []
@@ -36,8 +34,7 @@ class AddressGroupTransformer(BaseTransformer):
         }
 
         logger.debug(
-            f"Transformation complete for address group '{group['name']}': "
-            f"Total members processed={len(group['members'])}, Added to address list={len(added_addresses)}."
+            f"Transformation complete for address group '{group['name']}' to '{transformed['group']['name']}'."
         )
 
         if added_addresses:

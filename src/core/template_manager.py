@@ -27,7 +27,7 @@ class TemplateManager:
         self.device_groups = []
         self.has_shared_config = False
         self.logger.info(
-            "TemplateManager initialization complete. Parsing configurations..."
+            "TemplateManager initialization successfully. Parsing configurations..."
         )
         self._parse_device_groups()
         self._parse_shared_config()
@@ -62,7 +62,7 @@ class TemplateManager:
                                 )
                             )
                             self.logger.debug(
-                                f"Found device group '{group_name}' under device '{device_name}'."
+                                f"Device group '{group_name}' detected under device '{device_name}'."
                             )
 
             # Check for alternative format (response/result/entry)
@@ -96,7 +96,7 @@ class TemplateManager:
     def _parse_shared_config(self) -> None:
         """Parse shared configuration elements from XML."""
         try:
-            # Check both standard and alternative paths
+            # Locate the shared element using both standard and alternative paths.
             shared = self.tree.find("./shared")
             if shared is None and self.tree.getroot().tag == "response":
                 shared = self.tree.find(".//shared")
@@ -105,6 +105,7 @@ class TemplateManager:
                 self.logger.warning("No shared configuration section found in XML.")
                 return
 
+            # Define the list of elements we expect to find.
             elements_to_check = [
                 "address",
                 "address-group",
@@ -119,11 +120,18 @@ class TemplateManager:
                 "zone",
             ]
 
-            for element in elements_to_check:
-                if shared.find(f"./{element}") is not None:
-                    self.has_shared_config = True
-                    self.logger.debug(f"Shared configuration includes '{element}'.")
-                    break
+            # Identify which elements are present.
+            found_elements = [
+                element
+                for element in elements_to_check
+                if shared.find(f"./{element}") is not None
+            ]
+
+            # Set the flag if any shared configuration elements are found.
+            self.has_shared_config = bool(found_elements)
+
+            # Log details about found elements.
+            self.logger.debug(f"Shared configuration includes: {found_elements}.")
 
             if self.has_shared_config:
                 self.logger.info("Shared configuration elements detected in XML.")
@@ -131,7 +139,7 @@ class TemplateManager:
                 self.logger.info("No shared configuration elements found in XML.")
 
         except Exception as e:
-            self.logger.error(f"Error parsing shared configuration: {str(e)}")
+            self.logger.error(f"Error parsing shared configuration: {e}")
             raise
 
     def _get_template_name(
@@ -204,13 +212,13 @@ class TemplateManager:
                         "shared_only": False,
                     }
                 )
+
                 self.logger.debug(
-                    f"Added template '{template_name}' for device='{dg.device_name}', group='{dg.group_name}', "
-                    f"include_shared={include_shared}."
+                    f"Created template '{template_name}' (device={dg.device_name}, group={dg.group_name}, shared={include_shared}."
                 )
 
             self.logger.info(
-                f"Generated {len(templates)} templates based on {self.config["files"]["xml_source_file"]}."
+                f"Generated {len(templates)} templates based on {self.config['files']['xml_source_file']}."
             )
             return templates
 

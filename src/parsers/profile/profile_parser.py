@@ -480,7 +480,7 @@ class ProfileParser(BaseParser):
                             )
 
             self.logger.info(
-                f"Parsed {len(profiles)} profiles from '{source_type}' section"
+                f"Parsing successful for {len(profiles)} profiles from '{source_type}' section"
             )
             return profiles
 
@@ -495,7 +495,7 @@ class ProfileParser(BaseParser):
         try:
             self.logger.debug(
                 f"Parsing '{self.element_type}' element from section "
-                f"{'\'shared\'' if self.shared_only else f'device {self.device_name}/{self.device_group}'}"
+                f"{"'shared'" if self.shared_only else f'device {self.device_name}/{self.device_group}'}"
             )
             profiles = self.get_parseable_content()
             return profiles

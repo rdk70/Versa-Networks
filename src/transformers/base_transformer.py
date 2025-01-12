@@ -29,10 +29,6 @@ class BaseTransformer(ABC):
                         f"String cleaning: '{original_item}' → '{cleaned_item}' "
                         f"(removed invalid chars: {invalid_chars})"
                     )
-                else:
-                    logger.debug(
-                        f"String cleaning: No invalid chars in '{original_item}'"
-                    )
             return cleaned
         else:
             invalid_chars = "".join(set(re.findall(allowed_chars, input_str)))
@@ -43,8 +39,6 @@ class BaseTransformer(ABC):
                     f"String cleaning: '{input_str}' → '{cleaned_str}' "
                     f"(removed invalid chars: {invalid_chars})"
                 )
-            else:
-                logger.debug(f"String cleaning: No invalid chars in '{input_str}'")
             return cleaned_str
 
     @staticmethod
@@ -56,10 +50,6 @@ class BaseTransformer(ABC):
             logger.debug(
                 f"IP prefix validation: Added missing CIDR notation "
                 f"'{original_prefix}' → '{ip_prefix}'"
-            )
-        else:
-            logger.debug(
-                f"IP prefix validation: '{ip_prefix}' already has valid CIDR notation"
             )
         return ip_prefix
 
@@ -81,7 +71,7 @@ class BaseTransformer(ABC):
             if item_hash in seen_hashes:
                 duplicates.append(item)
                 logger.debug(
-                    f"Removing identical {name} item: {item.get('name', str(item)[:100])}"
+                    f"Duplicate item hash found of parsed data type '{name}'. Item '{item.get('name', str(item)[:100])}' removed."
                 )
                 continue
 
@@ -92,7 +82,7 @@ class BaseTransformer(ABC):
                 seen_names[item_name] += 1
                 new_name = f"{item_name}-dup-{seen_names[item_name]}"
                 logger.debug(
-                    f"Duplicate {name} name found: '{item_name}'. Renamed to '{new_name}'"
+                    f"Duplicate item name found of parsed data type '{name}'. Item '{item_name}' renamed to '{new_name}'"
                 )
                 item["name"] = new_name
                 renamed_count += 1
@@ -102,7 +92,7 @@ class BaseTransformer(ABC):
             unique.append(item)
 
         logger.debug(
-            f"Deduplication completed for {name}: "
+            f"Deduplicating complete for parsed data type '{name}': "
             f"Original count: {len(items)}, Final count: {len(unique)}, "
             f"Duplicates removed: {len(items) - len(unique)}, Renamed: {renamed_count}"
         )

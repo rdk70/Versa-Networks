@@ -113,7 +113,7 @@ class ScheduleParser(BaseParser):
                     continue
 
             self.logger.info(
-                f"Parsed {len(schedules)} schedules from '{source_type}' section."
+                f"Parsing successful for {len(schedules)} schedules from '{source_type}' section."
             )
             return schedules
 
@@ -145,7 +145,7 @@ class ScheduleParser(BaseParser):
         """Parse schedule entries from XML."""
         try:
             self.logger.debug(
-                f"Parsing '{self.element_type}' element from section {'\'shared\'' if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
+                f"Parsing '{self.element_type}' element from section {"'shared'" if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
             )
             schedules = self.get_parseable_content()
 

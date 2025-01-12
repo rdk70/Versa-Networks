@@ -30,8 +30,7 @@ class APIHandler:
         self.token_cache = TokenCache()
 
         self.logger.debug(
-            f"Initialized with base URL '{self.base_url}', rate limit {self.rate_limit} req/s, "
-            f"batch size {self.batch_size}, and max retries {self.MAX_RETRIES}."
+            f"API initialized: Base URL={self.base_url}, Rate limit={self.rate_limit} req/s, Batch Size={self.batch_size}, Max Retries={self.MAX_RETRIES}."
         )
 
     async def _rate_limited_request(
@@ -42,16 +41,15 @@ class APIHandler:
         elapsed_time = current_time - self.last_request_time
         if elapsed_time < 1 / self.rate_limit:
             delay = (1 / self.rate_limit) - elapsed_time
-            self.logger.debug(
-                f"Rate limiting active: elapsed={elapsed_time:.3f}s, delaying for {delay:.3f}s."
-            )
+            if delay > 0.05:
+                self.logger.debug(
+                    f"Rate limiting active: elapsed={elapsed_time:.3f}s, delaying for {delay:.3f}s."
+                )
             await asyncio.sleep(delay)
 
         self.last_request_time = time.time()
         headers_keys = ", ".join(kwargs.get("headers", {}).keys())
-        self.logger.debug(
-            f"Making API request: method={method}, url={url}, headers=[{headers_keys}]."
-        )
+        # self.logger.debug(f"Making API request: (method={method}, headers=[{headers_keys}], url={url}).")
 
         async with self.semaphore:
             return await session.request(method, url, **kwargs)
@@ -77,9 +75,10 @@ class APIHandler:
         retries = 0
         while retries < self.MAX_RETRIES:
             try:
-                self.logger.debug(
-                    f"Attempting API request: type={item_type}, name={item_name}, attempt={retries + 1}/{self.MAX_RETRIES}."
-                )
+                if retries > 0:
+                    self.logger.debug(
+                        f"Attempting API request: type={item_type}, name={item_name}, attempt={retries + 1}/{self.MAX_RETRIES}."
+                    )
 
                 async with await self._rate_limited_request(
                     session, method, url, json=payload, headers=headers
@@ -96,9 +95,8 @@ class APIHandler:
                         continue
 
                     if response.status in (200, 201):
-                        self.logger.debug(
-                            f"Request successful: type={item_type}, name={item_name}, status={response.status}."
-                        )
+                        drop = False
+                        # self.logger.debug(f"Request successful: type={item_type}, name={item_name}, status={response.status}.")
                     else:
                         self.logger.warning(
                             f"Unexpected status: type={item_type}, name={item_name}, "
@@ -235,6 +233,7 @@ class APIHandler:
             "Accept": "application/json",
         }
 
+        print("")  # Added a newline for better readability on the console
         self.logger.info(
             f"Creating service template: Name={template_name}, Tenant={tenant}, Description='{self.description}', "
         )
@@ -354,12 +353,10 @@ class APIHandler:
         }
 
         self.logger.info(
-            f"Starting batch upload: Template={template_name}, Type={item_type}, "
-            f"Total items={len(items)}, Batch size={self.batch_size}."
+            f"Starting batch upload: (Type={item_type}, Total items={len(items)}, Batch size={self.batch_size}, Template={template_name})."
         )
         self.logger.debug(
-            f"Starting batch upload: Template={template_name}, Type={item_type}, "
-            f"Total items={len(items)}, Batch size={self.batch_size}, Endpoint={endpoint}."
+            f"Starting batch upload: (Type={item_type}, Total items={len(items)}, Batch size={self.batch_size}, Template={template_name}, Endpoint={endpoint})."
         )
 
         async with aiohttp.ClientSession() as session:
@@ -390,8 +387,7 @@ class APIHandler:
                         await task
                         results["successful"] += 1
                         self.logger.debug(
-                            f"Item upload successful: Type={item_type}, Name={item_name}, "
-                            f"Progress={results['successful']}/{len(items)}."
+                            f"Item upload successful: (Name={item_name}, Type={item_type}, Progress={results['successful']}/{len(items)}."
                         )
                     except Exception as e:
                         results["failed"] += 1
@@ -408,9 +404,15 @@ class APIHandler:
                 batch_duration = time.time() - batch_start
                 self.logger.debug(
                     f"Batch {results['batches']} complete: Template={template_name}, Type={item_type}, "
-                    f"Success={results['successful']}/{len(items)} ({(results['successful']/len(items)*100):.1f}%), "
+                    f"Success={results['successful']}/{len(items)} ({(results['successful'] / len(items) * 100):.1f}%), "
                     f"Failures={results['failed']}, Duration={batch_duration:.2f}s."
                 )
+                if results["batches"] % 5 == 0:
+                    self.logger.info(
+                        f"Batch {results['batches']} complete: Template={template_name}, Type={item_type}, "
+                        f"Success={results['successful']}/{len(items)} ({(results['successful'] / len(items) * 100):.1f}%), "
+                        f"Failures={results['failed']}"
+                    )
 
         self._log_upload_summary(results, item_type, template_name)
         return results

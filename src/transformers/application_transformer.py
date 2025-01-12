@@ -69,11 +69,7 @@ class ApplicationTransformer(BaseTransformer):
     def transform(application: dict, logger) -> dict:
         """Transform an application entry to the desired format."""
         logger.debug(
-            f"Starting transformation for application '{application['name']}'."
-        )
-
-        logger.debug(
-            f"Initial application details: Category={application.get('category', 'None')}, "
+            f"Initial application details: (Name={application['name']},Category={application.get('category', 'None')}, "
             f"Subcategory={application.get('subcategory', 'None')}, "
             f"Default ports={application.get('default_ports', [])}, Description={application.get('description', 'None')}"
         )
@@ -150,9 +146,7 @@ class ApplicationTransformer(BaseTransformer):
         }
 
         logger.debug(
-            f"Transformation complete for application '{application['name']}': Family={family}, Subfamily={subfamily}, "
-            f"Match rules created={len(app_match_rules)}, Timeout={transformed['user-defined-application']['app-timeout']}, "
-            f"Risk level={transformed['user-defined-application']['risk']}."
+            f"Transformation complete for application '{application['name']}' to '{transformed['user-defined-application']['app-name']}'."
         )
 
         return transformed

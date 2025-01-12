@@ -41,7 +41,9 @@ class AddressParser(BaseParser):
             )
             return False
 
-        self.logger.debug(f"Validation successful for data: {data}")
+        self.logger.debug(
+            f"Address '{data['name']}' validated: IP={data['ip-netmask']}, Description={data['description']}, Source='{data['source']}'."
+        )
         return True
 
     def _validate_ip_netmask(self, ip_netmask: str) -> bool:
@@ -100,7 +102,7 @@ class AddressParser(BaseParser):
                     if self.validate(address_data):
                         addresses.append(address_data)
                         self.logger.debug(
-                            f"Appended address '{address_data['name']}' to addresses for '{source_type}' section."
+                            f"Address '{address_data['name']}' added to addresses list from '{source_type}' section."
                         )
                     else:
                         self.logger.warning(f"Invalid address data: {address_data}")
@@ -127,7 +129,7 @@ class AddressParser(BaseParser):
         try:
             # self.logger.debug("Starting parsing of address entries.")
             self.logger.debug(
-                f"Parsing '{self.element_type}' element from section {'\'shared\'' if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
+                f"Parsing '{self.element_type}' elements in the section {"'shared'" if self.shared_only else f'device {self.device_name}/{self.device_group}'} section."
             )
             addresses = self.get_parseable_content()
 

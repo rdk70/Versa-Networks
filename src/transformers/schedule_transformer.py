@@ -5,10 +5,8 @@ class ScheduleTransformer(BaseTransformer):
     @staticmethod
     def transform(schedule: dict, logger) -> dict:
         """Transform a schedule entry to Versa format."""
-        logger.debug(f"Starting transformation for schedule '{schedule['name']}'.")
-
         logger.debug(
-            f"Initial schedule details: Name='{schedule['name']}', Type='{schedule['schedule_type']}'."
+            f"Initial schedule details: (Name={schedule['name']}, Type={schedule['schedule_type']})."
         )
 
         transformed = {
@@ -58,7 +56,7 @@ class ScheduleTransformer(BaseTransformer):
             transformed["schedule"]["recurring"] = recurring
 
         logger.debug(
-            f"Transformation complete for schedule '{schedule['name']}': Type='{schedule['schedule_type']}'."
+            f"Transformation complete for schedule '{schedule['name']}' to '{transformed['schedule']['name']}'."
         )
 
         return transformed
