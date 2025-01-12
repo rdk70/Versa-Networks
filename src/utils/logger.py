@@ -15,6 +15,7 @@ class SingleLineHandler(logging.StreamHandler):
         super().__init__(stream)
         self.buffer = ""
 
+    """
     def emit(self, record):
         try:
             msg = self.format(record)
@@ -33,6 +34,7 @@ class SingleLineHandler(logging.StreamHandler):
                 self.stream.flush()
         except Exception:
             self.handleError(record)
+    """
 
 
 def setup_logging(
