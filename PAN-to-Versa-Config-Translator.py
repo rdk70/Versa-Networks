@@ -21,29 +21,35 @@ async def process_template(
     access_token: str,
 ) -> None:
     """Process a single template."""
+    # Determine additional information based on the template name.
+    if "_shared" not in template["name"] and "shared_" not in template["name"]:
+        extra_info = f" with device_name='{template['device_name']}', device_group='{template['device_group']}'"
+    else:
+        extra_info = ""
+
     logger.info(
-        f"Starting processing for template '{template['name']}'"
-        + (
-            f" with device_name='{template['device_name']}', device_group='{template['device_group']}'"
-            if "_shared" not in template["name"] and "shared_" not in template["name"]
-            else ""
-        )
-        + f", include_shared={template['include_shared']}, shared_only={template.get('shared_only', False)}."
+        f"Starting processing for template '{template['name']}'{extra_info}, "
+        f"include_shared={template['include_shared']}, shared_only={template.get('shared_only', False)}."
     )
 
     try:
         # Initialize processors
         logger.debug("Initializing parsers and transformers.")
-        parser_factory = ParserFactory()
-        transformer_factory = TransformerFactory()
-        dependency_manager = DependencyManager()
+        parser_factory = ParserFactory(logger)
+        transformer_factory = TransformerFactory(logger)
+        dependency_manager = DependencyManager(logger)
 
         # Initialize data processor
-        logger.debug(
-            "Initializing for shared items only."
-            if template["shared_only"]
-            else f"Initializing for device '{template['device_name']}', group '{template['device_group']}'."
-        )
+        if template["shared_only"]:
+            init_msg = "Initializing for shared items only."
+        else:
+            init_msg = (
+                f"Initializing for device '{template['device_name']}', "
+                f"group '{template['device_group']}'."
+            )
+
+        logger.debug(init_msg)
+
         processor = DataProcessor(
             xml_content=xml_content,
             device_name=template["device_name"],
@@ -77,7 +83,7 @@ async def process_template(
         print("")  # Added a newline for better readability on the console
         logger.info(f"Starting data transformation for '{template['name']}'...")
         transformed_data = await dependency_manager.process_stage(
-            deduped_data, processor.transform_item, ProcessingStage.TRANSFORM, logger
+            deduped_data, processor.transform_item, ProcessingStage.TRANSFORM
         )
         logger.info(
             f"Completed data transformation for '{template['name']}'. Summary:"

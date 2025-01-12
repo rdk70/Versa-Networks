@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from logging import Logger
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 
 @dataclass
@@ -12,7 +12,7 @@ class DeviceGroupInfo:
 
 class TemplateManager:
     def __init__(self, xml_content: str, config: Dict, logger: Logger):
-        """Initialize the template manager."""
+        """Initialize the template manager and parse the XML content and configuration."""
         self.xml_content = xml_content
         self.config = config
         self.logger = logger
@@ -20,66 +20,55 @@ class TemplateManager:
         try:
             self.tree = ET.ElementTree(ET.fromstring(xml_content))
             self.logger.debug("XML content successfully parsed into an ElementTree.")
-        except ET.ParseError as e:
-            self.logger.error(f"Failed to parse XML content: {str(e)}")
+        except ET.ParseError as pe:
+            self.logger.error(f"Failed to parse XML content: {pe}")
             raise
 
-        self.device_groups = []
+        self.device_groups: List[DeviceGroupInfo] = []
         self.has_shared_config = False
-        self.logger.info(
-            "TemplateManager initialization successfully. Parsing configurations..."
-        )
+        self.logger.info("TemplateManager initialized. Parsing configurations...")
         self._parse_device_groups()
         self._parse_shared_config()
 
     def _parse_device_groups(self) -> None:
-        """Parse device groups from XML configuration."""
+        """Parse device groups from XML configuration in expected formats."""
         try:
-            # First try standard format
             devices = self.tree.find("./devices")
             root = self.tree.getroot()
 
             if devices is not None:
-                # Standard format processing
-                device_entries = devices.findall("./entry")
+                entries = devices.findall("./entry")
                 self.logger.debug(
-                    f"Found {len(device_entries)} device entries in standard XML format."
+                    f"Found {len(entries)} device entries in standard XML format."
                 )
 
-                for device in device_entries:
+                for device in entries:
                     device_name = device.get("name")
                     if not device_name:
                         self.logger.warning("Skipping device entry with missing name.")
                         continue
 
-                    device_groups = device.findall(".//device-group/entry")
-                    for group in device_groups:
+                    groups = device.findall(".//device-group/entry")
+                    for group in groups:
                         group_name = group.get("name")
                         if group_name:
                             self.device_groups.append(
-                                DeviceGroupInfo(
-                                    device_name=device_name, group_name=group_name
-                                )
+                                DeviceGroupInfo(device_name, group_name)
                             )
                             self.logger.debug(
-                                f"Device group '{group_name}' detected under device '{device_name}'."
+                                f"Parsed group '{group_name}' for device '{device_name}'."
                             )
-
-            # Check for alternative format (response/result/entry)
             elif root.tag == "response":
                 entries = root.findall(".//result/entry")
                 if entries:
                     self.logger.debug(
-                        f"Found {len(entries)} device group entries in alternative XML format."
+                        f"Found {len(entries)} entries in alternative XML format."
                     )
                     for entry in entries:
                         group_name = entry.get("name")
                         if group_name:
-                            # In alternative format, we use the group name as device name since it's a flat structure
                             self.device_groups.append(
-                                DeviceGroupInfo(
-                                    device_name=group_name, group_name=group_name
-                                )
+                                DeviceGroupInfo(group_name, group_name)
                             )
                             self.logger.debug(
                                 f"Parsed device group '{group_name}' from alternative format."
@@ -88,15 +77,13 @@ class TemplateManager:
             self.logger.info(
                 f"Total device groups detected: {len(self.device_groups)}."
             )
-
         except Exception as e:
-            self.logger.error(f"Error parsing device groups: {str(e)}")
+            self.logger.error(f"Error parsing device groups: {e}")
             raise
 
     def _parse_shared_config(self) -> None:
         """Parse shared configuration elements from XML."""
         try:
-            # Locate the shared element using both standard and alternative paths.
             shared = self.tree.find("./shared")
             if shared is None and self.tree.getroot().tag == "response":
                 shared = self.tree.find(".//shared")
@@ -105,69 +92,46 @@ class TemplateManager:
                 self.logger.warning("No shared configuration section found in XML.")
                 return
 
-            # Define the list of elements we expect to find.
-            elements_to_check = [
-                "address",
-                "address-group",
-                "service",
-                "application",
-                "application-group",
-                "application-filter",
-                "pre-rulebase",
-                "post-rulebase",
-                "profile",
-                "schedule",
-                "zone",
-            ]
-
-            # Identify which elements are present.
-            found_elements = [
-                element
-                for element in elements_to_check
-                if shared.find(f"./{element}") is not None
-            ]
-
-            # Set the flag if any shared configuration elements are found.
-            self.has_shared_config = bool(found_elements)
-
-            # Log details about found elements.
-            self.logger.debug(f"Shared configuration includes: {found_elements}.")
-
-            if self.has_shared_config:
-                self.logger.info("Shared configuration elements detected in XML.")
-            else:
-                self.logger.info("No shared configuration elements found in XML.")
-
+            self.has_shared_config = True
+            self.logger.info("Shared configuration section detected in XML.")
         except Exception as e:
             self.logger.error(f"Error parsing shared configuration: {e}")
             raise
 
     def _get_template_name(
-        self, device_name: str = None, group_name: str = None
+        self, device_name: Optional[str] = None, group_name: Optional[str] = None
     ) -> str:
-        """Generate template name based on configuration."""
-        format_string = self.config["template"]["service_template_name_format"]
-        prefix = self.config["template"]["prefix"]
-        postfix = self.config["template"]["postfix"]
+        """Generate a template name based on configuration and optional device/group information."""
+        template_config = self.config.get("template", {})
+        format_string = template_config.get(
+            "service_template_name_format", "{prefix}{device_name}{postfix}"
+        )
+        prefix = template_config.get("prefix", "")
+        postfix = template_config.get("postfix", "")
 
-        # Default values for placeholders
         device_name = device_name or "shared_device"
         group_name = group_name or "shared_group"
 
-        base_name = format_string.format(
+        return format_string.format(
             prefix=prefix,
             device_group_name=group_name,
             device_name=device_name,
             postfix=postfix,
         )
-        return base_name
 
     def get_template_targets(self) -> List[Dict]:
-        """Get list of templates to be created based on configuration."""
-        templates = []
+        """
+        Get a list of templates to be created based on configuration.
+
+        Returns:
+            List[Dict]: A list containing dictionaries with template details.
+        """
         try:
-            if self.config["template"]["single_template"]:
-                single_template_name = self.config["template"]["single_template_name"]
+            templates = []
+            template_config = self.config.get("template", {})
+
+            if template_config.get("single_template"):
+                single_template_name = template_config.get("single_template_name")
                 self.logger.info(f"Using single template: '{single_template_name}'.")
                 return [
                     {
@@ -179,10 +143,10 @@ class TemplateManager:
                     }
                 ]
 
-            if (
-                self.config["template"]["create_separate_shared_template"]
-                and self.has_shared_config
-            ):
+            create_separate_shared = template_config.get(
+                "create_separate_shared_template", False
+            )
+            if create_separate_shared and self.has_shared_config:
                 shared_template_name = self._get_template_name()
                 self.logger.info(
                     f"Adding template '{shared_template_name}' for shared element."
@@ -197,9 +161,7 @@ class TemplateManager:
                     }
                 )
 
-            include_shared = not self.config["template"][
-                "create_separate_shared_template"
-            ]
+            include_shared = not create_separate_shared
 
             for dg in self.device_groups:
                 template_name = self._get_template_name(dg.device_name, dg.group_name)
@@ -212,16 +174,19 @@ class TemplateManager:
                         "shared_only": False,
                     }
                 )
-
                 self.logger.debug(
-                    f"Created template '{template_name}' (device={dg.device_name}, group={dg.group_name}, shared={include_shared}."
+                    f"Created template '{template_name}' "
+                    f"(device={dg.device_name}, group={dg.group_name}, shared={include_shared})."
                 )
 
+            xml_source = self.config.get("files", {}).get(
+                "xml_source_file", "unknown source"
+            )
             self.logger.info(
-                f"Generated {len(templates)} templates based on {self.config['files']['xml_source_file']}."
+                f"Generated {len(templates)} templates based on {xml_source}."
             )
             return templates
 
         except Exception as e:
-            self.logger.error(f"Error generating template targets: {str(e)}")
+            self.logger.error(f"Error generating template targets: {e}")
             raise
