@@ -24,9 +24,9 @@ class DataProcessor:
         self.shared_only = shared_only
         self.logger = logger
         self.parsers = parser_factory.create_parsers(
-            xml_content, device_name, device_group, logger, include_shared, shared_only
+            xml_content, device_name, device_group, include_shared, shared_only
         )
-        self.transformers = transformer_factory.create_transformers(logger)
+        self.transformers = transformer_factory.create_transformers()
         self._deduped_data = {}
         self._transformed_apps = None
         self._transformed_services = None
@@ -157,35 +157,3 @@ class DataProcessor:
         except Exception as e:
             self.logger.error(f"Error transforming '{item_type}': {str(e)}")
             raise
-
-    async def get_transformed_apps(self) -> List[Dict]:
-        """Get transformed applications for dependency resolution."""
-        if self._transformed_apps is None:
-            try:
-                self.logger.debug(
-                    "Transforming applications for dependency resolution."
-                )
-                self._transformed_apps = [
-                    self.transformers["application"].transform(app, self.logger)
-                    for app in self.parsers["application"].parse()
-                ]
-                self.logger.info("Application transformation completed successfully.")
-            except Exception as e:
-                self.logger.error(f"Error transforming applications: {str(e)}")
-                raise
-        return self._transformed_apps
-
-    async def get_transformed_services(self) -> List[Dict]:
-        """Get transformed services for dependency resolution."""
-        if self._transformed_services is None:
-            try:
-                self.logger.debug("Transforming services for dependency resolution.")
-                self._transformed_services = [
-                    self.transformers["service"].transform(service, self.logger)
-                    for service in self.parsers["service"].parse()
-                ]
-                self.logger.info("Service transformation completed successfully.")
-            except Exception as e:
-                self.logger.error(f"Error transforming services: {str(e)}")
-                raise
-        return self._transformed_services
