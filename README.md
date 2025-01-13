@@ -68,6 +68,7 @@ aiohttp>=3.9.1
 ## **Recommended Tools**
 - **VS Code**: For development, with the Python extension.
 - **Ruff**: For linting and maintaining code quality.
+- **Source Format Information**: https://pan.dev/scm/docs/home/ then NGFW Configuration
 
 ---
 
