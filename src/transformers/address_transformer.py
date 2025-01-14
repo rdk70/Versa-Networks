@@ -10,7 +10,6 @@ class AddressTransformer(BaseTransformer):
     Converts PAN address format to Versa address format.
     """
 
-    @staticmethod
     def transform(
         self, data: Dict[str, Any], logger: Logger, **kwargs: Any
     ) -> Dict[str, Any]:

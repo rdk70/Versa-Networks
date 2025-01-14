@@ -17,21 +17,24 @@ class BaseTransformer(ABC):
     def transform(
         self, data: Dict[str, Any], logger: Logger, **kwargs: Any
     ) -> Dict[str, Any]:
-        """
-        Transform configuration data from source format to target format.
-
-        Args:
-            data: Source configuration data to transform
-            logger: Logger instance for logging transformation operations
-            **kwargs: Additional transformer-specific parameters
-
-        Returns:
-            Dict[str, Any]: Transformed configuration data
-
-        Raises:
-            ValueError: If the input data is invalid or transformation fails
-        """
+        """Transforms configuration data from source to target format."""
         pass
+
+    def _optional_field(
+        self, data: Dict[str, Any], field: str, default: Any = ""
+    ) -> Any:
+        """Safely retrieve optional field from data dictionary."""
+        return data.get(field, default)
+
+    def _validate_required_fields(
+        self, data: Dict[str, Any], required_fields: List[str], logger: Logger
+    ) -> bool:
+        """Validate required fields are present in data."""
+        return all(field in data and data[field] for field in required_fields)
+
+    def _clean_string_list(self, items: List[str], logger: Logger) -> List[str]:
+        """Clean a list of strings."""
+        return [self.clean_string(item, logger) for item in items if item]
 
     @staticmethod
     def clean_string(

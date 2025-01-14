@@ -6,7 +6,6 @@ ___
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
     - [\[F-099\] Add support for zone/interface extraction, transformation, load](#f-099-add-support-for-zoneinterface-extraction-transformation-load)
-    - [\[F-102\] DOS Profile Support](#f-102-dos-profile-support)
     - [\[F-103\] Sub-Element Verification Enhancement](#f-103-sub-element-verification-enhancement)
     - [\[F-104\] Decryption profile support](#f-104-decryption-profile-support)
     - [\[F-105\] Add support for Log-Settings](#f-105-add-support-for-log-settings)
@@ -27,6 +26,7 @@ ___
   - [Completed](#completed)
     - [\[F-101\] Flexible Service Template Naming](#f-101-flexible-service-template-naming)
     - [\[F-098\] Improve Logging](#f-098-improve-logging)
+    - [\[F-102\] DOS Profile Support](#f-102-dos-profile-support)
   - [Contributing](#contributing)
 
 
@@ -59,25 +59,6 @@ ___
   - Related Issues:
   - Related Docs: 
 
-### [F-102] DOS Profile Support
-**Description**: Add support for DOS profile configuration migration.
-  - **Priority**: Medium
-  - **Status**: Planned
-  - **Owner**: RobK
- - **Due Date**: 
-
-- **Tasks:**
-  - [ ] Analysis of PAN DOS profile structure
-  - [ ] Design Versa mapping schema
-  - [ ] Implement extraction module
-  - [ ] Create transformation logic
-  - [ ] Add validation rules
-  - [ ] Test implementation
-
-- **References**:
-  - Branch: `feature/F-102-DOS-Profile-Support`
-  - Related Issues:
-  - Related Docs:
 
 ### [F-103] Sub-Element Verification Enhancement
 - **Description**: Improve verification of configuration dependencies and relationships between elements.
@@ -390,6 +371,28 @@ ___
   - Branch: `feature/F-098-improve-logging`
   - Related Issues:
   - Related Docs: 
+
+### [F-102] DOS Profile Support
+**Description**: Add support for DOS profile configuration migration.
+  - **Priority**: Medium
+  - **Status**: Planned
+  - **Owner**: RobK
+ - **Due Date**: 
+
+- **Tasks:**
+  - [X] Analysis of PAN DOS profile structure
+  - [X] Design Versa mapping schema
+  - [X] Implement extraction module
+  - [X] Create transformation logic
+  - [X] Add validation rules
+  - [ ] Test implementation
+
+- **References**:
+  - Branch: `feature/F-102-DOS-Profile-Support`
+  - Related Issues:
+  - Related Docs:
+
+
 ___
 ## Contributing
 

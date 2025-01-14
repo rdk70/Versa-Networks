@@ -82,14 +82,25 @@ api_endpoints:
     rules: "security/access-policies/access-policy-group/Default-Policy/rules"
     zone: "objects/zones"
     schedule: "objects/schedules"
-    profile.antivirus: "security/profiles/av"
-    profile.dos-classified: "security/profiles/dos/classified"
-    profile.dos-aggregate: "security/profiles/dos/aggregate"
-    profile.decryption: "security/profiles/decryption"
-    profile.file-blocking: "security/profiles/file-filtering"
-    profile.ips: "security/profiles/ips"
-    profile.url-filtering: "security/profiles/url-filtering"
-    profile.vulnerability: security/profiles/"ips"
+    dos_rules: security/dos-policies/dos-policy-group/Default-Policy/rules
+    profiles:
+        antivirus: "security/profiles/antivirus"
+        #data-filtering: "security/profiles/data-filtering"
+        decryption: "security/profiles/decryption"
+        #dns-security: "security/profiles/dns-security"
+        dos:
+          aggregate: "security/profiles/dos/aggregate"
+          classified: "security/profiles/dos/classified"
+        file-blocking: "security/profiles/file-blocking"
+        file-filtering: "security/profiles/file-filtering"
+        ips: "security/profiles/ips"
+        #mobile-security:
+        #pcap:
+        #sctp-protection:
+        #spyware:
+        url-filtering: "security/profiles/url-filtering"
+        vulnerability: "security/profiles/ips"
+        #wildfire-analysis: 
 
 token:
   # Token expiry time in seconds.
@@ -107,28 +118,29 @@ uploaders:
   application: true
   application_filter: true
   application_group: true
-  rules: true
+  rules: true                    # Firewall security rules
   schedule: true
-  service: true
-  service_group: false  # Service groups are not supported at this time.
+  service: True
+  service_group: false          # Service groups are not supported at this time.
   zone: true
+  dos_rules: true
   profiles:
     enabled: false
     types:
-      antivirus: true
-      url-filtering: true
-      vulnerability: true
-      file-blocking: true
-      wildfire-analysis: true
-      data-filtering: true
+      antivirus: false          # Antivirus profiles are not supported at this time.
+      url-filtering: false      # url-filtering profiles are not supported at this time.
+      vulnerability: false      # vulnerability profiles are not supported at this time.
+      file-blocking: false      # file-blocking profiles are not supported at this time.
+      wildfire-analysis: false  # wildfire-analysis profiles are not supported at this time.
+      data-filtering: false     # data-filtering profiles are not supported at this time.
       dos: true
-      spyware: true
-      sctp-protection: true
-      mobile-security: true
-      decryption: true
-      dns-security: true
-      pcap: true
-      ips: true
+      spyware: false            # spyware profiles are not supported at this time.
+      sctp-protection: false    # sctp-protection profiles are not supported at this time.
+      mobile-security: false    # mobile-security profiles are not supported at this time.
+      decryption: false         # decryption profiles are not supported at this time. 
+      dns-security: false       # dns-security profiles are not supported at this time.
+      pcap: false               # pcap profiles are not supported at this time.
+      ips: false                # ips profiles are not supported at this time.
 
 # The following parsers are not currently in use but may be implemented in future updates.
 parsers:
@@ -142,14 +154,24 @@ parsers:
   service: true
   service_group: true
   zones: true
-  profile.antivirus: false
-  profile.dos-classified: false
-  profile.dos-aggregate: false
-  profile.decryption: false
-  profile.file-blocking: false
-  profile.ips: false
-  profile.url-filtering: false 
-  profile.vulnerability: false
+  dos_rules: true
+  profiles:
+    enabled: false
+    types:
+      antivirus: true
+      url-filtering: false
+      vulnerability: false      # vulnerability profiles are not supported at this time.
+      file-blocking: false      # file-blocking profiles are not supported at this time.
+      wildfire-analysis: false  # wildfire-analysis profiles are not supported at this time.
+      data-filtering: false     # data-filtering profiles are not supported at this time.
+      dos: True
+      spyware: false            # spyware profiles are not supported at this time.
+      sctp-protection: false    # sctp-protection profiles are not supported at this time.
+      mobile-security: false    # mobile-security profiles are not supported at this time.
+      decryption: false         # decryption profiles are not supported at this time.
+      dns-security: false       # dns-security profiles are not supported at this time.
+      pcap: false               # pcap profiles are not supported at this time.
+      ips: false                # ips profiles are not supported at this time.
 
 transformers:
   # Removes duplicate objects during the transformation process.
@@ -157,6 +179,34 @@ transformers:
 
   # Removes objects with duplicate names. Set to false to retain all names.
   remove_duplicate_names: true
+  address: true
+  address_group: true
+  application: true
+  application_filter: true
+  application_group: true
+  rules: true
+  schedule: true
+  service: true
+  service_group: true
+  zones: true
+  dos-rules: true
+  profiles:
+    enabled: false
+    types:
+      antivirus: true
+      url-filtering: false      # url-filtering profiles are not supported at this time.
+      vulnerability: false      # vulnerability profiles are not supported at this time.
+      file-blocking: false      # file-blocking profiles are not supported at this time.
+      wildfire-analysis: false  # wildfire-analysis profiles are not supported at this time.
+      data-filtering: false     # data-filtering profiles are not supported at this time.
+      dos: false                # dos profiles are not supported at this time. 
+      spyware: false            # spyware profiles are not supported at this time.
+      sctp-protection: false    # sctp-protection profiles are not supported at this time.
+      mobile-security: false    # mobile-security profiles are not supported at this time.
+      decryption: false         # decryption profiles are not supported at this time.
+      dns-security: false       # dns-security profiles are not supported at this time.
+      pcap: false               # pcap profiles are not supported at this time.
+      ips: false                # ips profiles are not supported at this time.
 
 defaults:
   # Default risk level (scale: 1-5).

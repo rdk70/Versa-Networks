@@ -88,6 +88,9 @@ class BaseParser(ABC):
                 self.logger.debug("No shared section found in XML content.")
                 return None
 
+            if "profiles." in element_type:
+                element_type = element_type.replace(".", "/")
+
             element = shared.find(f"./{element_type}")
             if element is None:
                 self.logger.debug(f"No shared {element_type} configuration found.")

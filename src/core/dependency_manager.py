@@ -11,14 +11,9 @@ class ProcessingStage(Enum):
 
 class DependencyManager:
     def __init__(self, logger):
-        """
-        Initialize the DependencyManager with a logger.
-
-        Args:
-            logger: Logger instance for logging messages.
-        """
         self.logger = logger
 
+        # Transformation stage dependencies
         self.transform_dependencies: Dict[str, Set[str]] = {
             "address_group": {"address"},
             "service_group": {"service"},
@@ -33,10 +28,10 @@ class DependencyManager:
                 "application_filter",
                 "zone",
                 "schedule",
-                "profile",
             },
         }
 
+        # Upload stage dependencies
         self.upload_dependencies: Dict[str, Set[str]] = {
             "address_group": {"address"},
             "service_group": {"service"},
@@ -52,7 +47,6 @@ class DependencyManager:
                 "application_filter",
                 "zone",
                 "schedule",
-                "profile",
             },
         }
 
@@ -61,21 +55,8 @@ class DependencyManager:
         items: Dict,
         process_func: Callable[[str, Any], Awaitable[Any]],
         stage: ProcessingStage,
+        logger=None,
     ) -> Dict:
-        """
-        Process items based on dependencies for a given stage using an asynchronous processing function.
-
-        Args:
-            items (Dict): A dictionary of items to process.
-            process_func (Callable): An asynchronous function that processes an item.
-            stage (ProcessingStage): The processing stage (TRANSFORM or UPLOAD).
-
-        Returns:
-            Dict: A dictionary with processed results.
-
-        Raises:
-            ValueError: If a circular dependency is detected.
-        """
         results = {}
         dependencies = (
             self.transform_dependencies
@@ -83,7 +64,26 @@ class DependencyManager:
             else self.upload_dependencies
         )
 
-        self.logger.debug(f"Verifying dependencies for stage '{stage.name}'")
+        self.logger.debug(
+            f"Processing stage {stage.name} with items: {list(items.keys())}"
+        )
+
+        # Process items without dependencies first
+        no_deps_items = {
+            item: data
+            for item, data in items.items()
+            if item not in dependencies or not dependencies[item]
+        }
+
+        if no_deps_items:
+            tasks = [
+                asyncio.create_task(process_func(name, data))
+                for name, data in no_deps_items.items()
+            ]
+            completed = await asyncio.gather(*tasks)
+            results.update(dict(zip(no_deps_items.keys(), completed)))
+            items = {k: v for k, v in items.items() if k not in no_deps_items}
+
         while items:
             ready_items = {
                 item: data
@@ -91,9 +91,11 @@ class DependencyManager:
                 if not dependencies.get(item, set()) - set(results.keys())
             }
 
-            if not ready_items:
+            if not ready_items and items:
+                remaining = ", ".join(items.keys())
                 raise ValueError(
-                    f"Circular dependency detected in stage '{stage.name}'"
+                    f"Circular dependency detected in stage '{stage.name}'. "
+                    f"Remaining items: {remaining}"
                 )
 
             tasks = [

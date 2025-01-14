@@ -41,6 +41,7 @@ ___
 - **Comprehensive XML Parsing**: Handles PAN firewall configuration files with robust parsing.
 - **Intelligent Transformation**: Maps PAN configurations to Versa format seamlessly.
 - **Automated API Upload**: Pushes configurations to Versa Director using REST APIs.
+- **Barch Processing**: Configurable batch sizes for efficient API uploads
 - **Rate Limiting**: Prevents API overload with configurable limits.
 - **Error Handling**: Includes retry mechanisms for robust execution.
 - **Detailed Logging**: Multi-level logging for audits and debugging.
@@ -146,15 +147,18 @@ To export configurations:
 
 ## **Supported Configuration Elements**
 
-The translator supports conversion of:
-- Addresses and address groups
-- Services and service groups (note: service groups are logged but not uploaded as they're not supported in Versa)
-- Applications and application groups
-- Application filters
-- Security rules
-- Zones
-- Schedules
-
+- **Basic Objects**
+  - Addresses and address groups
+  - Services and service groups
+  - Applications and application groups
+  - Application filters
+  - Zones
+  - Schedules
+- **Security Policies**
+  - Security rules
+  - DOS rules
+- **Security Profiles**
+  - DOS protection profiles
 
 ## **Architecture**
 

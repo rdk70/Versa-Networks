@@ -89,22 +89,3 @@ def setup_logging(
         print(f"Failed to set up logging: {str(e)}")
         print("Exiting due to logging setup failure.")
         sys.exit(1)
-
-
-"""
-# Example usage
-if __name__ == "__main__":
-    logger = setup_logging(console_level=logging.DEBUG)
-
-    # Normal logging
-    logger.info("Starting normal processing...")
-
-    # Single-line continuation logging
-    extra = {"continue_line": True}
-    logger.info("Processing part 1... ", extra=extra)
-    logger.info("part 2... ", extra=extra)
-    logger.info("done.", extra=extra)
-
-    # Back to normal logging
-    logger.info("This is a new log line.")
-"""

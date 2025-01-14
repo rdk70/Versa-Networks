@@ -212,6 +212,46 @@ class APIHandler:
                         sys.exit(1)
             return None
 
+    async def create_dos_policy(
+        self, access_token: str, template_name: str, tenant: str
+    ) -> Optional[dict]:
+        """Create the default DOS policy group."""
+        endpoint = f"{self.endpoints['base_path'].format(template_name=template_name, tenant=tenant)}/security/dos-policies"
+        payload = {"dos-policy-group": {"name": "Default-Policy"}}
+
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with await self._rate_limited_request(
+                    session,
+                    "POST",
+                    f"{self.api_base_url}/{endpoint}",
+                    json=payload,
+                    headers={
+                        "Authorization": f"Bearer {access_token}",
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    },
+                ) as response:
+                    if response.status in (
+                        200,
+                        201,
+                        409,
+                    ):  # Include 409 as it might already exist
+                        self.logger.debug(
+                            f"Successfully created or verified DOS policy group in template '{template_name}'"
+                        )
+                        return True
+                    else:
+                        response_text = await response.text()
+                        self.logger.error(
+                            f"Failed to create DOS policy group: Status={response.status}, Response={response_text}"
+                        )
+                        return False
+
+            except Exception as e:
+                self.logger.error(f"Error creating DOS policy group: {str(e)}")
+                return False
+
     async def create_service_template(
         self, access_token: str, template_name: str, tenant: str
     ) -> Optional[dict]:
@@ -303,44 +343,91 @@ class APIHandler:
     ) -> Dict:
         """Upload items in batches with detailed progress tracking."""
 
-        if item_type == "service_group":
-            self.logger.warning(
-                "Service groups are not supported in Versa - skipping upload."
-            )
-            return {"total": 0, "successful": 0, "failed": 0, "errors": []}
-        if item_type == "profile":
-            self.logger.warning("Profiles are not fully supported - skipping upload.")
-            return {"total": 0, "successful": 0, "failed": 0, "errors": []}
-
-        elif self.uploaders.get(item_type) is False:
-            self.logger.info(
-                f"Skipping upload for item type: {item_type} as per configuration."
-            )
-            return {"total": 0, "successful": 0, "failed": 0, "errors": []}
-
-        # Modified path handling for shared template
+        # Prepare the base path using string formatting.
         base_path = self.endpoints["base_path"].format(
             template_name=template_name,
             tenant=self.config["template"]["tenant"],
         )
 
-        if item_type == "profile":
-            type_mapping = {
-                "antivirus": "profile.antivirus",
-                "decryption": "profile.decryption",
-                "dos": "profile.dos",
-                "dos-classified": "profile.dos-classified",
-                "dos-aggregate": "profile.dos-aggregate",
-                "file-blocking": "profile.file-blocking",
-                "ips": "profile.ips",
-                "url-filtering": "profile.url-filtering",
-                "vulnerability": "profile.vulnerability",
-            }
-            item_type = type_mapping.get(
-                items[0]["security-profile"]["type"], item_type
+        # Define the default return dictionary for cases when no upload is done.
+        default_result = {"total": 0, "successful": 0, "failed": 0, "errors": []}
+
+        # Skip upload for service groups.
+        if item_type == "service_group":
+            self.logger.warning(
+                "Service groups are not supported in Versa - skipping upload."
+            )
+            return default_result
+
+        # Handle profile-related item types.
+        if "profiles." in item_type:
+            # Remove the "profiles." prefix.
+            item_type = item_type[9:]
+
+            is_supported = (
+                self.uploaders.get("profiles", {}).get("types", {}).get(item_type)
             )
 
-        endpoint = f"{base_path}/{self.endpoints['object_path'][item_type]}"
+            if is_supported is False:
+                self.logger.warning(
+                    f"Skipping upload for item type: {item_type} as per configuration."
+                )
+                return default_result
+
+            if item_type == "dos":
+                processed_items = []
+                for item in items:
+                    profile_type = item.pop(
+                        "profile_type", "aggregate"
+                    )  # Remove metadata
+                    profile_endpoint = self.endpoints["object_path"]["profiles"]["dos"][
+                        profile_type
+                    ]
+                    if profile_endpoint is None:
+                        self.logger.error(
+                            f"DOS profile endpoint for '{profile_type}' is not defined."
+                        )
+                        continue
+
+                    processed_items.append(
+                        {
+                            "endpoint": f"{base_path}/{profile_endpoint}",
+                            "item": item,
+                        }
+                    )
+
+                # Update items list to include endpoint information
+                items = processed_items
+                endpoint = None  # Will be used from processed items
+            else:
+                # Regular profile handling
+                profile_endpoint = self.endpoints["object_path"]["profiles"].get(
+                    item_type
+                )
+                if profile_endpoint is None:
+                    self.logger.error(
+                        f"Profile endpoint for '{item_type}' is not defined."
+                    )
+                    return default_result
+                endpoint = f"{base_path}/{profile_endpoint}"
+
+        # Handle other item types.
+        elif self.uploaders.get(item_type) is False:
+            self.logger.info(
+                f"Skipping upload for item type: {item_type} as per configuration."
+            )
+            return default_result
+
+        else:
+            general_endpoint = self.endpoints["object_path"].get(item_type)
+            if general_endpoint is None:
+                self.logger.error(
+                    f"Endpoint for item type '{item_type}' is not defined."
+                )
+                return default_result
+            endpoint = f"{base_path}/{general_endpoint}"
+
+        # 'endpoint' is now defined for further processing...
 
         results = {
             "total": len(items),
@@ -368,18 +455,36 @@ class APIHandler:
                 tasks = []
 
                 for item in batch:
-                    item_name = self._get_item_name(item)
-                    task = asyncio.create_task(
-                        self.make_request(
-                            session,
-                            "POST",
-                            endpoint,
-                            item,
-                            access_token,
-                            item_type,
-                            item_name,
+                    if isinstance(item, dict) and "endpoint" in item:
+                        # Handle DOS profiles with specific endpoints
+                        item_endpoint = item["endpoint"]
+                        actual_item = item["item"]
+                        item_name = self._get_item_name(actual_item)
+                        task = asyncio.create_task(
+                            self.make_request(
+                                session,
+                                "POST",
+                                item_endpoint,
+                                actual_item,
+                                access_token,
+                                item_type,
+                                item_name,
+                            )
                         )
-                    )
+                    else:
+                        # Handle regular items
+                        item_name = self._get_item_name(item)
+                        task = asyncio.create_task(
+                            self.make_request(
+                                session,
+                                "POST",
+                                endpoint,
+                                item,
+                                access_token,
+                                item_type,
+                                item_name,
+                            )
+                        )
                     tasks.append((item, item_name, task))
 
                 for item, item_name, task in tasks:
@@ -454,10 +559,10 @@ class APIHandler:
         )
 
         self.logger.info(
-            f"Completed batch upload: Template={template_name}, Type={item_type}, Total={results['total']}, "
+            f"Completed batch upload: (Type={item_type}, Total={results['total']}, "
             f"Successful={results['successful']}, Failed={results['failed']}, "
             f"Total batches={results['batches']}, Duration={total_duration:.2f}s, "
-            f"Avg time/item={avg_time_per_item:.3f}s."
+            f"Avg time/item={avg_time_per_item:.3f}s, Template={template_name}.)"
         )
 
         if results["errors"]:

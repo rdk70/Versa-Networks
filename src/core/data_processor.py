@@ -73,9 +73,12 @@ class DataProcessor:
     async def _parse_item(self, name: str, parser: Any) -> List[Dict]:
         """Parse a single configuration element."""
         try:
+            if name == "dos_rule":
+                x = 1
             self.logger.debug(
                 f"Parsing '{name}' elements in the {"'shared'" if self.device_name is None and self.device_group is None else f"'device {self.device_name}/{self.device_group}' section"} "
             )
+
             return parser.parse()
         except Exception as e:
             self.logger.error(f"Error occurred while parsing '{name}': {str(e)}")
@@ -119,12 +122,17 @@ class DataProcessor:
             f"Starting transformation for '{item_type}' with {len(data)} items."
         )
         try:
-            transformer = self.transformers[item_type]
+            transformer = self.transformers.get(item_type)
+            if not transformer:
+                self.logger.debug(f"No transformer found for {item_type}, skipping")
+                return []
 
             if item_type == "address_group":
                 address_names = [addr["name"] for addr in data]
                 return [
-                    transformer.transform(group, address_names, self.logger)
+                    transformer.transform(
+                        group, self.logger, existing_addresses=address_names
+                    )
                     for group in data
                 ]
 
@@ -133,7 +141,10 @@ class DataProcessor:
                 deduped_services = self._deduped_data.get("service", [])
                 return [
                     transformer.transform(
-                        group, deduped_app, deduped_services, self.logger
+                        group,
+                        self.logger,
+                        existing_applications=deduped_app,
+                        existing_services=deduped_services,
                     )
                     for group in data
                 ]
@@ -144,7 +155,9 @@ class DataProcessor:
             elif item_type == "service_group":
                 deduped_services = self._deduped_data.get("service", [])
                 return [
-                    transformer.transform(group, deduped_services, self.logger)
+                    transformer.transform(
+                        group, self.logger, existing_services=deduped_services
+                    )
                     for group in data
                 ]
 

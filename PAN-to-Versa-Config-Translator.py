@@ -99,6 +99,18 @@ async def process_template(
         if not template_response:
             raise Exception(f"Failed to create service template: '{template['name']}'.")
 
+        # Create DOS policy group if DOS rules are enabled
+        if config["uploaders"].get("dos_rules"):
+            dos_policy_response = await api_handler.create_dos_policy(
+                access_token,
+                template["name"],
+                config["template"]["tenant"],
+            )
+            if not dos_policy_response:
+                raise Exception(
+                    f"Failed to create DOS policy group in template: '{template['name']}'."
+                )
+
         # Upload transformed data
         print("")  # Added a newline for better readability on the console
         logger.info(
