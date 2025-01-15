@@ -334,6 +334,16 @@ class APIHandler:
 
         return await self.batch_upload(data, item_type, access_token)
 
+    def _handle_interface_upload(
+        self, endpoint: str, interface_data: Dict, access_token: str, template_name: str
+    ) -> Dict:
+        """Special handling for interface uploads."""
+        # Interfaces need to be added to their respective zones
+        zone_name = interface_data.get("interface", {}).get("zone")
+        if zone_name:
+            endpoint = f"{endpoint}/{zone_name}/interfaces"
+        return interface_data
+
     async def batch_upload(
         self,
         items: List[Dict],
@@ -508,15 +518,15 @@ class APIHandler:
 
                 batch_duration = time.time() - batch_start
                 self.logger.debug(
-                    f"Batch {results['batches']} complete: Template={template_name}, Type={item_type}, "
+                    f"Batch {results['batches']} complete: (Type={item_type}, "
                     f"Success={results['successful']}/{len(items)} ({(results['successful'] / len(items) * 100):.1f}%), "
-                    f"Failures={results['failed']}, Duration={batch_duration:.2f}s."
+                    f"Failures={results['failed']}, Duration={batch_duration:.2f}s, Template={template_name})."
                 )
                 if results["batches"] % 5 == 0:
                     self.logger.info(
-                        f"Batch {results['batches']} complete: Template={template_name}, Type={item_type}, "
+                        f"Batch {results['batches']} complete: (Type={item_type}, "
                         f"Success={results['successful']}/{len(items)} ({(results['successful'] / len(items) * 100):.1f}%), "
-                        f"Failures={results['failed']}"
+                        f"Failures={results['failed']}, Template={template_name})."
                     )
 
         self._log_upload_summary(results, item_type, template_name)
