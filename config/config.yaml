@@ -80,6 +80,7 @@ api_endpoints:
     application_group: "application-identification/application-groups"
     application_filter: "application-identification/application-filters"
     rules: "security/access-policies/access-policy-group/Default-Policy/rules"
+    interface: "network/interfaces"
     zone: "objects/zones"
     schedule: "objects/schedules"
     dos_rules: security/dos-policies/dos-policy-group/Default-Policy/rules
@@ -118,9 +119,10 @@ uploaders:
   application: true
   application_filter: true
   application_group: true
+  interface: true
   rules: true                    # Firewall security rules
   schedule: true
-  service: True
+  service: false                 # Turn off for testing
   service_group: false          # Service groups are not supported at this time.
   zone: true
   dos_rules: true
@@ -149,6 +151,7 @@ parsers:
   application: true
   application_filter: true
   application_group: true
+  interface: true
   rules: true
   schedule: true
   service: true
@@ -184,6 +187,7 @@ transformers:
   application: true
   application_filter: true
   application_group: true
+  interface: true
   rules: true
   schedule: true
   service: true
