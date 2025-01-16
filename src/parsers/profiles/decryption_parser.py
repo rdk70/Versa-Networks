@@ -5,7 +5,98 @@ from src.parsers.base_parser import BaseParser
 
 
 class DecryptionParser(BaseParser):
-    """Parser for PAN SSL Decryption profile configurations."""
+    """
+    Parser for PAN SSL Decryption profile configurations.
+
+    PAN XML Configuration:
+    <entry name="profile_name">
+        <ssl-forward-proxy>
+            <auto-include-altname>no</auto-include-altname>
+            <block-client-cert>no</block-client-cert>
+            <block-expired-certificate>no</block-expired-certificate>
+            <block-timeout-cert>no</block-timeout-cert>
+            <block-tls13-downgrade-no-resource>no</block-tls13-downgrade-no-resource>
+            <block-unknown-cert>no</block-unknown-cert>
+            <block-unsupported-cipher>no</block-unsupported-cipher>
+            <block-unsupported-version>no</block-unsupported-version>
+            <block-untrusted-issuer>no</block-untrusted-issuer>
+            <restrict-cert-exts>no</restrict-cert-exts>
+            <strip-alpn>no</strip-alpn>
+        </ssl-forward-proxy>
+        <ssl-inbound-proxy>
+            <block-if-hsm-unavailable>no</block-if-hsm-unavailable>
+            <block-if-no-resource>no</block-if-no-resource>
+            <block-unsupported-cipher>no</block-unsupported-cipher>
+            <block-unsupported-version>no</block-unsupported-version>
+        </ssl-inbound-proxy>
+        <ssl-no-proxy>
+            <block-expired-certificate>no</block-expired-certificate>
+            <block-untrusted-issuer>no</block-untrusted-issuer>
+        </ssl-no-proxy>
+        <ssl-protocol-settings>
+            <auth-algo-md5>yes</auth-algo-md5>
+            <auth-algo-sha1>yes</auth-algo-sha1>
+            <auth-algo-sha256>yes</auth-algo-sha256>
+            <auth-algo-sha384>yes</auth-algo-sha384>
+            <enc-algo-3des>yes</enc-algo-3des>
+            <enc-algo-aes-128-cbc>yes</enc-algo-aes-128-cbc>
+            <enc-algo-aes-128-gcm>yes</enc-algo-aes-128-gcm>
+            <enc-algo-aes-256-cbc>yes</enc-algo-aes-256-cbc>
+            <enc-algo-aes-256-gcm>yes</enc-algo-aes-256-gcm>
+            <enc-algo-chacha20-poly1305>yes</enc-algo-chacha20-poly1305>
+            <enc-algo-rc4>yes</enc-algo-rc4>
+            <keyxchg-algo-dhe>yes</keyxchg-algo-dhe>
+            <keyxchg-algo-ecdhe>yes</keyxchg-algo-ecdhe>
+            <keyxchg-algo-rsa>yes</keyxchg-algo-rsa>
+        </ssl-protocol-settings>
+        <folder>My Folder</folder>
+    </entry>
+
+    Expected Python Output Structure:
+    {
+        "name": "string",
+        "ssl_forward_proxy": {
+            "auto_include_altname": false,
+            "block_client_cert": false,
+            "block_expired_certificate": false,
+            "block_timeout_cert": false,
+            "block_tls13_downgrade_no_resource": false,
+            "block_unknown_cert": false,
+            "block_unsupported_cipher": false,
+            "block_unsupported_version": false,
+            "block_untrusted_issuer": false,
+            "restrict_cert_exts": false,
+            "strip_alpn": false
+        },
+        "ssl_inbound_proxy": {
+            "block_if_hsm_unavailable": false,
+            "block_if_no_resource": false,
+            "block_unsupported_cipher": false,
+            "block_unsupported_version": false
+        },
+        "ssl_no_proxy": {
+            "block_expired_certificate": false,
+            "block_untrusted_issuer": false
+        },
+        "ssl_protocol_settings": {
+            "auth_algo_md5": true,
+            "auth_algo_sha1": true,
+            "auth_algo_sha256": true,
+            "auth_algo_sha384": true,
+            "enc_algo_3des": true,
+            "enc_algo_aes_128_cbc": true,
+            "enc_algo_aes_128_gcm": true,
+            "enc_algo_aes_256_cbc": true,
+            "enc_algo_aes_256_gcm": true,
+            "enc_algo_chacha20_poly1305": true,
+            "enc_algo_rc4": true,
+            "keyxchg_algo_dhe": true,
+            "keyxchg_algo_ecdhe": true,
+            "keyxchg_algo_rsa": true
+        },
+        "folder": "My Folder"
+    }
+    """
 
     def __init__(
         self,
