@@ -5,7 +5,6 @@ ___
 - [Versa Configuration Translator - Tasks](#versa-configuration-translator---tasks)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
-    - [\[F-099\] Add support for zone/interface extraction, transformation, load](#f-099-add-support-for-zoneinterface-extraction-transformation-load)
     - [\[F-103\] Sub-Element Verification Enhancement](#f-103-sub-element-verification-enhancement)
     - [\[F-104\] Decryption profile support](#f-104-decryption-profile-support)
     - [\[F-105\] Add support for Log-Settings](#f-105-add-support-for-log-settings)
@@ -27,38 +26,13 @@ ___
     - [\[F-101\] Flexible Service Template Naming](#f-101-flexible-service-template-naming)
     - [\[F-098\] Improve Logging](#f-098-improve-logging)
     - [\[F-102\] DOS Profile Support](#f-102-dos-profile-support)
+    - [\[F-099\] Add support for zone/interface extraction, transformation, load](#f-099-add-support-for-zoneinterface-extraction-transformation-load)
   - [Contributing](#contributing)
 
 
 ___
 
 ## Features
-
-### [F-099] Add support for zone/interface extraction, transformation, load
-- **Description**: Implement complete support for zone and interface configuration translation from PAN to Versa format.
-- **Priority**: High
-- **Status**: In Progress
-- **Owner**: RobK
-- **Due Date**: 
-- **Tasks:**
-  - [ ] Design zone/interface data model
-  - [ ] Implement zone extraction logic
-  - [ ] Develop interface mapping logic
-  - [ ] Create transformation rules
-  - [ ] Implement loading mechanism
-  - [ ] Add validation checks
-  - [ ] Write unit tests
-  - [ ] Document implementation
-
-- **Dependencies:**
-  - Base transformation framework
-  - XML parsing infrastructure
-
-- **References**:
-  - Branch: `feature/F-099-add-zone`
-  - Related Issues:
-  - Related Docs: 
-
 
 ### [F-103] Sub-Element Verification Enhancement
 - **Description**: Improve verification of configuration dependencies and relationships between elements.
@@ -392,7 +366,30 @@ ___
   - Related Issues:
   - Related Docs:
 
+### [F-099] Add support for zone/interface extraction, transformation, load
+- **Description**: Implement complete support for zone and interface configuration translation from PAN to Versa format.
+- **Priority**: High
+- **Status**: Completed
+- **Owner**: RobK
+- **Due Date**: 
+- **Tasks:**
+  - [ ] Design zone/interface data model
+  - [ ] Implement zone extraction logic
+  - [ ] Develop interface mapping logic
+  - [ ] Create transformation rules
+  - [ ] Implement loading mechanism
+  - [ ] Add validation checks
+  - [ ] Write unit tests
+  - [ ] Document implementation
 
+- **Dependencies:**
+  - Base transformation framework
+  - XML parsing infrastructure
+
+- **References**:
+  - Branch: `feature/F-099-add-zone`
+  - Related Issues:
+  - Related Docs: 
 ___
 ## Contributing
 
