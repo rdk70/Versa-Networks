@@ -5,7 +5,209 @@ from src.parsers.base_parser import BaseParser
 
 
 class DOSParser(BaseParser):
-    """Parser for PAN DOS (Denial of Service) profile configurations."""
+    """Parser for PAN DOS protection profile configurations.
+
+    This parser handles the extraction of DOS protection profile objects from PAN XML configurations,
+    transforming them into a standardized format for further processing.
+
+    Expected Input XML Structure:
+    ```xml
+    <entry name="dos-profile-name">
+        <type>aggregate</type>
+        <description>Profile description</description>
+        <flood>
+            <tcp-syn>
+                <red>
+                    <alarm-rate>10000</alarm-rate>
+                    <activate-rate>10000</activate-rate>
+                    <maximal-rate>40000</maximal-rate>
+                    <block>
+                        <duration>300</duration>
+                    </block>
+                </red>
+            </tcp-syn>
+            <udp>
+                <enable>no</enable>
+                <red>
+                    <alarm-rate>10000</alarm-rate>
+                    <activate-rate>10000</activate-rate>
+                    <maximal-rate>40000</maximal-rate>
+                    <block>
+                        <duration>300</duration>
+                    </block>
+                </red>
+            </udp>
+            <icmp>
+                <enable>no</enable>
+                <red>
+                    <alarm-rate>10000</alarm-rate>
+                    <activate-rate>10000</activate-rate>
+                    <maximal-rate>40000</maximal-rate>
+                    <block>
+                        <duration>300</duration>
+                    </block>
+                </red>
+            </icmp>
+            <icmpv6>
+                <enable>no</enable>
+                <red>
+                    <alarm-rate>10000</alarm-rate>
+                    <activate-rate>10000</activate-rate>
+                    <maximal-rate>40000</maximal-rate>
+                    <block>
+                        <duration>300</duration>
+                    </block>
+                </red>
+            </icmpv6>
+            <other-ip>
+                <enable>no</enable>
+                <red>
+                    <alarm-rate>10000</alarm-rate>
+                    <activate-rate>10000</activate-rate>
+                    <maximal-rate>40000</maximal-rate>
+                    <block>
+                        <duration>300</duration>
+                    </block>
+                </red>
+            </other-ip>
+        </flood>
+        <resource>
+            <sessions>
+                <enabled>no</enabled>
+                <max-concurrent-limit>32768</max-concurrent-limit>
+            </sessions>
+        </resource>
+        <folder>My Folder</folder>
+    </entry>
+    ```
+
+    Output Object Structure (PAN Format):
+    ```python
+    {
+        "name": str,                     # Profile name
+        "type": str,                     # Profile type (aggregate)
+        "description": str,              # Profile description
+        "flood": {                       # Flood protection settings
+            "tcp-syn": {                 # TCP SYN flood settings
+                "red": {                 # RED (Random Early Drop) settings
+                    "alarm-rate": int,    # Rate to trigger alarm
+                    "activate-rate": int, # Rate to activate protection
+                    "maximal-rate": int,  # Maximum allowed rate
+                    "block": {
+                        "duration": int   # Block duration in seconds
+                    }
+                }
+            },
+            "udp": {                     # UDP flood settings
+                "enable": bool,          # Enable UDP protection
+                "red": Dict              # Same RED structure as tcp-syn
+            },
+            "icmp": {                    # ICMP flood settings
+                "enable": bool,          # Enable ICMP protection
+                "red": Dict              # Same RED structure as tcp-syn
+            },
+            "icmpv6": {                  # ICMPv6 flood settings
+                "enable": bool,          # Enable ICMPv6 protection
+                "red": Dict              # Same RED structure as tcp-syn
+            },
+            "other-ip": {                # Other IP flood settings
+                "enable": bool,          # Enable other IP protection
+                "red": Dict              # Same RED structure as tcp-syn
+            }
+        },
+        "resource": {                    # Resource protection settings
+            "sessions": {
+                "enabled": bool,         # Enable session limiting
+                "max-concurrent-limit": int  # Maximum concurrent sessions
+            }
+        },
+        "folder": str,                  # Folder location
+        "source": str                   # Either "device-group" or "shared"
+    }
+    ```
+
+    Versa Format:
+    ```json
+    {
+        "name": "string",
+        "type": "aggregate",
+        "description": "string",
+        "flood": {
+            "tcp-syn": {
+                "red": {
+                    "alarm-rate": 10000,
+                    "activate-rate": 10000,
+                    "maximal-rate": 40000,
+                    "block": {
+                        "duration": 300
+                    }
+                }
+            },
+            "udp": {
+                "enable": false,
+                "red": {
+                    "alarm-rate": 10000,
+                    "activate-rate": 10000,
+                    "maximal-rate": 40000,
+                    "block": {
+                        "duration": 300
+                    }
+                }
+            },
+            "icmp": {
+                "enable": false,
+                "red": {
+                    "alarm-rate": 10000,
+                    "activate-rate": 10000,
+                    "maximal-rate": 40000,
+                    "block": {
+                        "duration": 300
+                    }
+                }
+            },
+            "icmpv6": {
+                "enable": false,
+                "red": {
+                    "alarm-rate": 10000,
+                    "activate-rate": 10000,
+                    "maximal-rate": 40000,
+                    "block": {
+                        "duration": 300
+                    }
+                }
+            },
+            "other-ip": {
+                "enable": false,
+                "red": {
+                    "alarm-rate": 10000,
+                    "activate-rate": 10000,
+                    "maximal-rate": 40000,
+                    "block": {
+                        "duration": 300
+                    }
+                }
+            }
+        },
+        "resource": {
+            "sessions": {
+                "enabled": false,
+                "max-concurrent-limit": 32768
+            }
+        },
+        "folder": "My Folder"
+    }
+    ```
+
+    Location in PAN XML:
+    - Device specific: /devices/entry[@name='device-name']/device-group/entry[@name='group-name']/profiles/dos/entry
+    - Shared: /shared/profiles/dos/entry
+
+    Notes:
+    - All rates are in packets per second
+    - Block durations are in seconds
+    - Enable/disable flags in XML use 'yes'/'no' values
+    - TCP SYN protection is always enabled
+    """
 
     def __init__(
         self,

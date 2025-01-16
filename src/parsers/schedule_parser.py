@@ -5,6 +5,98 @@ from src.parsers.base_parser import BaseParser
 
 
 class ScheduleParser(BaseParser):
+    """Parser for PAN schedule configurations.
+
+    This parser handles the extraction of schedule objects from PAN XML configurations,
+    transforming them into a standardized format for further processing.
+
+    Expected Input XML Structure:
+    ```xml
+    <entry name="schedule-name">
+        <schedule-type>
+            <recurring>
+                <weekly>
+                    <sunday>
+                        <member>08:00-17:00</member>
+                        <member>19:00-22:00</member>
+                    </sunday>
+                    <monday>
+                        <member>09:00-18:00</member>
+                    </monday>
+                    <tuesday>
+                        <member>09:00-18:00</member>
+                    </tuesday>
+                    <wednesday>
+                        <member>09:00-18:00</member>
+                    </wednesday>
+                    <thursday>
+                        <member>09:00-18:00</member>
+                    </thursday>
+                    <friday>
+                        <member>09:00-18:00</member>
+                    </friday>
+                    <saturday>
+                        <member>10:00-14:00</member>
+                    </saturday>
+                </weekly>
+            </recurring>
+        </schedule-type>
+        <folder>My Folder</folder>
+    </entry>
+    ```
+
+    Output Object Structure (PAN Format):
+    ```python
+    {
+        "name": str,                  # Schedule name
+        "schedule_type": {            # Schedule configuration
+            "recurring": {            # Recurring schedule settings
+                "weekly": {           # Weekly schedule configuration
+                    "sunday": List[str],    # Sunday time ranges
+                    "monday": List[str],    # Monday time ranges
+                    "tuesday": List[str],   # Tuesday time ranges
+                    "wednesday": List[str], # Wednesday time ranges
+                    "thursday": List[str],  # Thursday time ranges
+                    "friday": List[str],    # Friday time ranges
+                    "saturday": List[str]   # Saturday time ranges
+                }
+            }
+        },
+        "folder": str,               # Folder location
+        "source": str                # Either "device-group" or "shared"
+    }
+    ```
+
+    Versa Format:
+    ```json
+    {
+        "name": "string",
+        "schedule_type": {
+            "recurring": {
+                "weekly": {
+                    "sunday": ["string"],
+                    "monday": ["string"],
+                    "tuesday": ["string"],
+                    "wednesday": ["string"],
+                    "thursday": ["string"],
+                    "friday": ["string"],
+                    "saturday": ["string"]
+                }
+            }
+        },
+        "folder": "My Folder"
+    }
+    ```
+
+    Location in PAN XML:
+    - Device specific: /devices/entry[@name='device-name']/device-group/entry[@name='group-name']/schedule/entry
+    - Shared: /shared/schedule/entry
+
+    Notes:
+    - Time ranges are specified in 24-hour format (HH:MM-HH:MM)
+    - Multiple time ranges can be specified for each day
+    """
+
     def __init__(
         self,
         xml_content: str,

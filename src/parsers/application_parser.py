@@ -6,6 +6,182 @@ from src.parsers.base_parser import BaseParser
 
 
 class ApplicationParser(BaseParser):
+    """Parser for PAN application configurations.
+
+    This parser handles the extraction of application objects from PAN XML configurations,
+    transforming them into a standardized format for further processing.
+
+    Expected Input XML Structure:
+    ```xml
+    <entry name="app-name">
+        <default>
+            <port>
+                <member>tcp/80</member>
+                <member>udp/443</member>
+            </port>
+        </default>
+        <category>category-name</category>
+        <subcategory>subcategory-name</subcategory>
+        <technology>technology-name</technology>
+        <description>Application description</description>
+        <timeout>60</timeout>
+        <tcp-timeout>60</tcp-timeout>
+        <udp-timeout>60</udp-timeout>
+        <tcp-half-closed-timeout>60</tcp-half-closed-timeout>
+        <tcp-time-wait-timeout>60</tcp-time-wait-timeout>
+        <risk>3</risk>
+        <evasive-behavior>yes</evasive-behavior>
+        <consume-big-bandwidth>yes</consume-big-bandwidth>
+        <used-by-malware>yes</used-by-malware>
+        <able-to-transfer-file>yes</able-to-transfer-file>
+        <has-known-vulnerability>yes</has-known-vulnerability>
+        <tunnel-other-application>yes</tunnel-other-application>
+        <tunnel-applications>yes</tunnel-applications>
+        <prone-to-misuse>yes</prone-to-misuse>
+        <pervasive-use>yes</pervasive-use>
+        <file-type-ident>yes</file-type-ident>
+        <virus-ident>yes</virus-ident>
+        <data-ident>yes</data-ident>
+        <no-appid-caching>yes</no-appid-caching>
+        <alg-disable-capability>capability-name</alg-disable-capability>
+        <parent-app>parent-app-name</parent-app>
+        <signature>
+            <entry name="signature-name">
+                <comment>Signature comment</comment>
+                <order-free>no</order-free>
+                <and-condition>
+                    <entry name="and-condition-name">
+                        <or-condition>
+                            <entry name="or-condition-name">
+                                <operator>
+                                    <pattern-match>
+                                        <context>http-req-headers</context>
+                                        <pattern>pattern-string</pattern>
+                                        <qualifier>
+                                            <entry name="qualifier-name">
+                                                <value>qualifier-value</value>
+                                            </entry>
+                                        </qualifier>
+                                    </pattern-match>
+                                </operator>
+                            </entry>
+                        </or-condition>
+                    </entry>
+                </and-condition>
+            </entry>
+        </signature>
+        <folder>My Folder</folder>
+    </entry>
+    ```
+
+    Output Object Structure (PAN Format):
+    ```python
+    {
+        "name": str,                          # Application name
+        "default": {                          # Default port settings
+            "port": List[str]                 # List of port specifications
+        },
+        "category": str,                      # Application category
+        "subcategory": str,                   # Application subcategory
+        "technology": str,                    # Technology type
+        "description": str,                   # Application description
+        "timeout": int,                       # General timeout
+        "tcp_timeout": int,                   # TCP timeout
+        "udp_timeout": int,                   # UDP timeout
+        "tcp_half_closed_timeout": int,       # TCP half-closed timeout
+        "tcp_time_wait_timeout": int,         # TCP time wait timeout
+        "risk": int,                          # Risk level (1-5)
+        "evasive_behavior": bool,             # Evasive behavior flag
+        "consume_big_bandwidth": bool,        # High bandwidth usage flag
+        "used_by_malware": bool,              # Malware usage flag
+        "able_to_transfer_file": bool,        # File transfer capability
+        "has_known_vulnerability": bool,       # Known vulnerability flag
+        "tunnel_other_application": bool,      # Application tunneling flag
+        "tunnel_applications": bool,           # Applications tunneling capability
+        "prone_to_misuse": bool,              # Misuse risk flag
+        "pervasive_use": bool,                # Pervasive usage flag
+        "file_type_ident": bool,              # File type identification
+        "virus_ident": bool,                  # Virus identification
+        "data_ident": bool,                   # Data identification
+        "no_appid_caching": bool,             # AppID caching flag
+        "alg_disable_capability": str,         # ALG disable capability
+        "parent_app": str,                    # Parent application name
+        "signature": List[Dict],              # List of signature configurations
+        "folder": str,                        # Folder location
+        "source": str                         # Either "device-group" or "shared"
+    }
+    ```
+
+    Versa Format:
+    ```json
+    {
+        "name": "string",
+        "default": {
+            "port": ["string"]
+        },
+        "category": "string",
+        "subcategory": "string",
+        "technology": "string",
+        "description": "string",
+        "timeout": 0,
+        "tcp_timeout": 0,
+        "udp_timeout": 0,
+        "tcp_half_closed_timeout": 0,
+        "tcp_time_wait_timeout": 0,
+        "risk": 0,
+        "evasive_behavior": true,
+        "consume_big_bandwidth": true,
+        "used_by_malware": true,
+        "able_to_transfer_file": true,
+        "has_known_vulnerability": true,
+        "tunnel_other_application": true,
+        "tunnel_applications": true,
+        "prone_to_misuse": true,
+        "pervasive_use": true,
+        "file_type_ident": true,
+        "virus_ident": true,
+        "data_ident": true,
+        "no_appid_caching": true,
+        "alg_disable_capability": "string",
+        "parent_app": "string",
+        "signature": [
+            {
+                "name": "string",
+                "comment": "string",
+                "order_free": false,
+                "and_condition": [
+                    {
+                        "name": "string",
+                        "or_condition": [
+                            {
+                                "name": "string",
+                                "operator": {
+                                    "pattern_match": {
+                                        "context": "string",
+                                        "pattern": "string",
+                                        "qualifier": [
+                                            {
+                                                "name": "string",
+                                                "value": "string"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "folder": "My Folder"
+    }
+    ```
+
+    Location in PAN XML:
+    - Device specific: /devices/entry[@name='device-name']/device-group/entry[@name='group-name']/application/entry
+    - Shared: /shared/application/entry
+    """
+
     def __init__(
         self,
         xml_content: str,

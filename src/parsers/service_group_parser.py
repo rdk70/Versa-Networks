@@ -6,6 +6,57 @@ from src.parsers.base_parser import BaseParser
 
 
 class ServiceGroupParser(BaseParser):
+    """Parser for PAN service group configurations.
+
+    This parser handles the extraction of service group objects from PAN XML configurations,
+    transforming them into a standardized format for further processing.
+
+    Expected Input XML Structure:
+    ```xml
+    <entry name="service-group-name">
+        <members>
+            <member>service1</member>
+            <member>service2</member>
+            <member>service3</member>
+        </members>
+        <tag>
+            <member>tag1</member>
+            <member>tag2</member>
+        </tag>
+        <folder>My Folder</folder>
+    </entry>
+    ```
+
+    Output Object Structure (PAN Format):
+    ```python
+    {
+        "name": str,           # Service group name
+        "members": List[str],  # List of member services
+        "tag": List[str],     # List of tags
+        "folder": str,        # Folder location
+        "source": str         # Either "device-group" or "shared"
+    }
+    ```
+
+    Versa Format:
+    ```json
+    {
+        "name": "string",
+        "members": ["string"],
+        "tag": ["string"],
+        "folder": "My Folder"
+    }
+    ```
+
+    Location in PAN XML:
+    - Device specific: /devices/entry[@name='device-name']/device-group/entry[@name='group-name']/service-group/entry
+    - Shared: /shared/service-group/entry
+
+    Notes:
+    - Members must reference existing service objects
+    - Tags are optional
+    """
+
     def __init__(
         self,
         xml_content: str,

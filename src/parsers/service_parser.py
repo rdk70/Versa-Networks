@@ -6,6 +6,91 @@ from src.parsers.base_parser import BaseParser
 
 
 class ServiceParser(BaseParser):
+    """Parser for PAN service configurations.
+
+    This parser handles the extraction of service objects from PAN XML configurations,
+    transforming them into a standardized format for further processing.
+
+    Expected Input XML Structure:
+    ```xml
+    <entry name="service-name">
+        <description>Service description</description>
+        <protocol>
+            <tcp>
+                <port>80,443,8080</port>
+                <source-port>1024-65535</source-port>
+                <override>
+                    <timeout>3600</timeout>
+                    <halfclose-timeout>120</halfclose-timeout>
+                    <timewait-timeout>15</timewait-timeout>
+                </override>
+            </tcp>
+        </protocol>
+        <tag>
+            <member>tag1</member>
+            <member>tag2</member>
+        </tag>
+        <folder>My Folder</folder>
+    </entry>
+    ```
+
+    Output Object Structure (PAN Format):
+    ```python
+    {
+        "name": str,                # Service name
+        "description": str,         # Service description
+        "protocol": {              # Protocol configuration
+            "tcp": {               # TCP protocol settings
+                "port": str,       # Destination ports
+                "source_port": str, # Source ports
+                "override": {       # Timeout overrides
+                    "timeout": int,           # Session timeout
+                    "halfclose_timeout": int, # Half-close timeout
+                    "timewait_timeout": int   # Time-wait timeout
+                }
+            }
+        },
+        "tag": List[str],          # List of tags
+        "folder": str,             # Folder location
+        "source": str              # Either "device-group" or "shared"
+    }
+    ```
+
+    Versa Format:
+    ```json
+    {
+        "name": "string",
+        "description": "string",
+        "protocol": {
+            "tcp": {
+                "port": "string",
+                "source_port": "string",
+                "override": {
+                    "timeout": 3600,
+                    "halfclose_timeout": 120,
+                    "timewait_timeout": 15
+                }
+            }
+        },
+        "tag": ["string"],
+        "folder": "My Folder"
+    }
+    ```
+
+    Location in PAN XML:
+    - Device specific: /devices/entry[@name='device-name']/device-group/entry[@name='group-name']/service/entry
+    - Shared: /shared/service/entry
+
+    Notes:
+    - Port formats:
+      - Single port: "80"
+      - Port range: "1024-65535"
+      - Multiple ports: "80,443,8080"
+    - Protocol can be TCP, UDP, or SCTP
+    - All timeout values are in seconds
+    - Tags are optional
+    """
+
     def __init__(
         self,
         xml_content: str,

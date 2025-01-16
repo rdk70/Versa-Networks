@@ -6,6 +6,39 @@ from src.parsers.base_parser import BaseParser
 
 
 class AddressParser(BaseParser):
+    """Parser for PAN address configurations
+
+    This parser handles the extraction of address objects from PAN XML configurations,
+    transforming them into a standardized format for further processing.
+
+    Expected Input XML Structure:
+    ```xml
+    <entry name="address-name">
+        <ip-netmask>192.168.1.0/24</ip-netmask>
+        <description>Example Address</description>
+        <tag>
+            <member>tag1</member>
+            <member>tag2</member>
+        </tag>
+    </entry>
+    ```
+
+    Output Object Structure:
+    ```python
+    {
+        "name": str,              # Name of the address object
+        "ip-netmask": str,        # IP address with netmask (e.g., "192.168.1.0/24")
+        "description": str,        # Optional description
+        "source": str,            # Either "device-group" or "shared"
+        "tag": List[str]          # Optional list of tags
+    }
+    ```
+
+    Location in PAN XML:
+    - Device specific: /devices/entry[@name='device-name']/device-group/entry[@name='group-name']/address/entry
+    - Shared: /shared/address/entry
+    """
+
     def __init__(
         self,
         xml_content: str,

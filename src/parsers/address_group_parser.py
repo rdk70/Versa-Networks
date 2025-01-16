@@ -6,7 +6,54 @@ from src.parsers.base_parser import BaseParser
 
 
 class AddressGroupParser(BaseParser):
-    """Parser for address group configuration elements."""
+    """Parser for address group configuration elements.
+
+
+    This parser handles the extraction of address group objects from PAN XML configurations,
+    transforming them into a standardized format for further processing.
+
+    Expected Input XML Structure:
+    ```xml
+    <entry name="address-group-name">
+        <description>Example Address Group</description>
+        <static>
+            <member>address1</member>
+            <member>address2</member>
+            <member>address3</member>
+        </static>
+        <tag>
+            <member>tag1</member>
+            <member>tag2</member>
+        </tag>
+    </entry>
+    ```
+
+    Output Object Structure (PAN Format):
+    ```python
+    {
+        "name": str,           # Name of the address group
+        "description": str,    # Optional description
+        "members": List[str],  # List of member addresses
+        "source": str         # Either "device-group" or "shared"
+    }
+    ```
+
+    Versa Format:
+    ```json
+    {
+        "group": {
+            "name": "string",
+            "description": "string",
+            "tag": ["string"],
+            "static": ["string"]
+        }
+    }
+    ```
+
+    Location in PAN XML:
+    - Device specific: /devices/entry[@name='device-name']/device-group/entry[@name='group-name']/address-group/entry
+    - Shared: /shared/address-group/entry
+    """
 
     def __init__(
         self,

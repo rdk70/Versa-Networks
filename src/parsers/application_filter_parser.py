@@ -6,6 +6,116 @@ from src.parsers.base_parser import BaseParser
 
 
 class ApplicationFilterParser(BaseParser):
+    """Parser for PAN application filter configurations.
+
+    This parser handles the extraction of application filter objects from PAN XML configurations,
+    transforming them into a standardized format for further processing.
+
+    Expected Input XML Structure:
+    ```xml
+    <entry name="app-filter-name">
+        <category>
+            <member>category1</member>
+            <member>category2</member>
+        </category>
+        <subcategory>
+            <member>subcategory1</member>
+            <member>subcategory2</member>
+        </subcategory>
+        <technology>
+            <member>tech1</member>
+            <member>tech2</member>
+        </technology>
+        <risk>3</risk>
+        <evasive>yes</evasive>
+        <excessive-bandwidth-use>yes</excessive-bandwidth-use>
+        <used-by-malware>yes</used-by-malware>
+        <transfers-files>yes</transfers-files>
+        <has-known-vulnerabilities>yes</has-known-vulnerabilities>
+        <tunnels-other-apps>yes</tunnels-other-apps>
+        <prone-to-misuse>yes</prone-to-misuse>
+        <pervasive>yes</pervasive>
+        <is-saas>yes</is-saas>
+        <new-appid>yes</new-appid>
+        <saas-certifications>
+            <member>cert1</member>
+            <member>cert2</member>
+        </saas-certifications>
+        <saas-risk>
+            <member>risk1</member>
+            <member>risk2</member>
+        </saas-risk>
+        <tagging>
+            <no-tag>yes</no-tag>
+        </tagging>
+        <exclude>
+            <member>exclude1</member>
+            <member>exclude2</member>
+        </exclude>
+        <folder>My Folder</folder>
+    </entry>
+    ```
+
+    Output Object Structure (PAN Format):
+    ```python
+    {
+        "name": str,                       # Name of the application filter
+        "category": List[str],             # List of categories
+        "subcategory": List[str],          # List of subcategories
+        "technology": List[str],           # List of technologies
+        "evasive": bool,                   # Evasive behavior flag
+        "excessive_bandwidth_use": bool,    # High bandwidth usage flag
+        "used_by_malware": bool,           # Used by malware flag
+        "transfers_files": bool,           # File transfer capability flag
+        "has_known_vulnerabilities": bool, # Known vulnerabilities flag
+        "tunnels_other_apps": bool,        # Tunneling capability flag
+        "prone_to_misuse": bool,          # Misuse risk flag
+        "pervasive": bool,                # Pervasive use flag
+        "is_saas": bool,                  # SaaS application flag
+        "new_appid": bool,                # New application ID flag
+        "risk": List[int],               # Risk levels
+        "saas_certifications": List[str], # SaaS certifications
+        "saas_risk": List[str],          # SaaS risk factors
+        "tagging": Dict[str, bool],      # Tagging configuration
+        "exclude": List[str],            # Exclusion list
+        "folder": str,                   # Folder location
+        "source": str                    # Either "device-group" or "shared"
+    }
+    ```
+
+    Versa Format:
+    ```json
+    {
+        "name": "string",
+        "category": ["string"],
+        "subcategory": ["string"],
+        "technology": ["string"],
+        "evasive": true,
+        "excessive_bandwidth_use": true,
+        "used_by_malware": true,
+        "transfers_files": true,
+        "has_known_vulnerabilities": true,
+        "tunnels_other_apps": true,
+        "prone_to_misuse": true,
+        "pervasive": true,
+        "is_saas": true,
+        "new_appid": true,
+        "risk": [0],
+        "saas_certifications": ["string"],
+        "saas_risk": ["string"],
+        "tagging": {
+            "no_tag": true
+        },
+        "exclude": ["string"],
+        "folder": "My Folder"
+    }
+    ```
+
+    Location in PAN XML:
+    - Device specific: /devices/entry[@name='device-name']/device-group/entry[@name='group-name']/application-filter/entry
+    - Shared: /shared/application-filter/entry
+    """
+
     def __init__(
         self,
         xml_content: str,

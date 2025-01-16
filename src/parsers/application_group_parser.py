@@ -6,6 +6,51 @@ from src.parsers.base_parser import BaseParser
 
 
 class ApplicationGroupParser(BaseParser):
+    """Parser for PAN application group configurations.
+
+    This parser handles the extraction of application group objects from PAN XML configurations,
+    transforming them into a standardized format for further processing.
+
+    Expected Input XML Structure:
+    ```xml
+    <entry name="app-group-name">
+        <members>
+            <member>app1</member>
+            <member>app2</member>
+            <member>app3</member>
+        </members>
+        <folder>My Folder</folder>
+        <tag>
+            <member>tag1</member>
+            <member>tag2</member>
+        </tag>
+    </entry>
+    ```
+
+    Output Object Structure (PAN Format):
+    ```python
+    {
+        "name": str,           # Name of the application group
+        "members": List[str],  # List of member applications
+        "folder": str,        # Folder location
+        "source": str         # Either "device-group" or "shared"
+    }
+    ```
+
+    Versa Format:
+    ```json
+    {
+        "name": "string",
+        "members": ["string"],
+        "folder": "My Folder"
+    }
+    ```
+
+    Location in PAN XML:
+    - Device specific: /devices/entry[@name='device-name']/device-group/entry[@name='group-name']/application-group/entry
+    - Shared: /shared/application-group/entry
+    """
+
     def __init__(
         self,
         xml_content: str,

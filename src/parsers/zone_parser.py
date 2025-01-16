@@ -6,7 +6,98 @@ from src.parsers.base_parser import BaseParser
 
 
 class ZoneParser(BaseParser):
-    """Parser for zone configurations."""
+    """Parser for PAN zone configurations.
+
+    This parser handles the extraction of zone objects from PAN XML configurations,
+    transforming them into a standardized format for further processing.
+
+    Expected Input XML Structure:
+    ```xml
+    <entry name="zone-name">
+        <enable-user-identification>yes</enable-user-identification>
+        <enable-device-identification>yes</enable-device-identification>
+        <dos-protection>
+            <profile>dos-profile-name</profile>
+            <log-setting>dos-log-setting</log-setting>
+        </dos-protection>
+        <network>
+            <layer3>
+                <member>ethernet1/1</member>
+                <member>ethernet1/2</member>
+            </layer3>
+        </network>
+        <user-acl>
+            <include-list>
+                <member>user1</member>
+                <member>user2</member>
+            </include-list>
+            <exclude-list>
+                <member>user3</member>
+                <member>user4</member>
+            </exclude-list>
+        </user-acl>
+        <device-acl>
+            <include-list>
+                <member>device1</member>
+                <member>device2</member>
+            </include-list>
+            <exclude-list>
+                <member>device3</member>
+                <member>device4</member>
+            </exclude-list>
+        </device-acl>
+    </entry>
+    ```
+
+    Output Object Structure (PAN Format):
+    ```python
+    {
+        "name": str,                          # Zone name
+        "enable_user_identification": bool,    # Enable user identification
+        "enable_device_identification": bool,  # Enable device identification
+        "dos_profile": str,                   # DOS protection profile name
+        "dos_log_setting": str,               # DOS log setting name
+        "network": List[str],                 # List of network interfaces
+        "user_acl": {                         # User access control lists
+            "include_list": List[str],        # Included users
+            "exclude_list": List[str]         # Excluded users
+        },
+        "device_acl": {                       # Device access control lists
+            "include_list": List[str],        # Included devices
+            "exclude_list": List[str]         # Excluded devices
+        },
+        "source": str                         # Either "device-group" or "shared"
+    }
+    ```
+
+    Versa Format:
+    ```json
+    {
+        "name": "string",
+        "enable_user_identification": true,
+        "enable_device_identification": true,
+        "dos_profile": "string",
+        "dos_log_setting": "string",
+        "network": ["string"],
+        "user_acl": {
+            "include_list": ["string"],
+            "exclude_list": ["string"]
+        },
+        "device_acl": {
+            "include_list": ["string"],
+            "exclude_list": ["string"]
+        }
+    }
+    ```
+
+    Location in PAN XML:
+    - Device specific: /devices/entry[@name='device-name']/device-group/entry[@name='group-name']/zone/entry
+    - Shared: /shared/zone/entry
+
+    Notes:
+    - Network interfaces can be layer2, layer3, or virtual-wire types
+    - 'yes'/'no' values in XML are converted to boolean true/false in the output format
+    """
 
     def __init__(
         self,

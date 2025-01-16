@@ -11,7 +11,120 @@ class RulebaseType(Enum):
 
 
 class DOSRuleParser(BaseParser):
-    """Parser for PAN DOS rules configurations."""
+    """Parser for PAN security rule configurations.
+
+    This parser handles the extraction of security rule objects from PAN XML configurations,
+    transforming them into a standardized format for further processing.
+
+    Expected Input XML Structure:
+    ```xml
+    <entry name="rule-name">
+        <description>Rule description</description>
+        <disabled>no</disabled>
+        <position>pre</position>
+        <schedule>schedule-name</schedule>
+        <tag>
+            <member>tag1</member>
+            <member>tag2</member>
+        </tag>
+        <from>
+            <member>any</member>
+        </from>
+        <to>
+            <member>any</member>
+        </to>
+        <source>
+            <member>any</member>
+        </source>
+        <source-user>
+            <member>any</member>
+        </source-user>
+        <destination>
+            <member>any</member>
+        </destination>
+        <service>
+            <member>any</member>
+        </service>
+        <action>deny</action>
+        <protection>
+            <aggregate>
+                <profile>dos-profile-name</profile>
+            </aggregate>
+        </protection>
+        <log-setting>Cortex Data Lake</log-setting>
+        <folder>My Folder</folder>
+    </entry>
+    ```
+
+    Output Object Structure (PAN Format):
+    ```python
+    {
+        "name": str,                # Rule name
+        "description": str,         # Rule description
+        "disabled": bool,           # Rule disabled status
+        "position": str,            # Rule position (pre/post)
+        "schedule": str,            # Schedule name
+        "tag": List[str],          # List of tags
+        "from": List[str],         # Source zones
+        "to": List[str],           # Destination zones
+        "source": List[str],       # Source addresses
+        "source_user": List[str],  # Source users
+        "destination": List[str],  # Destination addresses
+        "service": List[str],      # Services
+        "action": Dict,            # Action configuration
+        "protection": {            # Protection settings
+            "aggregate": {
+                "profile": str     # DOS profile name
+            }
+        },
+        "log_setting": str,        # Log setting name
+        "folder": str,             # Folder location
+        "source": str              # Either "device-group" or "shared"
+    }
+    ```
+
+    Versa Format:
+    ```json
+    {
+        "name": "string",
+        "description": "string",
+        "disabled": false,
+        "position": "pre",
+        "schedule": "string",
+        "tag": ["string"],
+        "from": ["any"],
+        "to": ["any"],
+        "source": ["any"],
+        "source_user": ["any"],
+        "destination": ["any"],
+        "service": ["any"],
+        "action": {
+            "deny": {}
+        },
+        "protection": {
+            "aggregate": {
+                "profile": "string"
+            }
+        },
+        "log_setting": "Cortex Data Lake",
+        "folder": "My Folder"
+    }
+    ```
+
+    Location in PAN XML:
+    - Pre Rules:
+      - Device specific: /devices/entry[@name='device-name']/device-group/entry[@name='group-name']/pre-rulebase/security/rules/entry
+      - Shared: /shared/pre-rulebase/security/rules/entry
+    - Post Rules:
+      - Device specific: /devices/entry[@name='device-name']/device-group/entry[@name='group-name']/post-rulebase/security/rules/entry
+      - Shared: /shared/post-rulebase/security/rules/entry
+
+    Notes:
+    - Position indicates whether the rule is in pre-rulebase or post-rulebase
+    - Action can be "allow", "deny", "drop", "reset-client", "reset-server", or "reset-both"
+    - 'any' is used as a wildcard for source, destination, service, etc.
+    - Disabled flag in XML uses 'yes'/'no' values
+    """
 
     def __init__(
         self,
