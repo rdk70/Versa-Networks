@@ -48,7 +48,7 @@ class APIHandler:
             await asyncio.sleep(delay)
 
         self.last_request_time = time.time()
-        headers_keys = ", ".join(kwargs.get("headers", {}).keys())
+        # headers_keys = ", ".join(kwargs.get("headers", {}).keys())
         # self.logger.debug(f"Making API request: (method={method}, headers=[{headers_keys}], url={url}).")
 
         async with self.semaphore:
@@ -95,8 +95,9 @@ class APIHandler:
                         continue
 
                     if response.status in (200, 201):
-                        drop = False
-                        # self.logger.debug(f"Request successful: type={item_type}, name={item_name}, status={response.status}.")
+                        self.logger.debug(
+                            f"Request successful: type={item_type}, name={item_name}, status={response.status}."
+                        )
                     else:
                         self.logger.warning(
                             f"Unexpected status: type={item_type}, name={item_name}, "
