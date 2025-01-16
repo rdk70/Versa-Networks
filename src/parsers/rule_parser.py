@@ -72,31 +72,38 @@ class FirewallRuleParser(BaseParser):
             self.logger.error(f"Error parsing dictionary element: {str(e)}")
         return parsed_dict
 
-    def _parse_section(self, section: ET.Element, source_type: str) -> List[Dict]:
-        """Parse all security rules from a rulebase section."""
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
+        """Parse all security rules from a list of rulebase sections."""
         rules = []
-        try:
-            security = section.find("security/rules")
-            if security is not None:
-                entries = security.findall("entry")
-                self.logger.debug(
-                    f"Found {len(entries)} security rule entries in '{source_type}' section '{self.device_name}.{self.device_group}'."
+        if len(sections) == 1 and sections[0] is None:
+            self.logger.debug(f"Parsing found 0 rules in '{source_type}' sections.")
+            return None
+        for section in sections:
+            try:
+                security = section.find("security/rules")
+                if security is not None:
+                    entries = security.findall("entry")
+                    self.logger.debug(
+                        f"Found {len(entries)} security rule entries in '{source_type}' section '{self.device_name}.{self.device_group}'."
+                    )
+
+                    for entry in entries:
+                        rule = self._parse_rule_entry(entry, source_type)
+                        if rule:
+                            rules.append(rule)
+
+            except Exception as e:
+                self.logger.error(
+                    f"Error processing '{source_type}' section in '{self.device_name}.{self.device_group if self.device_name and self.device_group else ''}': {str(e)}"
                 )
-
-                for entry in entries:
-                    rule = self._parse_rule_entry(entry, source_type)
-                    if rule:
-                        rules.append(rule)
-
+                continue
+        if len(rules) > 0:
             self.logger.info(
-                f"Parsing successful for {len(rules)} rules from '{source_type}' section{f" '{self.device_name}.{self.device_group}'" if self.device_name and self.device_group else ''}."
+                f"Parsing successful for {len(rules)} rules from '{source_type}' sections{f" '{self.device_name}.{self.device_group}'" if self.device_name and self.device_group else ''}."
             )
-
-            return rules
-
-        except Exception as e:
-            self.logger.error(f"Error parsing '{source_type}' rules section: {str(e)}")
-            return rules
+        return rules
 
     def _parse_rule_entry(self, entry: ET.Element, source_type: str) -> Dict:
         """Parse an individual rule entry."""
@@ -165,18 +172,14 @@ class FirewallRuleParser(BaseParser):
                     if dg_element is not None:
                         dg_rules = self._parse_section(dg_element, "device-group")
                         rules.extend(dg_rules)
-                        self.logger.info(
-                            f"Parsing successful for {len(dg_rules)} '{self.device_name}/{self.device_group}' rules from '{rulebase.value}' rulebase."
-                        )
+                        # self.logger.info(f"Parsing successful for {len(dg_rules)} '{self.device_name}/{self.device_group}' rules from '{rulebase.value}' rulebase.")
 
                 if self.include_shared:
                     shared_element = self.get_shared_element(rulebase.value)
                     if shared_element is not None:
                         shared_rules = self._parse_section(shared_element, "shared")
                         rules.extend(shared_rules)
-                        self.logger.info(
-                            f"Parsing successful for {len(shared_rules)} rules from '{rulebase.value}' rulebase in 'shared' section."
-                        )
+                        # self.logger.info(f"Parsing successful for {len(shared_rules)} rules from '{rulebase.value}' rulebase in 'shared' section.")
 
             self.logger.debug(
                 f"Successfully parsed {len(rules)} total rules from all rulebases."

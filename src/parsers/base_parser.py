@@ -1,7 +1,9 @@
-import xml.etree.ElementTree as ET
+# import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
 from logging import Logger
 from typing import Any, Dict, List, Optional
+
+from lxml import etree as ET
 
 
 class BaseParser(ABC):
@@ -26,10 +28,7 @@ class BaseParser(ABC):
 
         try:
             self.tree = ET.ElementTree(ET.fromstring(xml_content))
-            self.logger.debug(
-                f"BaseParser initialized for {'shared' if device_name is None and device_group is None else f'device {device_name}/{device_group}'} "
-                f"(include_shared: {include_shared}, shared_only: {shared_only})."
-            )
+            # self.logger.debug(f"BaseParser initialized for {'shared' if device_name is None and device_group is None else f'device {device_name}/{device_group}'} (include_shared: {include_shared}, shared_only: {shared_only}).")
 
         except ET.ParseError as e:
             self.logger.error(f"Failed to parse XML content: {str(e)}")
@@ -38,15 +37,39 @@ class BaseParser(ABC):
             self.logger.error(f"Error during BaseParser initialization: {str(e)}")
             raise
 
+    def _get_section_type(self) -> str:
+        """Returns the configuration section type (shared or specific device)."""
+        if self.device_name is None and self.device_group is None:
+            return "shared"
+        return f"device {self.device_name}/{self.device_group}"
+
     def get_device_group_element(self) -> Optional[ET.Element]:
         """Get the specific device-group entry element for parsing."""
+
         try:
             if self.shared_only:
                 return None
 
             # First try the standard path
-            xpath = f".//devices/entry[@name='{self.device_name}']/device-group/entry[@name='{self.device_group}']"
-            element = self.tree.find(xpath)
+            if self.element_type == "zone":
+                xpath = (
+                    f".//devices/entry[@name='{self.device_name}']/template//vsys/entry | "
+                    f".//devices/entry[@name='{self.device_name}']/vsys/entry | "
+                    f".//readonly/devices/entry[@name='{self.device_name}']/template//vsys/entry | "
+                    f".//readonly/devices/entry[@name='{self.device_name}']/template-stack//vsys/entry"
+                )
+
+            elif self.element_type == "interface":
+                xpath = (
+                    f".//devices/entry[@name='{self.device_name}']/template//network | "
+                    f".//entry[@name='{self.device_name}']/template-stack//network | "
+                    f".//devices/entry[@name='{self.device_name}']//network | "
+                    f".//devices/entry[@name='{self.device_name}']/vsys//import/network"
+                )
+            else:
+                xpath = f"./devices/entry[@name='{self.device_name}']/device-group/entry[@name='{self.device_group}']"
+
+            element = self.tree.xpath(xpath)
 
             # If not found, check for alternative format (direct response format)
             if element is None and self.tree.getroot().tag == "response":
@@ -91,7 +114,7 @@ class BaseParser(ABC):
             if "profiles." in element_type:
                 element_type = element_type.replace(".", "/")
 
-            element = shared.find(f"./{element_type}")
+            element = shared.xpath(f"./{element_type}")
             if element is None:
                 self.logger.debug(f"No shared {element_type} configuration found.")
             return element
@@ -108,11 +131,18 @@ class BaseParser(ABC):
             return None
 
         try:
-            element = device_group.find(f"./{element_type}")
-            if element is None:
-                self.logger.debug(
-                    f"No {element_type} configuration found for device='{self.device_name}', group='{self.device_group}'."
-                )
+            element = []
+            for child in device_group:
+                child_element = child.find(f"./{element_type}")
+                if child_element is None:
+                    self.logger.debug(
+                        f"No {element_type} configuration found for device='{self.device_name}', group='{self.device_group}'."
+                    )
+                else:
+                    self.logger.debug(
+                        f"Found {element_type} configuration for device='{self.device_name}', group='{self.device_group}'."
+                    )
+                    element.append(child_element)
             return element
         except Exception as e:
             self.logger.error(
@@ -132,19 +162,21 @@ class BaseParser(ABC):
                 dg_element = self.get_config_element(self.element_type)
                 if dg_element is not None:
                     dg_content = self._parse_section(dg_element, "device-group")
-                    content.extend(dg_content)
-                    self.logger.debug(
-                        f"Parsing successful for {len(dg_content)} {self.element_type} elements from device-group '{self.device_name}/{self.device_group}'."
-                    )
+                    if dg_content is not None:
+                        content.extend(dg_content)
+                        self.logger.debug(
+                            f"Parsing successful for {len(dg_content)} {self.element_type} elements from device: '{self.device_name}'/ group: '{self.device_group}'."
+                        )
 
             if self.include_shared:
                 shared_element = self.get_shared_element(self.element_type)
                 if shared_element is not None:
                     shared_content = self._parse_section(shared_element, "shared")
-                    content.extend(shared_content)
-                    self.logger.debug(
-                        f"Parsing successful for {len(shared_content)} {self.element_type} elements from 'shared' section."
-                    )
+                    if shared_content is not None:
+                        content.extend(shared_content)
+                        self.logger.debug(
+                            f"Parsing successful for {len(shared_content)} {self.element_type} elements from 'shared' section."
+                        )
 
             return content
 

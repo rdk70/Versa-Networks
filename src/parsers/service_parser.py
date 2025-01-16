@@ -62,79 +62,83 @@ class ServiceParser(BaseParser):
             )
             return False
 
-    def _parse_section(self, section: ET.Element, source_type: str) -> List[Dict]:
-        """Parse services from a specific section."""
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
+        """Parse services from a list of sections."""
         services = []
-        try:
-            entries = section.findall("./entry")
-            self.logger.debug(
-                f"Found {len(entries)} service entries in '{source_type}' section."
-            )
+        if len(sections) == 1 and sections[0] is None:
+            self.logger.debug(f"Parsing found 0 services in '{source_type}' sections.")
+            return None
+        for section in sections:
+            try:
+                entries = section.findall("./entry")
+                self.logger.debug(
+                    f"Found {len(entries)} service entries in '{source_type}' section."
+                )
 
-            for entry in entries:
-                try:
-                    name = entry.get("name")
-                    if not name:
-                        self.logger.warning(
-                            f"Skipping '{source_type}' entry with missing name."
+                for entry in entries:
+                    try:
+                        name = entry.get("name")
+                        if not name:
+                            self.logger.warning(
+                                f"Skipping '{source_type}' entry with missing name."
+                            )
+                            continue
+
+                        service_data = {
+                            "name": name,
+                            "protocol": None,
+                            "port": None,
+                            "description": entry.findtext("description", ""),
+                            "source": source_type,
+                        }
+
+                        # Check TCP protocol
+                        tcp = entry.find("protocol/tcp")
+                        if tcp is not None:
+                            port = tcp.findtext("port")
+                            if port and self._validate_port(port, name):
+                                service_data["protocol"] = "tcp"
+                                service_data["port"] = port
+
+                        # Check UDP protocol
+                        udp = entry.find("protocol/udp")
+                        if udp is not None:
+                            port = udp.findtext("port")
+                            if port and self._validate_port(port, name):
+                                service_data["protocol"] = "udp"
+                                service_data["port"] = port
+
+                        if self.validate(service_data):
+                            services.append(service_data)
+                            self.logger.debug(
+                                f"Appended service '{name}' with protocol='{service_data['protocol']}' and port='{service_data['port']}' to services for '{source_type}' section."
+                            )
+
+                        else:
+                            self.logger.warning(f"Invalid service data: {service_data}")
+
+                    except Exception as e:
+                        self.logger.error(
+                            f"Error parsing '{source_type}' service '{name}': {str(e)}"
                         )
                         continue
 
-                    service_data = {
-                        "name": name,
-                        "protocol": None,
-                        "port": None,
-                        "description": entry.findtext("description", ""),
-                        "source": source_type,
-                    }
-
-                    # Check TCP protocol
-                    tcp = entry.find("protocol/tcp")
-                    if tcp is not None:
-                        port = tcp.findtext("port")
-                        if port and self._validate_port(port, name):
-                            service_data["protocol"] = "tcp"
-                            service_data["port"] = port
-
-                    # Check UDP protocol
-                    udp = entry.find("protocol/udp")
-                    if udp is not None:
-                        port = udp.findtext("port")
-                        if port and self._validate_port(port, name):
-                            service_data["protocol"] = "udp"
-                            service_data["port"] = port
-
-                    if self.validate(service_data):
-                        services.append(service_data)
-                        self.logger.debug(
-                            f"Appended service '{name}' with protocol='{service_data['protocol']}' and port='{service_data['port']}' to services for '{source_type}' section."
-                        )
-
-                    else:
-                        self.logger.warning(f"Invalid service data: {service_data}")
-
-                except Exception as e:
-                    self.logger.error(
-                        f"Error parsing '{source_type}' service '{name}': {str(e)}"
-                    )
-                    continue
-
+            except Exception as e:
+                self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
+                continue
+        if len(services) > 0:
             self.logger.info(
-                f"Parsing successful for {len(services)} services from '{source_type}' section."
+                f"Parsing successful for {len(services)} services from '{source_type}' sections."
             )
-            return services
-
-        except Exception as e:
-            self.logger.error(
-                f"Error parsing '{source_type}' service section: {str(e)}"
-            )
-            return services
+        return services
 
     def parse(self) -> List[Dict]:
         """Parse service entries from XML."""
         try:
             self.logger.debug(
-                f"Parsing '{self.element_type}' element from section {'\'shared\'' if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
+                f"Parsing '{self.element_type}' element from section {"'shared'" if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
             )
             services = self.get_parseable_content()
 

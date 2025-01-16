@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 from logging import Logger
 from typing import Any, Dict, List
 
@@ -6,6 +7,8 @@ from src.core.factories import ParserFactory, TransformerFactory
 
 
 class DataProcessor:
+    """Processes XML configuration data by parsing, deduplicating, and transforming it."""
+
     def __init__(
         self,
         xml_content: str,
@@ -17,31 +20,55 @@ class DataProcessor:
         parser_factory: ParserFactory,
         transformer_factory: TransformerFactory,
     ):
+        self.task_id = str(uuid.uuid4())
         self.xml_content = xml_content
         self.device_name = device_name
         self.device_group = device_group
         self.include_shared = include_shared
         self.shared_only = shared_only
         self.logger = logger
+        self.log_context = {
+            "task_id": self.task_id,
+            "device_name": device_name or "shared",
+            "device_group": device_group or "shared",
+            "include_shared": include_shared,
+            "shared_only": shared_only,
+        }
         self.parsers = parser_factory.create_parsers(
             xml_content, device_name, device_group, include_shared, shared_only
         )
         self.transformers = transformer_factory.create_transformers()
-        self._deduped_data = {}
-        self._transformed_apps = None
-        self._transformed_services = None
+        self._deduped_data: Dict[str, List] = {}
 
         self.logger.debug(
-            f"DataProcessor initialized for {'shared' if device_name is None and device_group is None else f'device {device_name}/{device_group}'} "
+            f"DataProcessor initialized for {self._get_section_type()} "
             f"(include_shared: {include_shared}, shared_only: {shared_only})."
         )
+
+    def _get_section_type(self) -> str:
+        """Returns the configuration section type (shared or specific device)."""
+        if self.device_name is None and self.device_group is None:
+            return "shared"
+        return f"device {self.device_name}/{self.device_group}"
+
+    def _log_and_raise(self, error: Exception, context: str):
+        """Log and re-raise exceptions for consistent error handling."""
+        self.logger.error(
+            f"Error in {context}. Task ID: {self.task_id}. Details: {str(error)}",
+            exc_info=True,
+        )
+        raise error
+
+    def _get_section_type(self) -> str:
+        """Returns the configuration section type (shared or specific device)."""
+        if self.device_name is None and self.device_group is None:
+            return "shared"
+        return f"device {self.device_name}/{self.device_group}"
 
     async def parse_all_async(self) -> Dict[str, List]:
         """Parse all configuration elements concurrently."""
         try:
-            self.logger.debug(
-                f"Starting parallel parsing for {"'shared' configurations" if self.shared_only else f'device {self.device_name} in group {self.device_group}'}..."
-            )
+            self.logger.debug(f"Starting parsing. Context: {self.log_context}")
             parse_tasks = {
                 name: asyncio.create_task(self._parse_item(name, parser))
                 for name, parser in self.parsers.items()
@@ -61,56 +88,47 @@ class DataProcessor:
                     )
 
             self.logger.debug(
-                f"Parsing completed. Parsed data summary: "
-                f"{', '.join([f'{k}: {len(v)}' for k, v in parsed_data.items()])}."
+                f"Parsing completed. Summary: {', '.join([f'{k}: {len(v)}' for k, v in parsed_data.items()])}"
             )
             return parsed_data
 
         except Exception as e:
-            self.logger.error(f"Unexpected error during parsing: {str(e)}")
-            raise
+            self._log_and_raise(e, "parse_all_async")
 
     async def _parse_item(self, name: str, parser: Any) -> List[Dict]:
         """Parse a single configuration element."""
         try:
-            if name == "dos_rule":
-                x = 1
             self.logger.debug(
-                f"Parsing '{name}' elements in the {"'shared'" if self.device_name is None and self.device_group is None else f"'device {self.device_name}/{self.device_group}' section"} "
+                f"Parsing '{name}' elements in {self._get_section_type()}. Context: {self.log_context}"
             )
 
             return parser.parse()
         except Exception as e:
-            self.logger.error(f"Error occurred while parsing '{name}': {str(e)}")
-            raise
+            self._log_and_raise(e, f"Parsing item '{name}'")
 
     def deduplicate_all(self, parsed_data: Dict[str, List]) -> Dict[str, List]:
         """Remove duplicates from parsed data."""
         deduped_data = {}
-        section_type = (
-            "shared"
-            if self.device_name is None and self.device_group is None
-            else f"device {self.device_name}/{self.device_group}"
-        )
-        self.logger.debug(f"Deduplicating parsed data from section '{section_type}'")
+        section_type = self._get_section_type()
+        self.logger.debug(f"Deduplicating parsed data from section '{section_type}'.")
 
         for name, data in parsed_data.items():
             self.logger.debug(
-                f"Deduplicating parsed data type '{name}' with {len(data)} items from '{section_type}' section."
+                f"Deduplicating '{name}' with {len(data)} items from '{section_type}'."
             )
             transformer = self.transformers.get(name)
-            if hasattr(transformer, "remove_duplicates"):
+            if transformer and hasattr(transformer, "remove_duplicates"):
                 deduped_data[name] = transformer.remove_duplicates(
                     data, self.logger, name
                 )
                 self.logger.debug(
-                    f"Deduplicating completed for parsed data type '{name}' with {len(deduped_data[name])} unique items retained from '{section_type}' section."
+                    f"Deduplicated '{name}' to {len(deduped_data[name])} unique items."
                 )
             else:
                 deduped_data[name] = data
 
         self.logger.debug(
-            f"Deduplicating completed from from '{section_type}' section. Deduplicated data summary: "
+            f"Deduplication completed. Summary: "
             f"{', '.join([f'{k}: {len(v)}' for k, v in deduped_data.items()])}."
         )
         self._deduped_data = deduped_data
@@ -124,48 +142,34 @@ class DataProcessor:
         try:
             transformer = self.transformers.get(item_type)
             if not transformer:
-                self.logger.debug(f"No transformer found for {item_type}, skipping")
+                self.logger.debug(f"No transformer found for '{item_type}', skipping.")
                 return []
 
-            if item_type == "address_group":
-                address_names = [addr["name"] for addr in data]
-                return [
-                    transformer.transform(
-                        group, self.logger, existing_addresses=address_names
-                    )
-                    for group in data
-                ]
+            transformer_actions = {
+                "address_group": lambda item: transformer.transform(
+                    item,
+                    self.logger,
+                    existing_addresses=[addr["name"] for addr in data],
+                ),
+                "application_group": lambda item: transformer.transform(
+                    item,
+                    self.logger,
+                    existing_applications=self._deduped_data.get("application", []),
+                    existing_services=self._deduped_data.get("service", []),
+                ),
+                "service_group": lambda item: transformer.transform(
+                    item,
+                    self.logger,
+                    existing_services=self._deduped_data.get("service", []),
+                ),
+                "rules": lambda item: transformer.transform(item, self.logger),
+                "profiles": lambda item: transformer.transform(item, self.logger),
+            }
 
-            elif item_type == "application_group":
-                deduped_app = self._deduped_data.get("application", [])
-                deduped_services = self._deduped_data.get("service", [])
-                return [
-                    transformer.transform(
-                        group,
-                        self.logger,
-                        existing_applications=deduped_app,
-                        existing_services=deduped_services,
-                    )
-                    for group in data
-                ]
-
-            elif item_type == "rules":
-                return [transformer.transform(rule, self.logger) for rule in data]
-
-            elif item_type == "service_group":
-                deduped_services = self._deduped_data.get("service", [])
-                return [
-                    transformer.transform(
-                        group, self.logger, existing_services=deduped_services
-                    )
-                    for group in data
-                ]
-
-            elif item_type == "profiles":
-                return [transformer.transform(profile, self.logger) for profile in data]
-
-            else:
-                return [transformer.transform(item, self.logger) for item in data]
+            action = transformer_actions.get(
+                item_type, lambda item: transformer.transform(item, self.logger)
+            )
+            return [action(item) for item in data]
 
         except Exception as e:
             self.logger.error(f"Error transforming '{item_type}': {str(e)}")

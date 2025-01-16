@@ -27,7 +27,7 @@ class DOSParser(BaseParser):
         self.element_type = "profiles.dos-profiles"
 
         self.logger.debug(
-            f"DOSParser initialized for {'shared' if device_name is None and device_group is None else f'device {device_name}/{device_group}'} "
+            f"DOSProfileParser initialized for {'shared' if device_name is None and device_group is None else f'device {device_name}/{device_group}'} "
             f"(include_shared: {include_shared}, shared_only: {shared_only})."
         )
 
@@ -173,70 +173,77 @@ class DOSParser(BaseParser):
             )
             return {}
 
-    def _parse_section(self, section: ET.Element, source_type: str) -> List[Dict]:
-        """Parse DOS profiles from a specific section."""
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
+        """Parse DOS profiles from a list of sections."""
         profiles = []
-
-        try:
-            entries = section.findall("./entry")
+        if len(sections) == 1 and sections[0] is None:
             self.logger.debug(
-                f"Found {len(entries)} DOS profile entries in '{source_type}' section"
+                f"Parsing found 0 DOS profiles in '{source_type}' sections."
             )
+            return None
+        for section in sections:
+            try:
+                entries = section.findall("./entry")
+                self.logger.debug(
+                    f"Found {len(entries)} DOS profile entries in '{source_type}' section"
+                )
 
-            for entry in entries:
-                try:
-                    name = entry.get("name")
-                    if not name:
-                        self.logger.warning(
-                            f"Skipping {source_type} entry with missing name"
+                for entry in entries:
+                    try:
+                        name = entry.get("name")
+                        if not name:
+                            self.logger.warning(
+                                f"Skipping {source_type} entry with missing name"
+                            )
+                            continue
+
+                        profile_type = entry.findtext("type", "aggregate")
+                        profile_data = {
+                            "name": name,
+                            "type": profile_type,
+                            "description": entry.findtext("description", ""),
+                            "source": source_type,
+                            "folder": entry.findtext("folder", ""),
+                        }
+
+                        # Parse configuration based on profile type
+                        if profile_type == "aggregate":
+                            profile_data["flood"] = self._parse_flood_section(
+                                entry.find("flood"), name
+                            )
+                        elif profile_type == "classified":
+                            profile_data["classification"] = (
+                                self._parse_classification_section(entry, name)
+                            )
+
+                        profile_data["resource"] = self._parse_resource_section(
+                            entry, name
                         )
+
+                        if self.validate(profile_data):
+                            profiles.append(profile_data)
+                            self.logger.debug(
+                                f"Successfully parsed DOS profile '{name}' of type '{profile_type}'"
+                            )
+                        else:
+                            self.logger.warning(
+                                f"Validation failed for DOS profile '{name}'"
+                            )
+
+                    except Exception as e:
+                        self.logger.error(f"Error parsing DOS profile entry: {str(e)}")
                         continue
 
-                    profile_type = entry.findtext("type", "aggregate")
-                    profile_data = {
-                        "name": name,
-                        "type": profile_type,
-                        "description": entry.findtext("description", ""),
-                        "source": source_type,
-                        "folder": entry.findtext("folder", ""),
-                    }
-
-                    # Parse configuration based on profile type
-                    if profile_type == "aggregate":
-                        profile_data["flood"] = self._parse_flood_section(
-                            entry.find("flood"), name
-                        )
-                    elif profile_type == "classified":
-                        profile_data["classification"] = (
-                            self._parse_classification_section(entry, name)
-                        )
-
-                    profile_data["resource"] = self._parse_resource_section(entry, name)
-
-                    if self.validate(profile_data):
-                        profiles.append(profile_data)
-                        self.logger.debug(
-                            f"Successfully parsed DOS profile '{name}' of type '{profile_type}'"
-                        )
-                    else:
-                        self.logger.warning(
-                            f"Validation failed for DOS profile '{name}'"
-                        )
-
-                except Exception as e:
-                    self.logger.error(f"Error parsing DOS profile entry: {str(e)}")
-                    continue
-
+            except Exception as e:
+                self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
+                continue
+        if {len(profiles)} > 0:
             self.logger.info(
-                f"Parsing Successful for {len(profiles)} DOS profiles from '{source_type}' section"
+                f"Parsing successful for {len(profiles)} DOS profiles from '{source_type}' sections"
             )
-            return profiles
-
-        except Exception as e:
-            self.logger.error(
-                f"Error parsing '{source_type}' DOS profiles section: {str(e)}"
-            )
-            return profiles
+        return profiles
 
     def parse(self) -> List[Dict]:
         """Parse DOS profile entries from XML."""

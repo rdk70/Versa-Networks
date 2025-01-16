@@ -41,87 +41,91 @@ class ScheduleParser(BaseParser):
         self.logger.debug(f"Validation successful for data: {data}")
         return True
 
-    def _parse_section(self, section: ET.Element, source_type: str) -> List[Dict]:
-        """Parse schedules from a specific section."""
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
+        """Parse schedules from a list of sections."""
         schedules = []
-        try:
-            entries = section.findall("./entry")
-            self.logger.debug(
-                f"Found {len(entries)} schedule entries in '{source_type}' section."
-            )
+        if len(sections) == 1 and sections[0] is None:
+            self.logger.debug(f"Parsing found 0 schedules in '{source_type}' sections.")
+            return None
+        for section in sections:
+            try:
+                entries = section.findall("./entry")
+                self.logger.debug(
+                    f"Found {len(entries)} schedule entries in '{source_type}' section."
+                )
 
-            for entry in entries:
-                try:
-                    name = entry.get("name")
-                    if not name:
-                        self.logger.warning(
-                            f"Skipping '{source_type}' entry with missing name."
-                        )
-                        continue
+                for entry in entries:
+                    try:
+                        name = entry.get("name")
+                        if not name:
+                            self.logger.warning(
+                                f"Skipping '{source_type}' entry with missing name."
+                            )
+                            continue
 
-                    schedule_type = entry.find("schedule-type")
-                    if schedule_type is None:
-                        self.logger.warning(f"Missing schedule type for '{name}'.")
-                        continue
+                        schedule_type = entry.find("schedule-type")
+                        if schedule_type is None:
+                            self.logger.warning(f"Missing schedule type for '{name}'.")
+                            continue
 
-                    # Handle non-recurring schedules
-                    non_recurring = schedule_type.find("non-recurring")
-                    if non_recurring is not None:
-                        members = non_recurring.findall("member")
-                        for member in members:
-                            if member.text:
-                                start_time, end_time = self._parse_time_range(
-                                    member.text, name
-                                )
-                                if start_time and end_time:
+                        # Handle non-recurring schedules
+                        non_recurring = schedule_type.find("non-recurring")
+                        if non_recurring is not None:
+                            members = non_recurring.findall("member")
+                            for member in members:
+                                if member.text:
+                                    start_time, end_time = self._parse_time_range(
+                                        member.text, name
+                                    )
+                                    if start_time and end_time:
+                                        schedules.append(
+                                            {
+                                                "name": name,
+                                                "schedule_type": "non-recurring",
+                                                "start_time": start_time,
+                                                "end_time": end_time,
+                                                "source": source_type,
+                                            }
+                                        )
+
+                        # Handle recurring schedules
+                        recurring = schedule_type.find("recurring")
+                        if recurring is not None:
+                            daily = recurring.find("daily")
+                            if daily is not None:
+                                time_slots = []
+                                for member in daily.findall("member"):
+                                    if member.text:
+                                        start, end = self._parse_time_range(
+                                            member.text, name
+                                        )
+                                        if start and end:
+                                            time_slots.append(f"{start}-{end}")
+                                if time_slots:
                                     schedules.append(
                                         {
                                             "name": name,
-                                            "schedule_type": "non-recurring",
-                                            "start_time": start_time,
-                                            "end_time": end_time,
+                                            "schedule_type": "recurring",
+                                            "recurring_type": "daily",
+                                            "time_slots": time_slots,
                                             "source": source_type,
                                         }
                                     )
 
-                    # Handle recurring schedules
-                    recurring = schedule_type.find("recurring")
-                    if recurring is not None:
-                        daily = recurring.find("daily")
-                        if daily is not None:
-                            time_slots = []
-                            for member in daily.findall("member"):
-                                if member.text:
-                                    start, end = self._parse_time_range(
-                                        member.text, name
-                                    )
-                                    if start and end:
-                                        time_slots.append(f"{start}-{end}")
-                            if time_slots:
-                                schedules.append(
-                                    {
-                                        "name": name,
-                                        "schedule_type": "recurring",
-                                        "recurring_type": "daily",
-                                        "time_slots": time_slots,
-                                        "source": source_type,
-                                    }
-                                )
+                    except Exception as e:
+                        self.logger.error(f"Error parsing schedule entry: {str(e)}")
+                        continue
 
-                except Exception as e:
-                    self.logger.error(f"Error parsing schedule entry: {str(e)}")
-                    continue
-
+            except Exception as e:
+                self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
+                continue
+        if len(schedules) > 0:
             self.logger.info(
-                f"Parsing successful for {len(schedules)} schedules from '{source_type}' section."
+                f"Parsing successful for {len(schedules)} schedules from '{source_type}' sections."
             )
-            return schedules
-
-        except Exception as e:
-            self.logger.error(
-                f"Error parsing '{source_type}' schedule section: {str(e)}"
-            )
-            return schedules
+        return schedules
 
     def _parse_time_range(self, member_text: str, schedule_name: str) -> tuple:
         """Parse time range from member text."""

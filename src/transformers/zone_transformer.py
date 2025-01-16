@@ -22,14 +22,19 @@ class ZoneTransformer(BaseTransformer):
             Dict[str, Any]: Transformed zone configuration
         """
         zone = data
+        network_type = zone.get("network_type")
+        interface = zone.get("interface")
+        details = "/".join(filter(None, [network_type, interface]))
         logger.debug(
-            f"Processing zone '{zone['name']}': {zone['network_type']}/{zone['interface']}"
+            f"Processing zone '{zone['name']}': {details}"
+            if details
+            else f"Processing zone '{zone['name']}'"
         )
 
         transformed = {
             "zone": {
                 "name": self.clean_string(zone["name"], logger),
-                "description": f"PAN {zone['network_type']} zone - {zone['interface']}",
+                "description": f"PAN {network_type} zone - {interface}",
                 "tag": [],
             }
         }

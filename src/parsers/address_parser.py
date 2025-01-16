@@ -69,67 +69,72 @@ class AddressParser(BaseParser):
         except (ValueError, AttributeError):
             return False
 
-    def _parse_section(self, section: ET.Element, source_type: str) -> List[Dict]:
-        """Parse addresses from a specific section."""
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
+        """Parse addresses from a list of sections."""
         addresses = []
-        try:
-            entries = section.findall("./entry")
-            self.logger.debug(
-                f"Found {len(entries)} address entries in '{source_type}' section."
-            )
+        if len(sections) == 1 and sections[0] is None:
+            self.logger.debug(f"Parsing found 0 addresses in '{source_type}' section.")
+            return None
+        for section in sections:
+            try:
+                entries = section.findall("./entry")
+                self.logger.debug(
+                    f"Found {len(entries)} address entries in '{source_type}' section."
+                )
 
-            for entry in entries:
-                try:
-                    address_data = {
-                        "name": entry.get("name"),
-                        "ip-netmask": entry.findtext("ip-netmask", ""),
-                        "description": entry.findtext("description", ""),
-                        "source": source_type,
-                    }
+                for entry in entries:
+                    try:
+                        address_data = {
+                            "name": entry.get("name"),
+                            "ip-netmask": entry.findtext("ip-netmask", ""),
+                            "description": entry.findtext("description", ""),
+                            "source": source_type,
+                        }
 
-                    if not address_data["name"]:
-                        self.logger.warning(
-                            f"Skipping '{source_type}' entry with missing name."
+                        if not address_data["name"]:
+                            self.logger.warning(
+                                f"Skipping '{source_type}' entry with missing name."
+                            )
+                            continue
+
+                        if not address_data["ip-netmask"]:
+                            self.logger.warning(
+                                f"Skipping address '{address_data['name']}' with missing ip-netmask."
+                            )
+                            continue
+
+                        if self.validate(address_data):
+                            addresses.append(address_data)
+                            self.logger.debug(
+                                f"Address '{address_data['name']}' added to addresses list from '{source_type}' section."
+                            )
+                        else:
+                            self.logger.warning(f"Invalid address data: {address_data}")
+
+                    except Exception as e:
+                        self.logger.error(
+                            f"Error parsing '{source_type}' address entry: {str(e)}"
                         )
                         continue
 
-                    if not address_data["ip-netmask"]:
-                        self.logger.warning(
-                            f"Skipping address '{address_data['name']}' with missing ip-netmask."
-                        )
-                        continue
+            except Exception as e:
+                self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
+                continue
 
-                    if self.validate(address_data):
-                        addresses.append(address_data)
-                        self.logger.debug(
-                            f"Address '{address_data['name']}' added to addresses list from '{source_type}' section."
-                        )
-                    else:
-                        self.logger.warning(f"Invalid address data: {address_data}")
-
-                except Exception as e:
-                    self.logger.error(
-                        f"Error parsing '{source_type}' address entry: {str(e)}"
-                    )
-                    continue
-
+        if {len(addresses)} > 0:
             self.logger.info(
-                f"Parsing successful for {len(addresses)} addresses from '{source_type}' section."
+                f"Parsing successful for {len(addresses)} addresses from '{source_type}' sections."
             )
-            return addresses
-
-        except Exception as e:
-            self.logger.error(
-                f"Error parsing '{source_type}' address section: {str(e)}"
-            )
-            return addresses
+        return addresses
 
     def parse(self) -> List[Dict]:
         """Parse address entries from XML."""
         try:
             # self.logger.debug("Starting parsing of address entries.")
             self.logger.debug(
-                f"Parsing '{self.element_type}' elements in the section {"'shared'" if self.shared_only else f'device {self.device_name}/{self.device_group}'} section."
+                f"Parsing '{self.element_type}' elements in the {"'shared'" if self.shared_only else f'device {self.device_name}/{self.device_group}'} element."
             )
             addresses = self.get_parseable_content()
 

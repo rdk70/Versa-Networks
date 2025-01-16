@@ -438,11 +438,13 @@ class ProfileParser(BaseParser):
             )
             return None
 
-    def _parse_section(self, section: ET.Element, source_type: str) -> List[Dict]:
-        """Parse profiles from a specific section."""
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
+        """Parse profiles from a list of sections."""
         profiles = []
         try:
-            # Parse each profile type
+            # Define profile types and their corresponding parsers
             profile_types = {
                 "dos": self._parse_dos_profile,
                 "antivirus": self._parse_antivirus_profile,
@@ -460,33 +462,35 @@ class ProfileParser(BaseParser):
                 "pcap": self._parse_pcap_profile,
             }
 
-            for profile_type, parser_func in profile_types.items():
-                profile_section = section.find(profile_type)
-                if profile_section is not None:
-                    for entry in profile_section.findall("entry"):
-                        name = entry.get("name")
-                        if not name:
-                            self.logger.warning(
-                                f"Skipping {profile_type} entry with missing name"
-                            )
-                            continue
+            # Iterate through each section and parse profiles
+            for section in sections:
+                for profile_type, parser_func in profile_types.items():
+                    profile_section = section.find(profile_type)
+                    if profile_section is not None:
+                        for entry in profile_section.findall("entry"):
+                            name = entry.get("name")
+                            if not name:
+                                self.logger.warning(
+                                    f"Skipping {profile_type} entry with missing name"
+                                )
+                                continue
 
-                        profile_data = parser_func(entry, name)
-                        if profile_data and self.validate(profile_data):
-                            profile_data["source"] = source_type
-                            profiles.append(profile_data)
-                            self.logger.debug(
-                                f"Successfully parsed {profile_type} profile '{name}' from {source_type}"
-                            )
+                            profile_data = parser_func(entry, name)
+                            if profile_data and self.validate(profile_data):
+                                profile_data["source"] = source_type
+                                profiles.append(profile_data)
+                                self.logger.debug(
+                                    f"Successfully parsed {profile_type} profile '{name}' from {source_type}"
+                                )
 
             self.logger.info(
-                f"Parsing successful for {len(profiles)} profiles from '{source_type}' section"
+                f"Parsing successful for {len(profiles)} profiles from '{source_type}' sections"
             )
             return profiles
 
         except Exception as e:
             self.logger.error(
-                f"Error parsing '{source_type}' profiles section: {str(e)}"
+                f"Error parsing '{source_type}' profiles sections: {str(e)}"
             )
             return profiles
 

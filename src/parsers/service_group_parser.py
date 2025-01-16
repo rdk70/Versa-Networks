@@ -69,73 +69,79 @@ class ServiceGroupParser(BaseParser):
             )
             return members
 
-    def _parse_section(self, section: ET.Element, source_type: str) -> List[Dict]:
-        """Parse service group entries from a specific section."""
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
+        """Parse service group entries from a list of sections."""
         groups = []
-        try:
-            entries = section.findall("./entry")
-            self.logger.debug(
-                f"Found {len(entries)} service group entries in '{source_type}' section."
+        if len(sections) == 1 and sections[0] is None:
+            self.logger.info(
+                f"Parsing found 0 service groups in '{source_type}' sections."
             )
+            return None
+        for section in sections:
+            try:
+                entries = section.findall("./entry")
+                self.logger.debug(
+                    f"Found {len(entries)} service group entries in '{source_type}' section."
+                )
 
-            for entry in entries:
-                try:
-                    name = entry.get("name")
-                    self.logger.debug(
-                        f"Parsing service group '{name}' from '{source_type}' section."
-                    )
-                    if not name:
-                        self.logger.warning(
-                            f"Skipping '{source_type}' entry with missing name."
+                for entry in entries:
+                    try:
+                        name = entry.get("name")
+                        self.logger.debug(
+                            f"Parsing service group '{name}' from '{source_type}' section."
                         )
-                        continue
-
-                    group_data = {
-                        "name": name,
-                        "members": self._parse_members(entry, name),
-                        "description": entry.findtext("description", ""),
-                        "source": source_type,
-                    }
-
-                    if self.validate(group_data):
-                        if not group_data["members"]:
+                        if not name:
                             self.logger.warning(
-                                f"Skipping empty service group '{name}'."
+                                f"Skipping '{source_type}' entry with missing name."
                             )
                             continue
 
-                        groups.append(group_data)
+                        group_data = {
+                            "name": name,
+                            "members": self._parse_members(entry, name),
+                            "description": entry.findtext("description", ""),
+                            "source": source_type,
+                        }
 
-                        self.logger.debug(
-                            f"Appended service group '{name}' with {len(group_data['members'])} members from section '{source_type}"
+                        if self.validate(group_data):
+                            if not group_data["members"]:
+                                self.logger.warning(
+                                    f"Skipping empty service group '{name}'."
+                                )
+                                continue
+
+                            groups.append(group_data)
+
+                            self.logger.debug(
+                                f"Appended service group '{name}' with {len(group_data['members'])} members from section '{source_type}'"
+                            )
+                        else:
+                            self.logger.warning(
+                                f"Invalid data for '{source_type}' service group '{name}'."
+                            )
+
+                    except Exception as e:
+                        self.logger.error(
+                            f"Error parsing '{source_type}' service group entry: {str(e)}"
                         )
-                    else:
-                        self.logger.warning(
-                            f"Invalid data for '{source_type}' service group '{name}'."
-                        )
+                        continue
 
-                except Exception as e:
-                    self.logger.error(
-                        f"Error parsing '{source_type}' service group entry: {str(e)}"
-                    )
-                    continue
-
+            except Exception as e:
+                self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
+                continue
+        if len(groups) > 0:
             self.logger.info(
-                f"Parsing successful for {len(groups)} service groups from '{source_type}' section."
+                f"Parsing successful for {len(groups)} service groups from '{source_type}' sections."
             )
-            return groups
-
-        except Exception as e:
-            self.logger.error(
-                f"Error parsing '{source_type}' service group section: {str(e)}"
-            )
-            return groups
+        return groups
 
     def parse(self) -> List[Dict]:
         """Parse service group entries from XML."""
         try:
             self.logger.debug(
-                f"Parsing '{self.element_type}' element from section {'\'shared\'' if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
+                f"Parsing '{self.element_type}' element from section {"'shared'" if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
             )
             groups = self.get_parseable_content()
 

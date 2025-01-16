@@ -20,6 +20,10 @@ class DecryptionParser(BaseParser):
             xml_content, device_name, device_group, logger, include_shared, shared_only
         )
         self.element_type = "profiles.ssl-decryption"
+        self.logger.debug(
+            f"DecryptionProfileParser initialized for {'shared' if device_name is None and device_group is None else f'device {device_name}/{device_group}'} "
+            f"(include_shared: {include_shared}, shared_only: {shared_only})."
+        )
 
     def validate(self, data: Dict) -> bool:
         """Validate SSL Decryption profile data structure."""
@@ -163,79 +167,85 @@ class DecryptionParser(BaseParser):
             )
             return options
 
-    def _parse_section(self, section: ET.Element, source_type: str) -> List[Dict]:
-        """Parse SSL Decryption profiles from a specific section."""
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
+        """Parse SSL Decryption profiles from a list of sections."""
         profiles = []
-
-        try:
-            entries = section.findall("./entry")
+        if len(sections) == 1 and sections[0] is None:
             self.logger.debug(
-                f"Found {len(entries)} SSL Decryption profile entries in '{source_type}' section"
+                f"Parsing found 0 Decryption profiles in '{source_type}' sections."
             )
+            return None
+        for section in sections:
+            try:
+                entries = section.findall("./entry")
+                self.logger.debug(
+                    f"Found {len(entries)} SSL Decryption profile entries in '{source_type}' section"
+                )
 
-            for entry in entries:
-                try:
-                    name = entry.get("name")
-                    if not name:
-                        self.logger.warning(
-                            f"Skipping {source_type} entry with missing name"
+                for entry in entries:
+                    try:
+                        name = entry.get("name")
+                        if not name:
+                            self.logger.warning(
+                                f"Skipping {source_type} entry with missing name"
+                            )
+                            continue
+
+                        profile_data = {
+                            "name": name,
+                            "description": entry.findtext("description", ""),
+                            "decryption_type": entry.findtext(
+                                "decryption-type", "certificate-inspection"
+                            ),
+                            "certificate": entry.findtext("certificate", ""),
+                            "inbound_inspection": entry.findtext(
+                                "inbound-inspection", "no"
+                            ),
+                            "source": source_type,
+                        }
+
+                        # Parse TLS protocols
+                        tls_protocols = self._parse_tls_protocols(entry, name)
+                        if tls_protocols:
+                            profile_data["tls_protocols"] = tls_protocols
+
+                        # Parse decryption exclusions
+                        exclusions = self._parse_decryption_exclusions(entry, name)
+                        if exclusions:
+                            profile_data["decryption_exclusions"] = exclusions
+
+                        # Parse options
+                        options = self._parse_options(entry, name)
+                        if options:
+                            profile_data["options"] = options
+
+                        if self.validate(profile_data):
+                            profiles.append(profile_data)
+                            self.logger.debug(
+                                f"Successfully parsed SSL Decryption profile '{name}'"
+                            )
+                        else:
+                            self.logger.warning(
+                                f"Validation failed for SSL Decryption profile '{name}'"
+                            )
+
+                    except Exception as e:
+                        self.logger.error(
+                            f"Error parsing SSL Decryption profile entry: {str(e)}"
                         )
                         continue
 
-                    profile_data = {
-                        "name": name,
-                        "description": entry.findtext("description", ""),
-                        "decryption_type": entry.findtext(
-                            "decryption-type", "certificate-inspection"
-                        ),
-                        "certificate": entry.findtext("certificate", ""),
-                        "inbound_inspection": entry.findtext(
-                            "inbound-inspection", "no"
-                        ),
-                        "source": source_type,
-                    }
+            except Exception as e:
+                self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
+                continue
 
-                    # Parse TLS protocols
-                    tls_protocols = self._parse_tls_protocols(entry, name)
-                    if tls_protocols:
-                        profile_data["tls_protocols"] = tls_protocols
-
-                    # Parse decryption exclusions
-                    exclusions = self._parse_decryption_exclusions(entry, name)
-                    if exclusions:
-                        profile_data["decryption_exclusions"] = exclusions
-
-                    # Parse options
-                    options = self._parse_options(entry, name)
-                    if options:
-                        profile_data["options"] = options
-
-                    if self.validate(profile_data):
-                        profiles.append(profile_data)
-                        self.logger.debug(
-                            f"Successfully parsed SSL Decryption profile '{name}'"
-                        )
-                    else:
-                        self.logger.warning(
-                            f"Validation failed for SSL Decryption profile '{name}'"
-                        )
-
-                except Exception as e:
-                    self.logger.error(
-                        f"Error parsing SSL Decryption profile entry: {str(e)}"
-                    )
-                    continue
-
+        if {len(profiles)} > 0:
             self.logger.info(
-                f"Successfully parsed {len(profiles)} SSL Decryption profiles from '{source_type}' section"
+                f"Parsing successful for {len(profiles)} SSL Decryption profiles from '{source_type}' sections"
             )
-            return profiles
-
-        except Exception as e:
-            self.logger.error(
-                f"Error parsing '{source_type}' SSL Decryption profiles section: {str(e)}"
-            )
-            return profiles
+        return profiles
 
     def parse(self) -> List[Dict]:
         """Parse SSL Decryption profile entries from XML."""

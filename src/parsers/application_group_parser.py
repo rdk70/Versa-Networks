@@ -65,70 +65,76 @@ class ApplicationGroupParser(BaseParser):
             )
             return members
 
-    def _parse_section(self, section: ET.Element, source_type: str) -> List[Dict]:
-        """Parse application groups from a specific section."""
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
+        """Parse application groups from a list of sections."""
         groups = []
-        try:
-            entries = section.findall("./entry")
-            self.logger.debug(
-                f"Found {len(entries)} application group entries in '{source_type}' section."
+        if len(sections) == 1 and sections[0] is None:
+            self.logger.info(
+                f"Parsing found 0 application groups in '{source_type}' sections."
             )
+            return None
+        for section in sections:
+            try:
+                entries = section.findall("./entry")
+                self.logger.debug(
+                    f"Found {len(entries)} application group entries in '{source_type}' section."
+                )
 
-            for entry in entries:
-                try:
-                    name = entry.get("name")
-                    if not name:
-                        self.logger.warning(
-                            f"Skipping '{source_type}' entry with missing name."
-                        )
-                        continue
-
-                    group_data = {
-                        "name": name,
-                        "description": entry.findtext("description", ""),
-                        "members": self._parse_members(entry, name),
-                        "source": source_type,
-                    }
-
-                    if self.validate(group_data):
-                        if not group_data["members"]:
+                for entry in entries:
+                    try:
+                        name = entry.get("name")
+                        if not name:
                             self.logger.warning(
-                                f"Skipping empty application group '{name}'."
+                                f"Skipping '{source_type}' entry with missing name."
                             )
                             continue
 
-                        groups.append(group_data)
-                        self.logger.debug(
-                            f"Successfully parsed application group '{name}' "
-                            f"with {len(group_data['members'])} members from section '{source_type}'."
-                        )
-                    else:
-                        self.logger.warning(
-                            f"Invalid data for '{source_type}' application group '{name}'."
-                        )
+                        group_data = {
+                            "name": name,
+                            "description": entry.findtext("description", ""),
+                            "members": self._parse_members(entry, name),
+                            "source": source_type,
+                        }
 
-                except Exception as e:
-                    self.logger.error(
-                        f"Error parsing '{source_type}' application group entry: {str(e)}"
-                    )
-                    continue
+                        if self.validate(group_data):
+                            if not group_data["members"]:
+                                self.logger.warning(
+                                    f"Skipping empty application group '{name}'."
+                                )
+                                continue
 
+                            groups.append(group_data)
+                            self.logger.debug(
+                                f"Successfully parsed application group '{name}' "
+                                f"with {len(group_data['members'])} members from section '{source_type}'."
+                            )
+                        else:
+                            self.logger.warning(
+                                f"Invalid data for '{source_type}' application group '{name}'."
+                            )
+
+                    except Exception as e:
+                        self.logger.error(
+                            f"Error parsing '{source_type}' application group entry: {str(e)}"
+                        )
+                        continue
+
+            except Exception as e:
+                self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
+                continue
+        if {len(groups)} > 0:
             self.logger.info(
-                f"Parsing successful for {len(groups)} application groups from '{source_type}' section."
+                f"Parsing successful for {len(groups)} application groups from '{source_type}' sections."
             )
-            return groups
-
-        except Exception as e:
-            self.logger.error(
-                f"Error parsing '{source_type}' application group section: {str(e)}"
-            )
-            return groups
+        return groups
 
     def parse(self) -> List[Dict]:
         """Parse application group entries from XML."""
         try:
             self.logger.debug(
-                f"Parsing '{self.element_type}' element from section {'\'shared\'' if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
+                f"Parsing '{self.element_type}' element from {"'shared'" if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
             )
             groups = self.get_parseable_content()
 

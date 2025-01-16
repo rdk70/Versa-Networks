@@ -20,6 +20,10 @@ class AntivirusParser(BaseParser):
             xml_content, device_name, device_group, logger, include_shared, shared_only
         )
         self.element_type = "profiles.anti-virus"
+        self.logger.debug(
+            f"AntivirusProfileParser initialized for {'shared' if device_name is None and device_group is None else f'device {device_name}/{device_group}'} "
+            f"(include_shared: {include_shared}, shared_only: {shared_only})."
+        )
 
     def validate(self, data: Dict) -> bool:
         """Validate antivirus profile data structure."""
@@ -120,90 +124,95 @@ class AntivirusParser(BaseParser):
             )
             raise
 
-    def _parse_section(self, section: "ET.Element", source_type: str) -> List[Dict]:
+    def _parse_section(
+        self, sections: List["ET.Element"], source_type: str
+    ) -> List[Dict]:
         """
-        Parse antivirus profiles from a specific XML section.
+        Parse antivirus profiles from a list of XML sections.
 
         Args:
-            section (Element): The XML element that contains the profile entries.
+            sections (List[Element]): A list of XML elements that contain the profile entries.
             source_type (str): The type of source from which the profiles are being parsed.
 
         Returns:
             List[Dict]: A list of dictionaries representing the parsed antivirus profiles.
         """
         profiles = []
-
-        try:
-            entries = section.findall("./entry")
+        if len(sections) == 1 and sections[0] is None:
             self.logger.debug(
-                f"Found {len(entries)} antivirus profile entries in '{source_type}' section"
+                f"Parsing found 0 Antivirus profiles in '{source_type}' sections."
             )
+            return None
+        for section in sections:
+            try:
+                entries = section.findall("./entry")
+                self.logger.debug(
+                    f"Found {len(entries)} antivirus profile entries in '{source_type}' section"
+                )
 
-            for entry in entries:
-                try:
-                    name = entry.get("name")
-                    if not name:
-                        self.logger.warning(
-                            f"Skipping {source_type} entry with missing name"
+                for entry in entries:
+                    try:
+                        name = entry.get("name")
+                        if not name:
+                            self.logger.warning(
+                                f"Skipping {source_type} entry with missing name"
+                            )
+                            continue
+
+                        profile_data = {
+                            "name": name,
+                            "description": entry.findtext("description", ""),
+                            "source": source_type,
+                        }
+
+                        # Parse threat section
+                        threat_element = entry.find("threats")
+                        if threat_element is not None:
+                            profile_data["threat"] = self._parse_threat_section(
+                                threat_element, name
+                            )
+                        else:
+                            self.logger.warning(
+                                f"Missing threat section in profile '{name}'"
+                            )
+                            continue
+
+                        # Parse options section
+                        options_element = entry.find("options")
+                        if options_element is not None:
+                            profile_data["options"] = self._parse_options_section(
+                                options_element, name
+                            )
+                        else:
+                            self.logger.warning(
+                                f"Missing options section in profile '{name}'"
+                            )
+                            continue
+
+                        if self.validate(profile_data):
+                            profiles.append(profile_data)
+                            self.logger.debug(
+                                f"Parsing successful for antivirus profile '{name}'"
+                            )
+                        else:
+                            self.logger.warning(
+                                f"Validation failed for antivirus profile '{name}'"
+                            )
+
+                    except Exception as entry_exception:
+                        self.logger.error(
+                            f"Error parsing antivirus profile entry (name='{name if 'name' in locals() else 'unknown'}'): {entry_exception}"
                         )
                         continue
 
-                    profile_data = {
-                        "name": name,
-                        "description": entry.findtext("description", ""),
-                        "source": source_type,
-                    }
-
-                    # Parse threat section
-                    threat_element = entry.find("threats")
-                    if threat_element is not None:
-                        profile_data["threat"] = self._parse_threat_section(
-                            threat_element, name
-                        )
-                    else:
-                        self.logger.warning(
-                            f"Missing threat section in profile '{name}'"
-                        )
-                        continue
-
-                    # Parse options section
-                    options_element = entry.find("options")
-                    if options_element is not None:
-                        profile_data["options"] = self._parse_options_section(
-                            options_element, name
-                        )
-                    else:
-                        self.logger.warning(
-                            f"Missing options section in profile '{name}'"
-                        )
-                        continue
-
-                    if self.validate(profile_data):
-                        profiles.append(profile_data)
-                        self.logger.debug(
-                            f"Parsing successful for antivirus profile '{name}'"
-                        )
-                    else:
-                        self.logger.warning(
-                            f"Validation failed for antivirus profile '{name}'"
-                        )
-
-                except Exception as entry_exception:
-                    self.logger.error(
-                        f"Error parsing antivirus profile entry (name='{name if 'name' in locals() else 'unknown'}'): {entry_exception}"
-                    )
-                    continue
-
+            except Exception as e:
+                self.logger.error(f"Error processing '{source_type}' section: {e}")
+                continue
+        if {len(profiles)} > 0:
             self.logger.info(
-                f"Parsing successful for {len(profiles)} antivirus profiles from '{source_type}' section"
+                f"Parsing successful for {len(profiles)} antivirus profiles from '{source_type}' sections"
             )
-            return profiles
-
-        except Exception as e:
-            self.logger.error(
-                f"Error parsing '{source_type}' antivirus profiles section: {e}"
-            )
-            return profiles
+        return profiles
 
     def parse(self) -> List[Dict]:
         """Parse antivirus profile entries from XML."""

@@ -68,94 +68,102 @@ class ApplicationParser(BaseParser):
             self.logger.error(f"Error parsing tags: {str(e)}")
         return tags
 
-    def _parse_section(self, section: ET.Element, source_type: str) -> List[Dict]:
-        """Parse applications from a specific section."""
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
+        """Parse applications from a list of sections."""
         applications = []
-        try:
-            entries = section.findall("./entry")
+        if len(sections) == 1 and sections[0] is None:
             self.logger.debug(
-                f"Found {len(entries)} application entries in '{source_type}' section."
+                f"Parsing found 0 applications in '{source_type}' sections."
             )
+            return None
+        for section in sections:
+            try:
+                entries = section.findall("./entry")
+                self.logger.debug(
+                    f"Found {len(entries)} application entries in '{source_type}' section."
+                )
 
-            for entry in entries:
-                try:
-                    name = entry.get("name")
-                    if not name:
-                        self.logger.warning(
-                            f"Skipping '{source_type}' entry with missing name."
+                for entry in entries:
+                    try:
+                        name = entry.get("name")
+                        if not name:
+                            self.logger.warning(
+                                f"Skipping '{source_type}' entry with missing name."
+                            )
+                            continue
+
+                        app_data = {
+                            "name": name,
+                            "description": entry.findtext("description", "").strip(),
+                            "timeout": entry.findtext("timeout", "").strip(),
+                            "tcp_timeout": entry.findtext("tcp-timeout", "").strip(),
+                            "udp_timeout": entry.findtext("udp-timeout", "").strip(),
+                            "risk": entry.findtext("risk", "").strip(),
+                            "category": entry.findtext("category", "").strip(),
+                            "subcategory": entry.findtext("subcategory", "").strip(),
+                            "technology": entry.findtext("technology", "").strip(),
+                            "evasive_behavior": entry.findtext(
+                                "evasive-behavior", "no"
+                            ).strip(),
+                            "consume_big_bandwidth": entry.findtext(
+                                "consume-big-bandwidth", "no"
+                            ).strip(),
+                            "used_by_malware": entry.findtext(
+                                "used-by-malware", "no"
+                            ).strip(),
+                            "able_to_transfer_file": entry.findtext(
+                                "able-to-transfer-file", "no"
+                            ).strip(),
+                            "has_known_vulnerability": entry.findtext(
+                                "has-known-vulnerability", "no"
+                            ).strip(),
+                            "tunnel_other_application": entry.findtext(
+                                "tunnel-other-application", "no"
+                            ).strip(),
+                            "prone_to_misuse": entry.findtext(
+                                "prone-to-misuse", "no"
+                            ).strip(),
+                            "pervasive_use": entry.findtext(
+                                "pervasive-use", "no"
+                            ).strip(),
+                            "default_ports": self._parse_default_ports(entry, name),
+                            "tags": self._parse_tags(entry),
+                            "source": source_type,
+                        }
+
+                        if self.validate(app_data):
+                            applications.append(app_data)
+                            self.logger.debug(
+                                f"Appended application '{name}' with category='{app_data['category']}', "
+                                f"subcategory='{app_data['subcategory']}' to applications for '{source_type}' section."
+                            )
+                        else:
+                            self.logger.warning(
+                                f"Invalid data for '{source_type}' application '{name}'."
+                            )
+
+                    except Exception as e:
+                        self.logger.error(
+                            f"Error parsing '{source_type}' application entry: {str(e)}"
                         )
                         continue
 
-                    app_data = {
-                        "name": name,
-                        "description": entry.findtext("description", "").strip(),
-                        "timeout": entry.findtext("timeout", "").strip(),
-                        "tcp_timeout": entry.findtext("tcp-timeout", "").strip(),
-                        "udp_timeout": entry.findtext("udp-timeout", "").strip(),
-                        "risk": entry.findtext("risk", "").strip(),
-                        "category": entry.findtext("category", "").strip(),
-                        "subcategory": entry.findtext("subcategory", "").strip(),
-                        "technology": entry.findtext("technology", "").strip(),
-                        "evasive_behavior": entry.findtext(
-                            "evasive-behavior", "no"
-                        ).strip(),
-                        "consume_big_bandwidth": entry.findtext(
-                            "consume-big-bandwidth", "no"
-                        ).strip(),
-                        "used_by_malware": entry.findtext(
-                            "used-by-malware", "no"
-                        ).strip(),
-                        "able_to_transfer_file": entry.findtext(
-                            "able-to-transfer-file", "no"
-                        ).strip(),
-                        "has_known_vulnerability": entry.findtext(
-                            "has-known-vulnerability", "no"
-                        ).strip(),
-                        "tunnel_other_application": entry.findtext(
-                            "tunnel-other-application", "no"
-                        ).strip(),
-                        "prone_to_misuse": entry.findtext(
-                            "prone-to-misuse", "no"
-                        ).strip(),
-                        "pervasive_use": entry.findtext("pervasive-use", "no").strip(),
-                        "default_ports": self._parse_default_ports(entry, name),
-                        "tags": self._parse_tags(entry),
-                        "source": source_type,
-                    }
-
-                    if self.validate(app_data):
-                        applications.append(app_data)
-                        self.logger.debug(
-                            f"Appended application '{name}' with category='{app_data['category']}', "
-                            f"subcategory='{app_data['subcategory']}' to applications for '{source_type}' section."
-                        )
-                    else:
-                        self.logger.warning(
-                            f"Invalid data for '{source_type}' application '{name}'."
-                        )
-
-                except Exception as e:
-                    self.logger.error(
-                        f"Error parsing '{source_type}' application entry: {str(e)}"
-                    )
-                    continue
-
+            except Exception as e:
+                self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
+                continue
+        if len(applications) > 0:
             self.logger.info(
-                f"Parsing successful for {len(applications)} applications from '{source_type}' section."
+                f"Parsing successful for {len(applications)} applications from '{source_type}' sections."
             )
-            return applications
-
-        except Exception as e:
-            self.logger.error(
-                f"Error parsing '{source_type}' application section: {str(e)}"
-            )
-            return applications
+        return applications
 
     def parse(self) -> List[Dict]:
         """Parse application entries from XML."""
         try:
             self.logger.debug(
-                f"Parsing '{self.element_type}' element from section {'\'shared\'' if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
+                f"Parsing '{self.element_type}' element from section {"'shared'" if self.shared_only else f'device {self.device_name}/{self.device_group}'} "
             )
             applications = self.get_parseable_content()
 

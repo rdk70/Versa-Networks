@@ -127,9 +127,7 @@ async def process_template(
             ProcessingStage.UPLOAD,
             logger,
         )
-        logger.info(
-            f"Completed data upload for template '{template['name']}'. Summary:"
-        )
+        logger.info(f"Completed data upload for template '{template['name']}'")
 
     except Exception as e:
         logger.error(f"Error processing template '{template['name']}': {str(e)}")

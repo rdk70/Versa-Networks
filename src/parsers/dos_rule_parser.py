@@ -141,32 +141,39 @@ class DOSRuleParser(BaseParser):
             self.logger.error(f"Error parsing DOS rule entry '{name}': {str(e)}")
             return None
 
-    def _parse_section(self, section: ET.Element, source_type: str) -> List[Dict]:
-        """Parse DOS rules from a specific section."""
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
+        """Parse DOS rules from a list of sections."""
         rules = []
-        try:
-            dos_section = section.find("dos/rules")
-            if dos_section is not None:
-                entries = dos_section.findall("entry")
-                self.logger.debug(
-                    f"Found {len(entries)} DOS rule entries in '{source_type}' section."
+
+        if len(sections) == 1 and sections[0] is None:
+            self.logger.info(f"Parsing found 0 DOS rules in '{source_type}' sections.")
+            return None
+        for section in sections:
+            try:
+                dos_section = section.find("dos/rules")
+                if dos_section is not None:
+                    entries = dos_section.findall("entry")
+                    self.logger.debug(
+                        f"Found {len(entries)} DOS rule entries in '{source_type}' section."
+                    )
+
+                    for entry in entries:
+                        rule = self._parse_rule_entry(entry, source_type)
+                        if rule:
+                            rules.append(rule)
+
+            except Exception as e:
+                self.logger.error(
+                    f"Error processing '{source_type}' DOS rules section: {str(e)}"
                 )
-
-                for entry in entries:
-                    rule = self._parse_rule_entry(entry, source_type)
-                    if rule:
-                        rules.append(rule)
-
+                continue
+        if len(rules) > 0:
             self.logger.info(
-                f"Successfully parsed {len(rules)} DOS rules from '{source_type}' section"
+                f"Parsing successful for {len(rules)} DOS rules from '{source_type}' sections."
             )
-            return rules
-
-        except Exception as e:
-            self.logger.error(
-                f"Error parsing '{source_type}' DOS rules section: {str(e)}"
-            )
-            return rules
+        return rules
 
     def parse(self) -> List[Dict]:
         """Parse DOS rules from both PRE and POST rulebases."""
@@ -181,18 +188,14 @@ class DOSRuleParser(BaseParser):
                     if dg_element is not None:
                         dg_rules = self._parse_section(dg_element, "device-group")
                         rules.extend(dg_rules)
-                        self.logger.info(
-                            f"Parsed {len(dg_rules)} DOS rules from '{self.device_name}/{self.device_group}' in '{rulebase.value}'"
-                        )
+                        # self.logger.info(f"Parsing successful for {len(dg_rules)} DOS rules from '{self.device_name}/{self.device_group}' in '{rulebase.value}'")
 
                 if self.include_shared:
                     shared_element = self.get_shared_element(rulebase.value)
                     if shared_element is not None:
                         shared_rules = self._parse_section(shared_element, "shared")
                         rules.extend(shared_rules)
-                        self.logger.info(
-                            f"Parsed {len(shared_rules)} DOS rules from '{rulebase.value}' in shared section"
-                        )
+                        # self.logger.info(f"Parsing successful for {len(shared_rules)} DOS rules from '{rulebase.value}' in shared section")
 
             self.logger.debug(f"Successfully parsed {len(rules)} total DOS rules")
             return rules
