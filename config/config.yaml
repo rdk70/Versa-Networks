@@ -119,10 +119,10 @@ uploaders:
   application: true
   application_filter: true
   application_group: true
-  interface: False              # !!able to create interfaces in next gen firewall service template!!
+  interface: False              # !!Unable to create interfaces in next gen firewall service template!!
   rules: true                   # Firewall security rules
   schedule: true
-  service: false                # Turn off for testing
+  service: true                # Turn off for testing
   service_group: false          # Service groups are not supported at this time.
   zone: true
   dos_rules: true
@@ -159,7 +159,7 @@ parsers:
   zone: true
   dos_rules: true
   profiles:
-    enabled: false
+    enabled: True
     types:
       antivirus: true
       url-filtering: false
@@ -195,7 +195,7 @@ transformers:
   zone: true
   dos-rules: true
   profiles:
-    enabled: false
+    enabled: true
     types:
       antivirus: true
       url-filtering: false      # url-filtering profiles are not supported at this time.
