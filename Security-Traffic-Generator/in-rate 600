@@ -1,0 +1,2 @@
+# Nmap 7.95 scan initiated Thu Jan 30 12:06:47 2025 as: nmap -sU "-min-rate 600" 192.168.1.1
+# Nmap done at Thu Jan 30 12:06:51 2025 -- 1 IP address (0 hosts up) scanned in 4.09 seconds
