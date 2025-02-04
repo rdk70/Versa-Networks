@@ -179,9 +179,7 @@ parsers:
 transformers:
   # Removes duplicate objects during the transformation process.
   remove_duplicates: true
-
-  # Removes objects with duplicate names. Set to false to retain all names.
-  remove_duplicate_names: true
+  
   address: true
   address_group: true
   application: true
