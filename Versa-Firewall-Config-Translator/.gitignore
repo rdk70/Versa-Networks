@@ -1,6 +1,0 @@
-.env
-*.log
-__pycache__/
-*.pyc
-./Versa-Firewall-Config-Translator/src/core/reference
-./Versa-Firewall-Config-Translator/src/core/Future
