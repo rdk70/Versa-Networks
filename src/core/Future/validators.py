@@ -33,6 +33,7 @@ import string
 import time
 from dataclasses import dataclass
 from functools import lru_cache
+from threading import Lock
 from typing import Any, Callable, Dict, List, Optional, Union
 
 
@@ -46,8 +47,11 @@ class ValidationError:
         message (str): A human-readable error message
     """
 
-    type: str
-    message: str
+    def __init__(self, type: str, message: Union[str, tuple], **kwargs):
+        super().__init__(message)
+        self.type = type
+        self.message = message
+        self.extra = kwargs
 
 
 def monitor_cache(func):
@@ -94,6 +98,8 @@ class Validators:
     """
 
     def __init__(self):
+        self._cache_lock = Lock()
+
         """Initialize the Validators class with common patterns and error messages."""
 
         # Network Address Patterns
@@ -207,19 +213,10 @@ class Validators:
             "errmessages.domainRf1035": "Invalid IP Address / FQDN",
             "errmessages.fqdn": "Invalid FQDN",
             "errmessages.fqdnOrIP": "Invalid Hostname or IP Address",
-            "errmessages.ipOrfqdnOrHost": "Invalid Hostname or IP Address",
             "errmessages.fqdn_domain": "Invalid Domain Name",
             "errmessages.fqdn_domain_port": "Invalid Domain Name or Port Address",
             "errmessages.fromIp-toIP": "From IP must be less than To IP",
             "errmessages.host": "Host name should be valid DNS host name",
-            "errmessages.invalidFromIpAddr": 'Invalid "From" IP Address',
-            "errmessages.invalidHigherIpv4address": "Invalid Higher IPv4 Address",
-            "errmessages.invalidIpAddress0": "0.0.0.0 is not a valid IP address",
-            "errmessages.invalidIPRange": "Invalid IP Address Range",
-            "errmessages.invalidLowerHigherIpv4address": "Invalid Lower and Higher IPv4 Address",
-            "errmessages.invalidLowerIpv4address": "Invalid Lower IPv4 Address",
-            "errmessages.invalidNetwork": "Invalid network - cannot be 0.0.0.0",
-            "errmessages.invalidToIpAddr": 'Invalid "To" IP Address',
             "errmessages.ip": "Invalid IP address format",
             "errmessages.ip-address": "Invalid IPv4 Or IPv6 address",
             "errmessages.ipOrfqdn": "Invalid Hostname or IP Address",
@@ -232,9 +229,16 @@ class Validators:
             "errmessages.ip-string": "Value should be IP address or string upto 64 characters",
             "errmessages.ip-uint": "Value should be IP address or number (0-4294967295)",
             "errmessages.ip_ranges_not_allowed": "IP ranges are not allowed in this context",
+            "errmessages.invalidFromIpAddr": 'Invalid "From" IP Address',
+            "errmessages.invalidHigherIpv4address": "Invalid Higher IPv4 Address",
+            "errmessages.invalidIpAddress0": "0.0.0.0 is not a valid IP address",
+            "errmessages.invalidIPRange": "Invalid IP Address Range",
+            "errmessages.invalidLowerHigherIpv4address": "Invalid Lower and Higher IPv4 Address",
+            "errmessages.invalidLowerIpv4address": "Invalid Lower IPv4 Address",
+            "errmessages.invalidNetwork": "Invalid network - cannot be 0.0.0.0",
+            "errmessages.invalidToIpAddr": 'Invalid "To" IP Address',
             "errmessages.invalid_ip_version": "Invalid IP version",
             "errmessages.invalid_ip_range": "Invalid IP range",
-            "errmessages.cidr_not_allowed": "CIDR notation is not allowed in this context",
             "errmessages.invalid_ip_network": "Invalid IP network",
             "errmessages.invalid_ip_address": "Invalid IP address",
             "errmessages.invalid_ip_format": "Invalid IP format",
@@ -282,7 +286,7 @@ class Validators:
             "errmessages.prefixUpto80": "Prefix Length should be less than or equal to 80",
             "errmessages.subnetmask": "Invalid Subnet Mask",
             "errmessages.netmask": "Invalid Subnet Mask",
-            "errmessages.switch-vlan": "Vlans can be a number, range(low-high)  or combination of both.",
+            "errmessages.switch-vlan": "Vlans can be a number, range(low-high)  or combination of both.",
             "errmessages.vlan": "Invalid VLAN ID or range",
             "errmessages.vlanIdUsed": "VLAN ID already present",
             "errmessages.vlanid": "VLAN ID value must be between 0-4095",
@@ -305,8 +309,8 @@ class Validators:
             "errmessages.applianceName_invalid": "Appliance name is invalid.",
             "errmessages.atleastOneCharName": "Name should contain at least one alphabet",
             "errmessages.customOptionsName": "Cannot be named as custom-dhcp-option",
-            "errmessages.customStringLength": f"{0} should be {1} - {2} characters",
-            "errmessages.disallowedChars": f"Contains disallowed characters: {0}",
+            "errmessages.customStringLength": "{0} should be {1} - {2} characters",
+            "errmessages.disallowedChars": "Contains disallowed characters: {0}",
             "errmessages.entityName": "Name cannot contain special characters or spaces except '_', '-'",
             "errmessages.entityNameStartNotWithNumbers": "Name cannot start with numbers",
             "errmessages.entityNameWithColon": "Name cannot contain special characters or spaces except '_', '-', ':'",
@@ -319,13 +323,13 @@ class Validators:
             "errmessages.entityNameWithSpace": "Name cannot contain special characters",
             "errmessages.hostName": "Name cannot contain special characters or spaces except '_', '-'",
             "errmessages.invalidApplianceTag": "Invalid value, Value should be alphanumeric and special characters !, #, $, %, ', *, +, ., /, :, ;, <, =, >, ?, @, [, ], ^, _, `, {, |, }, ~, - with length of 1-255",
-            "errmessages.invalid_character": f"Invalid character {0} is present",
-            "errmessages.invalid_characters": f"{0} characters are not allowed.",
+            "errmessages.invalid_character": "Invalid character {0} is present",
+            "errmessages.invalid_characters": "{0} characters are not allowed.",
             "errmessages.invalid_doublequotesallowed": "Double quotes are not allowed",
-            "errmessages.invalid_start_characters": f"Value cannot start with charater {0}",
+            "errmessages.invalid_start_characters": "Value cannot start with charater {0}",
             "errmessages.isBasicLatin": "Name cannot contain special characters except basic latin characters.",
             "errmessages.name": "Invalid Name",
-            "errmessages.nameLength": f"Length should be between {0}-{1} characters",
+            "errmessages.nameLength": "Length should be between {0}-{1} characters",
             "errmessages.nameRequired": "Should have a name",
             "errmessages.specificNameErrorCheck": "Name value cannot be {0}",
             "errmessages.singleCharName": "Name should not be a single character",
@@ -341,28 +345,31 @@ class Validators:
             "errmessages.defaultRoleName": "Names cannot be default roles",
             # Section 4: Numeric, Range & Interval Validation
             "errmessages.above2": "Value should be more than 2",
+            "errmessages.ascii-128-bit-key": "Length must be equal to 13",
+            "errmessages.ascii-64-bit-key": "Length must be equal to 5",
+            "errmessages.blockBands.all": "Cannot show all options",
+            "errmessages.blockSizeMod": "Block size must be divisible by {0}",
+            "errmessages.blockSizePower": "Block size must be power of {0}",
+            "errmessages.blockSizeRange": "Block size must be between {0}-{1} sec",
             "errmessages.charLength": " Length should be between {0} to {1} characters",
             "errmessages.exactLength": "Length must be exactly {0} characters",
             "errmessages.fraction_value": "Invalid value. please enter value between {0},{1}",
             "errmessages.int64": "Value should be between 0 to 9223372036854775807",
-            "errmessages.length_between1_43": "Length must between 1 to 43 characters",
-            "errmessages.lengthEqualTo": "Length must be equal to {0}",
-            "errmessages.ascii-128-bit-key": "Length must be equal to 13",
-            "errmessages.ascii-64-bit-key": "Length must be equal to 5",
-            "errmessages.hex-128-bit-key": "Length must be equal to 26",
-            "errmessages.hex-64-bit-key": "Length must be equal to 10",
             "errmessages.lengthMax63": "Length must not exceed 63 characters",
             "errmessages.lenRange64to128": "length must be between 64-128",
+            "errmessages.length_between1_43": "Length must between 1 to 43 characters",
+            "errmessages.lengthEqualTo": "Length must be equal to {0}",
             "errmessages.minLength": "Length must not be less than {0}",
-            "errmessages.numCPU": "Number of CPUs should be between 4 and 8",
-            "errmessages.numNIC": "Number of NICs should be between 2 and 8",
+            "errmessages.number": "Should be a number",
+            "errmessages.numberList": "Should be a number",
+            "errmessages.numberMinimumIsThree": "Please use a number greater than or equal to 3",
+            "errmessages.numeric_number": "Should be a numeric number",
             "errmessages.offsetvalue": "Offset value should be between 0 to 15",
             "errmessages.out_of_range": "Value out of allowed range",
             "errmessages.port": "Value should be between 0 to 65535",
-            "errmessages.port_reserved": f"Port {0} is reserved",
+            "errmessages.port_reserved": "Port {0} is reserved",
             "errmessages.positiveNonZero": "Value must be a positive, non-zero number",
             "errmessages.powerOf2": "Value should be power of 2",
-            "errmessages.powerOf2Value": "Value should be power of 2",
             "errmessages.priorityrange": "Priority range 1-255",
             "errmessages.range": "Value should be between 1 to 600",
             "errmessages.range.0_100": "Value should be between 0 to 100",
@@ -413,11 +420,6 @@ class Validators:
             "errmessages.MinReceiveIntervalRange": "Minimum receive interval must be between 1 to 255000 msec",
             "errmessages.MinReceiveIntervalRequired": "Minimum Receive Interval must be configured",
             "errmessages.minTransIntervalRequired": "Minimum Transmit Interval must be configured",
-            "errmessages.number": "Should be a number",
-            "errmessages.float": "Should be a number",
-            "errmessages.numberList": "Should be a number",
-            "errmessages.numberMinimumIsThree": "Please use a number greater than or equal to 3",
-            "errmessages.numeric_number": "Should be a numeric number",
             "errmessages.port-low-high": "Low port should be smaller than or equal to High port",
             "errmessages.ports": "Invalid Ports/Ranges",
             "errmessages.ports_with_range_and_number": "Should be a number or range",
@@ -440,38 +442,6 @@ class Validators:
             "errmessages.allowedRangeHour": "Allowed Range is {0}-{1} hours",
             "errmessages.allowedRangeMinutes": "Allowed Range is {0}-{1} minutes",
             "errmessages.allowedRangeTB": "Allowed Range is {0}-{1} TB",
-            "errmessages.blockBands.all": "Cannot show all options",
-            "errmessages.blockSizeMod": "Block size must be divisible by {0}",
-            "errmessages.blockSizePower": "Block size must be power of {0}",
-            "errmessages.blockSizeRange": "Block size must be between {0}-{1} sec",
-            "errmessages.fastIntervalRange": "Fast Interval value must be between {0}-{1}",
-            "errmessages.holdtimeBetweenRange": "Value must be between {0} and {1} milliseconds",
-            "errmessages.interval": "Interval value must be between {0}-{1}",
-            "errmessages.intervalRange": "Interval value must be between {0}-{1}",
-            "errmessages.mappingTimeRange": "Mapping time must be between {0} - {1} sec",
-            "errmessages.maxBlockRange": "max block per user must be between {0}-{1}",
-            "errmessages.priorityCostRange": "Priority Cost must be between {0}-{1}",
-            "errmessages.priorityHoldtimeRange": "Priority Hold Time value must be between {0}-{1}",
-            "errmessages.priorityValue": "Priority value must be between {0}-{1}",
-            "errmessages.queueRange": "Queue value must be between {0} - {1}",
-            "errmessages.rebind-renewTimer": "The Rebind Timer should be more than twice the Renew Timer",
-            "errmessages.thresholdRange": "Threshold value must be between {0}-{1}",
-            "errmessages.timeRange": "Time value must be between {0}-{1}",
-            "errmessages.update_interval": "Update interval must be 0 for disable or atleast 30",
-            "errmessages.update_interval_uint16": "Update interval must be 0 for disable or 30 to 65535",
-            "errmessages.valueBetweenRange": f"Value must be between {0} and {1}",
-            "errmessages.valueEqualTo": f"Value must be equal to {0}",
-            "errmessages.valueGreater": f"Value must be greater than {0}",
-            "errmessages.valueGreaterEqual": f"Value must be greater than or equal to {0}",
-            "errmessages.valueGreatest": f"Value must be greater than {0} and {1}",
-            "errmessages.valueInRange": f"Please enter value in range {0}...{1}",
-            "errmessages.valueLeast": f"Value must be less than {0} and {1}",
-            "errmessages.valueLess": f"Value must be less than {0}",
-            "errmessages.valueLesserEqual": f"Value must be lesser than or equal to {0}",
-            "errmessages.valueMin": f"Value can not be less than {0}",
-            "errmessages.valueMultipleOfMonitoringInterval": "Value should be multiple of Monitoring Interval",
-            "errmessages.versionRange": f"Version value must be between {0} - {1}",
-            "errmessages.warmupTimeIntervalRange": f"Warmup Time interval value must be between {0}-{1}",
             # Section 5: Password & Security Validation
             "errmessages.allowNumber": "Password should contain at least one digit",
             "errmessages.allowSpclChar": "Password should contain at least one special character",
@@ -487,7 +457,7 @@ class Validators:
             "errmessages.versa_password": "password should contain at least one uppercase, lowercase, number and special character with length of 8-16",
             "errmessages.versa-password": "password should contain at least one uppercase, lowercase, number and special character with length of 8-16",
             "errmessages.multiple_password_validators": "Password should contain at least one",
-            "errmessages.passwordlength": f"Password length should be {0} to {1} characters",
+            "errmessages.passwordlength": "Password length should be {0} to {1} characters",
             # Section 6: Date, Time & Timer Validation
             "errmessages.clientSecretExpires": "Client Secret Expires should be less than Client Expires",
             "errmessages.invalidDateRange_end_greater_than_start": "Invalid Range - End date should be greater than Start date",
@@ -507,7 +477,7 @@ class Validators:
             # Section 7: Configuration, Duplicate & Required Field Errors
             "errmessages.binddata_validation_failed": "Invalid Bind data values. The invalid fields are highlighed in red. Please rollover the highlighted fields to see the validation error.",
             "errmessages.combineDuplicateRecord": "Duplicate Record. Combination of 'Destination', 'Nexthop Interface' and 'Nexthop IP Address' is considered",
-            "errmessages.configure-msg": f"Please Configure {0}",
+            "errmessages.configure-msg": "Please Configure {0}",
             "errmessages.configure_primary_cluster": "Please configure a primary cluster type",
             "errmessages.configure_two_clusters": "Please configure exactly 2 clusters",
             "errmessages.controllerName": "Controller name is invalid.",
@@ -553,9 +523,9 @@ class Validators:
             "errmessages.configure.at_least_one.security_profile": "Configure at least one security profile",
             "errmessages.custom_message_count_message": "The count and wait-in-minutes attributes to be used together",
             "errmessages.same_ip_and_authtype.error": " Resource already exist for same IP address and Auth Type connector",
-            "errmessages.validateSubunit": f"Subunit {0} is already being used with {1}",
-            "errmessages.validateUnitIds": f"{0} is already in use with {1}",
-            "errmessages.validateVLANID": f"VLAN ID {0} is already being used with {1}",
+            "errmessages.validateSubunit": "Subunit {0} is already being used with {1}",
+            "errmessages.validateUnitIds": "{0} is already in use with {1}",
+            "errmessages.validateVLANID": "VLAN ID {0} is already being used with {1}",
             # Section 8: Routing, BGP & Community Validation
             "errmessages.bgp_community": "BGP Community should be of the format 1234:1234",
             "errmessages.community": "Value should be a set of communities separated by a space in the format 2 byte decimal:2 byte decimal or 4 byte decimal with a maximum value of 4294967295",
@@ -570,7 +540,7 @@ class Validators:
             "errmessages.routerDistinguisher": "Value must be in format - <route-distinguisher>:<IPv4 prefix>/<prefix-length>",
             "errmessages.routerDistinguisher_ipv6": "Value must be in format - <route-distinguisher>:<IPv6 prefix>/<prefix-length>",
             "errmessages.ripInstanceValue": "Value must be vni-0/ or tvi-0/",
-            "errmessages.routerDistributor": f"Route distinguisher value must be between {0} : {1}",
+            "errmessages.routerDistributor": "Route distinguisher value must be between {0} : {1}",
             "errmessages.localAS": "Allowed Range is 0 - 4294967295 Or <0..65535>.<0..65535> except the value of 0.0",
             "errmessages.peerAS": "Allowed Range is 1 - 4294967295 Or <0..65535>.<0..65535> except the value of 0.0",
             # Section 9: MAC Address & Hardware Validation
@@ -587,7 +557,7 @@ class Validators:
             # Section 10: Contact & Login Validation
             "errmessages.email": "Invalid email address",
             "errmessages.phone": "Phone Number Incorrect",
-            "errmessages.phone_format": f"{0}. It should be like {1}",
+            "errmessages.phone_format": "{0}. It should be like {1}",
             "errmessages.username": "Username must be 3-32 characters and contain only alphanumeric, underscore, or hyphen",
             "errmessages.usernamewithHost": "Username must be 3-32 characters and contain only alphanumeric, underscore, or hyphen",
             "errmessages.versausername": "Username must be 3-32 characters and contain only alphanumeric, underscore, or hyphen",
@@ -601,16 +571,16 @@ class Validators:
             # Section 12: Geographical Validation
             "errmessages.invalid_latitude": "Value should be a number between -90.00 to 90.00",
             "errmessages.invalid_longitude": "Value should be a number between -180.00 to 180.00",
-            "errmessages.geofence_too_few_points": f"Geofence requires at least {0} points",
-            "errmessages.geofence_too_many_points": f"Geofence exceeds maximum of {0} points",
+            "errmessages.geofence_too_few_points": "Geofence requires at least {0} points",
+            "errmessages.geofence_too_many_points": "Geofence exceeds maximum of {0} points",
             "errmessages.geofence_not_closed": "Geofence polygon must be closed",
             "errmessages.invalid_geofence_format": "Invalid geofence format",
             "errmessages.invalid_coordinate_pair": "Invalid coordinate pair",
             "errmessages.invalid_coordinate_pair_format": "Invalid coordinate pair format",
             "errmessages.latitude_out_of_range": "Latitude must be between -90 and 90 degrees",
             "errmessages.longitude_out_of_range": "Longitude must be between -180 and 180 degrees",
-            "errmessages.latitude_max_decimal_places": f"Latitude exceeds maximum of {0} decimal places",
-            "errmessages.longitude_max_decimal_places": f"Longitude exceeds maximum of {0} decimal places",
+            "errmessages.latitude_max_decimal_places": "Latitude exceeds maximum of {0} decimal places",
+            "errmessages.longitude_max_decimal_places": "Longitude exceeds maximum of {0} decimal places",
             "errmessages.invalid_dms_format": "Invalid degrees/minutes/seconds format",
             "errmessages.invalid_dms_values": "Invalid degrees/minutes/seconds values",
             # Section 13: Miscellaneous / Other Validation
@@ -641,11 +611,11 @@ class Validators:
             "errmessages.wpa-psk": "Invalid WPA-PSK.  Length should be between 8-63 characters",
             "errmessages.sharedSecret": "Space and # is not allowed.",
             "errmessages.list_not_tuple_or_list": "Value must be a list or tuple",
-            "errmessages.list_too_short": f"List must contain at least {0} items",
-            "errmessages.list_too_long": f"List cannot contain more than {0} items",
+            "errmessages.list_too_short": "List must contain at least {0} items",
+            "errmessages.list_too_long": "List cannot contain more than {0} items",
             "errmessages.list_duplicates_found": "List contains duplicate values",
             "errmessages.range_invalid_start_end": "Range start must be less than end",
-            "errmessages.range_out_of_bounds": f"Range must be between {0} and {1}",
+            "errmessages.range_out_of_bounds": "Range must be between {0} and {1}",
             "errmessages.range_invalid_format": "Invalid range format",
             "errmessages.single_values_not_allowed": "Single values are not allowed in this context",
             "errmessages.value_failed_all_validation": "Value failed all validation criteria",
@@ -4364,30 +4334,14 @@ class Validators:
     #######################
     # 10: Helper Methods
     #######################
-    @lru_cache(maxsize=64)
+    @lru_cache(maxsize=65536)
     def _is_valid_port(self, port: int) -> bool:
-        """
-        Check if a port number is valid (1-65535).
-
-        Args:
-            port (int): Port number to validate
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
+        """Check if a port number is valid (1-65535)."""
         return isinstance(port, int) and 1 <= port <= 65535
 
     @lru_cache(maxsize=1024)
     def _is_valid_ip_network(self, network: str) -> bool:
-        """
-        Check if a string is a valid IP network in CIDR notation.
-
-        Args:
-            network (str): Network address to validate
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
+        """Check if a string is a valid IP network in CIDR notation."""
         try:
             ipaddress.ip_network(network, strict=False)
             return True
@@ -4407,54 +4361,23 @@ class Validators:
 
     @lru_cache(maxsize=512)
     def _normalize_mac_address(self, mac: str) -> str:
-        """
-        Normalize MAC address format (XX:XX:XX:XX:XX:XX).
-
-        Args:
-            mac (str): MAC address to normalize
-
-        Returns:
-            str: Normalized MAC address
-        """
-        # Remove all separators and spaces
+        """Normalize MAC address format (XX:XX:XX:XX:XX:XX)."""
         clean_mac = re.sub(r"[^0-9a-fA-F]", "", mac)
-
-        # Insert colons
         return ":".join(clean_mac[i : i + 2] for i in range(0, 12, 2))
 
+    @lru_cache(maxsize=256)
     def _convert_dms_to_decimal(
         self, degrees: int, minutes: int, seconds: float, direction: str
     ) -> float:
-        """
-        Convert DMS (Degrees, Minutes, Seconds) to decimal degrees.
-
-        Args:
-            degrees (int): Degrees component
-            minutes (int): Minutes component
-            seconds (float): Seconds component
-            direction (str): Direction (N/S/E/W)
-
-        Returns:
-            float: Decimal degrees
-        """
+        """Convert DMS (Degrees, Minutes, Seconds) to decimal degrees."""
         decimal = float(degrees) + float(minutes) / 60 + float(seconds) / 3600
-
         if direction.upper() in ["S", "W"]:
             decimal = -decimal
-
         return round(decimal, 8)
 
+    @lru_cache(maxsize=256)
     def _convert_decimal_to_dms(self, decimal: float, is_latitude: bool = True) -> str:
-        """
-        Convert decimal degrees to DMS format.
-
-        Args:
-            decimal (float): Decimal degrees
-            is_latitude (bool): True if converting latitude, False for longitude
-
-        Returns:
-            str: DMS formatted string
-        """
+        """Convert decimal degrees to DMS format."""
         direction = (
             "N"
             if decimal >= 0 and is_latitude
@@ -4468,200 +4391,63 @@ class Validators:
         degrees = int(decimal)
         minutes = int((decimal - degrees) * 60)
         seconds = round(((decimal - degrees) * 60 - minutes) * 60, 2)
-
         return f"{degrees}°{minutes}'{seconds}\"{direction}"
 
-    def _validate_network_mask(self, mask: str) -> bool:
-        """
-        Validate network mask format and sequence.
-
-        Args:
-            mask (str): Network mask to validate
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
+    @lru_cache(maxsize=128)
+    def _parse_ip_prefix(self, value: str) -> tuple:
+        """Parse IP prefix into address and prefix length."""
         try:
-            # Convert to binary
-            addr = ipaddress.IPv4Address(mask)
-            binary = bin(int(addr))[2:].zfill(32)
-
-            # Check if it's a sequence of 1s followed by 0s
-            return "01" not in binary and binary.count("1") > 0
-        except Exception:
-            return False
-
-    def _is_reserved_port(self, port: int) -> bool:
-        """
-        Check if a port number is in the reserved range (0-1023).
-
-        Args:
-            port (int): Port number to check
-
-        Returns:
-            bool: True if reserved, False otherwise
-        """
-        return isinstance(port, int) and 0 <= port <= 1023
-
-    @lru_cache(maxsize=64)
-    def _parse_range_list(self, range_list: str) -> list:
-        """
-        Parse a comma-separated list of ranges into a list of integers.
-
-        Args:
-            range_list (str): Range list string (e.g., "1-5,7,9-11")
-
-        Returns:
-            list: List of integers in the ranges
-        """
-        result = []
-        ranges = range_list.split(",")
-
-        for r in ranges:
-            r = r.strip()
-            if "-" in r:
-                start, end = map(int, r.split("-"))
-                result.extend(range(start, end + 1))
-            else:
-                result.append(int(r))
-
-        return sorted(list(set(result)))
-
-    def _is_valid_hostname(self, hostname: str) -> bool:
-        """
-        Check if a string is a valid hostname.
-
-        Args:
-            hostname (str): Hostname to validate
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
-        if len(hostname) > 255:
-            return False
-
-        if hostname[-1] == ".":
-            hostname = hostname[:-1]
-
-        allowed = re.compile(r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?$")
-        return all(allowed.match(x) for x in hostname.split("."))
-
-    def _validate_hex_string(self, hex_str: str) -> bool:
-        """
-        Validate hexadecimal string format.
-
-        Args:
-            hex_str (str): Hexadecimal string to validate
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
-        # Remove 0x prefix if present
-        hex_str = hex_str[2:] if hex_str.startswith("0x") else hex_str
-        return all(c in string.hexdigits for c in hex_str)
-
-    def _format_error_message(
-        self, error_type: str, message: str, details: Dict = None
-    ) -> str:
-        """
-        Format error message with optional details.
-
-        Args:
-            error_type (str): Type of error
-            message (str): Error message
-            details (dict, optional): Additional error details
-
-        Returns:
-            str: Formatted error message
-        """
-        base_message = f"{error_type}: {message}"
-        if details:
-            detail_str = "; ".join(f"{k}={v}" for k, v in details.items())
-            return f"{base_message} ({detail_str})"
-        return base_message
-
-    def _combine_validators(self, validators: List) -> Callable:
-        """
-        Combine multiple validators into a single validator.
-
-        Args:
-            validators (list): List of validator functions
-
-        Returns:
-            Callable: Combined validator function
-        """
-
-        def combined_validator(value: Any) -> Optional[ValidationError]:
-            for validator in validators:
-                result = validator(value)
-                if result:
-                    return result
-            return None
-
-        return combined_validator
-
-    @lru_cache(maxsize=256)
-    def _create_pattern_validator(self, pattern: str, error_message: str) -> Callable:
-        """
-        Create a validator function from a regex pattern.
-
-        Args:
-            pattern (str): Regular expression pattern
-            error_message (str): Error message for validation failure
-
-        Returns:
-            Callable: Validator function
-        """
-
-        def pattern_validator(value: str) -> Optional[ValidationError]:
-            if not value:
-                return None
-
-            if not re.match(pattern, value):
-                return ValidationError(type="pattern", message=error_message)
-            return None
-
-        return pattern_validator
-
-    def _is_valid_cidr_range(self, cidr: str) -> bool:
-        """
-        Validate CIDR range format and values.
-
-        Args:
-            cidr (str): CIDR range to validate
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
-        try:
-            network = ipaddress.ip_network(cidr, strict=False)
-            prefix_length = int(cidr.split("/")[-1])
-
-            if network.version == 4:
-                return 0 <= prefix_length <= 32
-            else:
-                return 0 <= prefix_length <= 128
+            network = ipaddress.ip_network(value, strict=False)
+            return (str(network.network_address), network.prefixlen)
         except ValueError:
-            return False
+            return (None, None)
+
+    # Cache Management Methods
+    def clear_caches(self):
+        """Clear all method caches when needed."""
+        self._is_valid_ip_network.cache_clear()
+        self._is_valid_ip_address.cache_clear()
+        self._normalize_mac_address.cache_clear()
+        self._convert_dms_to_decimal.cache_clear()
+        self._convert_decimal_to_dms.cache_clear()
+        self._is_valid_range.cache_clear()
+        self._is_valid_port.cache_clear()
+
+    def get_cache_info(self):
+        """Get cache statistics for monitoring."""
+        return {
+            "ip_network": self._is_valid_ip_network.cache_info(),
+            "ip_address": self._is_valid_ip_address.cache_info(),
+            "mac_address": self._normalize_mac_address.cache_info(),
+            "dms_to_decimal": self._convert_dms_to_decimal.cache_info(),
+            "decimal_to_dms": self._convert_decimal_to_dms.cache_info(),
+            "range": self._is_valid_range.cache_info(),
+            "port": self._is_valid_port.cache_info(),
+        }
+
+    def warmup_caches(self):
+        """Pre-populate caches with common values."""
+        # Warm up port cache for common ports
+        common_ports = [80, 443, 22, 21, 25, 110, 143, 3306, 5432]
+        for port in common_ports:
+            self._is_valid_port(port)
+
+        # Warm up IP cache for common networks
+        common_networks = ["192.168.0.0/24", "10.0.0.0/8", "172.16.0.0/12"]
+        for network in common_networks:
+            self._is_valid_ip_network(network)
+
+    def _thread_safe_cache(func):
+        """Decorator for thread-safe caching."""
+
+        def wrapper(self, *args, **kwargs):
+            with self._cache_lock:
+                return func(self, *args, **kwargs)
+
+        return wrapper
 
     def _is_valid_vlan_range(self, range_str: str) -> bool:
-        """
-        Check if a string represents a valid VLAN range.
-
-        Args:
-            range_str (str): VLAN range string in format "n" or "n-m" where n,m are integers
-
-        Returns:
-            bool: True if the VLAN range is valid (1-4094), False otherwise
-
-        Examples:
-            >>> _is_valid_vlan_range("1-10")
-            True
-            >>> _is_valid_vlan_range("100")
-            True
-            >>> _is_valid_vlan_range("0-4095")
-            False
-        """
+        """Check if a string represents a valid VLAN range."""
         try:
             if "-" in range_str:
                 start, end = map(int, range_str.strip().split("-"))
@@ -4672,222 +4458,42 @@ class Validators:
         except (ValueError, TypeError):
             return False
 
-    def _parse_range_with_spaces(self, range_str: str) -> List[int]:
-        """
-        Parse a space-separated list of ranges into a list of integers.
+    def _is_valid_port(self, port: int) -> bool:
+        """Check if a port number is valid (1-65535)."""
+        return isinstance(port, int) and 1 <= port <= 65535
 
-        Args:
-            range_str (str): Range string (e.g., "1-5 7 9-11")
+    def _is_reserved_port(self, port: int) -> bool:
+        """Check if a port number is in the reserved range (0-1023)."""
+        return isinstance(port, int) and 0 <= port <= 1023
 
-        Returns:
-            List[int]: Sorted list of unique integers from the ranges
-
-        Raises:
-            ValueError: If range format is invalid
-            TypeError: If input is not a string
-        """
-        result = []
-        ranges = range_str.split()
-
-        for r in ranges:
-            r = r.strip()
-            try:
-                if "-" in r:
-                    start, end = map(int, r.split("-"))
-                    if start < end:
-                        result.extend(range(start, end + 1))
-                else:
-                    result.append(int(r))
-            except (ValueError, TypeError):
-                continue
-
-        return sorted(list(set(result)))
-
-    def _validate_ipv4v6_with_dhcp(self, value: str, allow_ipv6: bool = True) -> bool:
-        """
-        Validate IPv4/IPv6 address with optional DHCP.
-
-        Args:
-            value (str): IP address or 'DHCP'
-            allow_ipv6 (bool): Whether to allow IPv6 addresses
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
-        if value.upper() == "DHCP":
-            return True
-
+    def _is_valid_ip_network(self, network: str) -> bool:
+        """Check if a string is a valid IP network in CIDR notation."""
         try:
-            ip = ipaddress.ip_address(value)
-            if not allow_ipv6 and isinstance(ip, ipaddress.IPv6Address):
-                return False
+            ipaddress.ip_network(network, strict=False)
             return True
         except ValueError:
-            try:
-                # Try as network address
-                network = ipaddress.ip_network(value, strict=False)
-                if not allow_ipv6 and isinstance(network, ipaddress.IPv6Network):
-                    return False
-                return True
-            except ValueError:
-                return False
+            return False
+
+    def _is_valid_ip_address(self, ip: str, version: int = None) -> bool:
+        """Validate IP address format."""
+        try:
+            ip_obj = ipaddress.ip_address(ip)
+            if version is not None:
+                return ip_obj.version == version
+            return True
+        except ValueError:
+            return False
 
     def _is_valid_as_number(self, value: Union[str, int]) -> bool:
-        """
-        Validate Autonomous System number.
-
-        Args:
-            value: AS number to validate
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
+        """Validate Autonomous System number."""
         try:
             num = int(value)
             return self.MIN_AS_NUMBER <= num <= self.MAX_AS_NUMBER
         except (ValueError, TypeError):
             return False
 
-    def _is_valid_interface_name(self, value: str) -> bool:
-        """
-        Validate network interface name format.
-
-        Args:
-            value (str): Interface name to validate
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
-
-        return any(pattern.match(value) for pattern in self.INTERFACE_PATTERNS)
-
-    @lru_cache(maxsize=256)
-    def _normalize_interface_name(self, value: str) -> str:
-        """
-        Normalize interface name to standard format.
-
-        Args:
-            value (str): Interface name to normalize
-
-        Returns:
-            str: Normalized interface name
-        """
-        # Common abbreviations and their full forms
-        mappings = {
-            r"^(?i)eth": "Ethernet",
-            r"^(?i)gi": "GigabitEthernet",
-            r"^(?i)te": "TenGigabitEthernet",
-            r"^(?i)fa": "FastEthernet",
-            r"^(?i)lo": "Loopback",
-            r"^(?i)po": "Port-channel",
-            r"^(?i)vl": "Vlan",
-            r"^(?i)tu": "Tunnel",
-            r"^(?i)be": "Bundle-Ether",
-            r"^(?i)mg": "Management",
-        }
-
-        result = value
-        for pattern, replacement in mappings.items():
-            result = re.sub(pattern, replacement, result)
-        return result
-
-    def _is_valid_community_string(self, value: str) -> bool:
-        """
-        Validate BGP community string format.
-
-        Args:
-            value (str): Community string to validate
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
-        # Check well-known communities
-        if value.lower() in self.WELL_KNOWN_COMMUNITIES:
-            return True
-
-        # Check numeric format (16-bit:16-bit)
-        try:
-            if ":" in value:
-                asn, local = map(int, value.split(":"))
-                return 0 <= asn <= 65535 and 0 <= local <= 65535
-            return False
-        except (ValueError, TypeError):
-            return False
-
-    @lru_cache(maxsize=128)
-    def _parse_ip_prefix(self, value: str) -> tuple:
-        """
-        Parse IP prefix into address and prefix length.
-
-        Args:
-            value (str): IP prefix to parse (e.g., "192.168.1.0/24")
-
-        Returns:
-            tuple: (ip_address, prefix_length) or (None, None) if invalid
-        """
-        try:
-            network = ipaddress.ip_network(value, strict=False)
-            return (str(network.network_address), network.prefixlen)
-        except ValueError:
-            return (None, None)
-
-    def _is_valid_metric(self, value: Union[str, int, float]) -> bool:
-        """
-        Validate routing metric value.
-
-        Args:
-            value: Metric value to validate
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
-        try:
-            num = int(value)
-            return 0 <= num <= self.MAX_AS_NUMBER
-        except (ValueError, TypeError):
-            return False
-
-    def _is_valid_description(self, value: str, max_length) -> bool:
-        """
-        Validate description string.
-
-        Args:
-            value (str): Description to validate
-            max_length (int): Maximum allowed length
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
-        if not value or len(value) > self.MAX_DESCRIPTION_LENGTH:
-            return False
-        return all(32 <= ord(c) <= 126 or c in " \t" for c in value)
-
-    def _is_valid_route_map_name(self, value: str) -> bool:
-        """
-        Validate route-map name format.
-
-        Args:
-            value (str): Route-map name to validate
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
-        return bool(
-            re.match(r"^[a-zA-Z][a-zA-Z0-9_-]*$", value)
-            and len(value) <= self.MAX_ROUTE_MAP_NAME_LENGTH
-        )
-
     def _is_valid_acl_name(self, value: str) -> bool:
-        """
-        Validate ACL name format.
-
-        Args:
-            value (str): ACL name to validate
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
-        # Check if it's a number (standard/extended ACL)
+        """Validate ACL name format."""
         try:
             num = int(value)
             return (
@@ -4895,23 +4501,18 @@ class Validators:
                 or self.MIN_EXTENDED_ACL <= num <= self.MAX_EXTENDED_ACL
             )
         except ValueError:
-            # Named ACL
             return bool(
                 re.match(r"^[a-zA-Z][a-zA-Z0-9_-]*$", value)
                 and len(value) <= self.MAX_ACL_NAME_LENGTH
             )
 
-    @lru_cache(maxsize=16)
+    def _normalize_mac_address(self, mac: str) -> str:
+        """Normalize MAC address format."""
+        clean_mac = re.sub(r"[^0-9a-fA-F]", "", mac)
+        return ":".join(clean_mac[i : i + 2] for i in range(0, 12, 2))
+
     def _normalize_protocol_name(self, value: str) -> str:
-        """
-        Normalize protocol name to standard format.
-
-        Args:
-            value (str): Protocol name to normalize
-
-        Returns:
-            str: Normalized protocol name
-        """
+        """Normalize protocol name to standard format."""
         self.protocols = {
             "tcp": "TCP",
             "udp": "UDP",
@@ -4928,36 +4529,30 @@ class Validators:
         }
         return self.protocols.get(value.lower(), value.upper())
 
+    def _is_valid_range(self, start: int, end: int, min_val: int, max_val: int) -> bool:
+        """Validate a range."""
+        return (
+            isinstance(start, int)
+            and isinstance(end, int)
+            and min_val <= start <= end <= max_val
+        )
+
     def _is_valid_mtu(self, value: Union[str, int]) -> bool:
-        """
-        Validate MTU value.
-
-        Args:
-            value: MTU value to validate
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
+        """Validate MTU value."""
         try:
             num = int(value)
-            return (
-                self.MIN_MTU <= num <= self.MAX_MTU
-            )  # Common range, might need adjustment
+            return self.MIN_MTU <= num <= self.MAX_MTU
         except (ValueError, TypeError):
             return False
 
-    def _is_valid_bandwidth(self, value: Union[str, int]) -> bool:
-        """
-        Validate bandwidth value in Kbps.
-
-        Args:
-            value: Bandwidth value to validate
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
+    def _is_valid_community_string(self, value: str) -> bool:
+        """Validate BGP community string format."""
+        if value.lower() in self.WELL_KNOWN_COMMUNITIES:
+            return True
         try:
-            num = int(value)
-            return self.MIN_BANDWIDTH <= num <= self.MAX_BANDWIDTH  # 1 Kbps to 100 Gbps
+            if ":" in value:
+                asn, local = map(int, value.split(":"))
+                return 0 <= asn <= 65535 and 0 <= local <= 65535
+            return False
         except (ValueError, TypeError):
             return False
