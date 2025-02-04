@@ -3,5 +3,6 @@
 __pycache__/
 *.pyc
 .\Versa-Firewall-Config-Translator\src\core\reference\*.js
+.\Versa-Firewall-Config-Translator\src\core\reference\*.properties
 .\Versa-Firewall-Config-Translator\src\core\Future\*.*
 .\Versa-Firewall-Config-Translator\Source_Files\*.xml
