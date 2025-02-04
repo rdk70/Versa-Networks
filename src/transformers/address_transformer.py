@@ -28,11 +28,15 @@ class AddressTransformer(BaseTransformer):
             Dict[str, Any]: Transformed address configuration in Versa format
 
         Example input:
-        {
-            "name": "web_server",
-            "ip-netmask": "192.168.1.100/24",
-            "description": "Web Server"
-        }
+        ```python
+            {
+                "name": str,              # Name of the address object
+                "ip-netmask": str,        # IP address with netmask (e.g., "192.168.1.0/24")
+                "description": str,        # Optional description
+                "source": str,            # Either "device-group" or "shared"
+                "tag": List[str]          # Optional list of tags
+            }
+            ```
 
         Example output:
         {
