@@ -29,7 +29,6 @@ class Config:
             print(f"Error parsing YAML configuration: {e}")
             sys.exit(1)
 
-        self._validate_config(config)
         return config
 
     def _add_api_config(self):
@@ -48,73 +47,6 @@ class Config:
             raise ConfigError(
                 f"Missing required environment variables: {', '.join(missing)}"
             )
-
-    def _validate_config(self, config: Dict[str, Any]) -> None:
-        # Validate basic uploaders
-        required_uploaders = [
-            "address",
-            "address_group",
-            "application",
-            "application_filter",
-            "application_group",
-            "rules",
-            "schedule",
-            "service",
-            "service_group",
-            "zone",
-            "profiles",
-        ]
-
-        if "uploaders" not in config:
-            raise ConfigError("Missing 'uploaders' section")
-
-        for uploader in required_uploaders:
-            if uploader not in config["uploaders"]:
-                raise ConfigError(f"Missing '{uploader}' in uploaders section")
-
-            # Special validation for profiles
-            if uploader == "profiles":
-                profiles_config = config["uploaders"]["profiles"]
-
-                if not isinstance(profiles_config, dict):
-                    raise ConfigError("'profiles' must be a dictionary")
-
-                if "enabled" not in profiles_config:
-                    raise ConfigError("Missing 'enabled' in profiles configuration")
-
-                if "types" not in profiles_config:
-                    raise ConfigError("Missing 'types' in profiles configuration")
-
-                required_profile_types = [
-                    "antivirus",
-                    "url-filtering",
-                    "vulnerability",
-                    "file-blocking",
-                    "wildfire-analysis",
-                    "data-filtering",
-                    "dos",
-                    "spyware",
-                    "sctp-protection",
-                    "mobile-security",
-                    "decryption",
-                    "dns-security",
-                    "pcap",
-                    "ips",
-                ]
-
-                for profile_type in required_profile_types:
-                    if profile_type not in profiles_config["types"]:
-                        raise ConfigError(
-                            f"Missing profile type '{profile_type}' in profiles configuration"
-                        )
-                    if not isinstance(profiles_config["types"][profile_type], bool):
-                        raise ConfigError(
-                            f"Profile type '{profile_type}' must be a boolean"
-                        )
-            else:
-                # Validate other uploaders are booleans
-                if not isinstance(config["uploaders"][uploader], bool):
-                    raise ConfigError(f"Uploader '{uploader}' must be a boolean")
 
     def get_template_name(self, device_name: str = None, group_name: str = None) -> str:
         """Generate template name based on configuration."""
