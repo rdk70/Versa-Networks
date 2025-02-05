@@ -6,10 +6,9 @@ import sys
 import time
 from typing import Dict, List, Optional, Union
 
+import config
 import requests
 import yaml
-
-import config
 
 requests.packages.urllib3.disable_warnings()
 

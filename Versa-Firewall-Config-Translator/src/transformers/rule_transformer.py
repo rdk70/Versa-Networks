@@ -31,9 +31,9 @@ class RulesTransformer(BaseTransformer):
                     "name": rule_name,
                     "description": rule.get("description", ""),
                     "tag": rule.get("tag", []),
-                    "rule-disable": "true"
-                    if rule.get("disabled") == "yes"
-                    else "false",
+                    "rule-disable": (
+                        "true" if rule.get("disabled") == "yes" else "false"
+                    ),
                     "match": self._create_match_section(data),
                     "set": self._create_set_section(data),
                 }

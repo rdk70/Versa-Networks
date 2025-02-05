@@ -2,14 +2,16 @@
 
 An asynchronous Python utility for translating Palo Alto Networks (PAN) firewall configurations to Versa Networks format and uploading them to a service template via the Versa API.
 
-___
+---
 
 ## NOTICE!
 
 This script attempts to convert a Palo Alto Firewall configuration as completely and acurately as possible. It is NOT going to convert perfectly, please verify everything.
-___
+
+---
 
 ## Table of Contents
+
 - [PAN to Versa Configuration Translator](#pan-to-versa-configuration-translator)
   - [NOTICE!](#notice)
   - [Table of Contents](#table-of-contents)
@@ -37,6 +39,7 @@ ___
 ---
 
 ## **Features**
+
 - **Asynchronous Processing**: Leverages Python's `asyncio` for high-performance processing.
 - **Comprehensive XML Parsing**: Handles PAN firewall configuration files with robust parsing.
 - **Intelligent Transformation**: Maps PAN configurations to Versa format seamlessly.
@@ -52,11 +55,13 @@ ___
 ## **Requirements**
 
 ### System Requirements
+
 - **Python Version**: 3.8 or higher
 - **Memory**: Minimum 4GB RAM (8GB recommended)
 - **Network**: Access to Versa Director
 
 ### Python Dependencies
+
 ```plaintext
 requests>=2.31.0
 python-dotenv>=1.0.0
@@ -67,6 +72,7 @@ aiohttp>=3.9.1
 ---
 
 ## **Recommended Tools**
+
 - **VS Code**: For development, with the Python extension.
 - **Ruff**: For linting and maintaining code quality.
 - **Source Format Information**: https://pan.dev/scm/docs/home/ then NGFW Configuration
@@ -76,6 +82,7 @@ aiohttp>=3.9.1
 ## **Installation**
 
 2. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -83,7 +90,9 @@ pip install -r requirements.txt
 ## **Configuration**
 
 ### Environment Variables
+
 Create a `.env` file in the project root with the following variables:
+
 ```env
 VERSA_BASE_URL=https://your-versa-director.com
 VERSA_API_BASE_URL=https://your-versa-director.com:9182
@@ -94,6 +103,7 @@ VERSA_CLIENT_SECRET=your_client_secret
 ```
 
 ### YAML Configuration
+
 Edit `config/config.yaml` to configure:
 
 Inline comments in the configuration file provide detailed explanations for each line.
@@ -114,7 +124,7 @@ template:
   # Prefix or postfix for template names.
   multi_template_fix: DG
   # Create a separate shared template.
-  create_separate_shared_template: False  
+  create_separate_shared_template: False
 logging:
   # Console logging level.
   console_level: INFO
@@ -132,18 +142,19 @@ upload:
 1. Place your PAN configuration XML file in the `Source_Files` directory
 2. Update `.env` and `config/config.yaml` files as needed
 3. Run the translator:
+
 ```bash
 python PAN-to-Versa-Config-Translator-Async.py
 ```
+
 4. Monitor the `logs` directory for detailed execution logs
 
 ## **Exporting PAN Configurations**
 
 To export configurations:
+
 - **From a PAN Device**: Use the GUI to save/export configurations. See the [official guide](https://docs.paloaltonetworks.com/pan-os/10-1/pan-os-admin/firewall-administration/manage-configuration-backups/save-and-export-firewall-configurations).
 - **From Panorama**: Use Panorama to save/export configurations. See the [official guide](https://docs.paloaltonetworks.com/panorama/10-2/panorama-admin/administer-panorama/manage-panorama-and-firewall-configuration-backups/save-and-export-panorama-and-firewall-configurations).
-
-
 
 ## **Supported Configuration Elements**
 
@@ -186,18 +197,19 @@ project_root/                                 # Root directory of the project
 ### Common Issues
 
 1. **OAuth Token Errors**
+
    - Verify credentials in `.env`.
    - Check network connectivity to Versa Director.
    - Confirm API ports are open.
 
 2. **XML Parsing Errors**
+
    - Ensure valid XML format and UTF-8 encoding.
    - Check file encoding (UTF-8 required).
    - Verify file permissions.
 
 3. **Rate Limiting Issues**
    - Adjust `request_per_second` in `config.yaml`
-
 
 ### Logging
 
@@ -215,6 +227,7 @@ project_root/                                 # Root directory of the project
 5. Create Pull Request
 
 ### Development Guidelines
+
 - Follow PEP 8 style guide
 - Include docstrings for all functions
 - Add unit tests for new features
@@ -228,6 +241,7 @@ project_root/                                 # Root directory of the project
 ### Support
 
 For issues and feature requests, please:
+
 1. Check existing GitHub issues
 2. Create a new issue with:
    - Clear description

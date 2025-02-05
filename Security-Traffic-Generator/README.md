@@ -20,7 +20,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 Linux (Tested on Ubuntu 22.04)
 Python3 with modules
-  requests, re, time, random, subprocess, signal, http.client (You should have all of these)
+requests, re, time, random, subprocess, signal, http.client (You should have all of these)
 
 hping3 – sudo apt install hping
 nmap – sudo apt install nmap
@@ -33,7 +33,7 @@ All configuration takes place in config.py and are very simple
 
 ##### Settings
 
-- `MIN_DEPTH = 3`, `MAX_DEPTH = 10`,  Starting from each root URL (i.e.: <www.yahoo.com>), our generator will click to a depth randomly selected between MIN_DEPTH and MAX_DEPTH.
+- `MIN_DEPTH = 3`, `MAX_DEPTH = 10`, Starting from each root URL (i.e.: <www.yahoo.com>), our generator will click to a depth randomly selected between MIN_DEPTH and MAX_DEPTH.
 
 The interval between every HTTP GET requests is chosen at random between the following two variables...
 
@@ -44,12 +44,12 @@ The interval between every HTTP GET requests is chosen at random between the fol
 
 Denial of service settings
 
-- `CREATE_DOS_TRAFFIC = True`  Set to True to create DOS traffic
+- `CREATE_DOS_TRAFFIC = True` Set to True to create DOS traffic
 - `CREATE_DOS_TRAFFIC_EVERY_X_TIMES = 10` How often to create DOS traffic
 - `DOS_DST_IP = ("192.168.1.1/24")` Enter Target/Destination IP Address with Subnet 192.168.1.1/24
 - `DOS_DST_PORT = ("444")` Enter TCP Destination Port
-- `DOS_DURATION_SEC = 30`  Enter the time duration (in seconds) for which traffic is to be generated
-- `DOS_SOURCE_ADDRESS = ("192.168.0.1")`  Enter Source IP Address for spoofing traffic
+- `DOS_DURATION_SEC = 30` Enter the time duration (in seconds) for which traffic is to be generated
+- `DOS_SOURCE_ADDRESS = ("192.168.0.1")` Enter Source IP Address for spoofing traffic
 
 User Agent
 
@@ -61,7 +61,7 @@ All URL lists will be randomly combined into a single list. The script will work
 
 - `RULE_SPECIFIC_URLS = [url1,url2,url3]` The list of rule URLs under comments for which NGFW rule it should trigger
 - `REPUTATION_URLS = [url1,url2,url3]` The list of URLs that fall into a specific reputation.
-- `CATEGORY_URLS = [url1,url2,url3]` The list of  URLs that fall into a specific category.
+- `CATEGORY_URLS = [url1,url2,url3]` The list of URLs that fall into a specific category.
 - `GENERAL_URLS = [url1,url2,url3]` The list of root URLs to start from when browsing.
 
 DOS Traffic Profiles
@@ -85,7 +85,7 @@ How to use
 2. Create a service template in the org called Traffic-Generator-NGFW
 3. Import the Traffic-Generator-NGFW.cfg into the service template.
 4. Assign the Service Template to the Device Group you want to test this on and commit the template
-5. The config file includes a Zone Protection Profile called TG-ZP-Profile.  This will need to be assigned to the zone from which the attacks are coming.
+5. The config file includes a Zone Protection Profile called TG-ZP-Profile. This will need to be assigned to the zone from which the attacks are coming.
 
 ## Execution
 

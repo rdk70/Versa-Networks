@@ -11,11 +11,13 @@ This repository contains multiple tools for Versa Networks infrastructure manage
 ## Requirements
 
 #### System Requirements
+
 - Python 3.12 or higher
 - Minimum 4GB RAM (8GB recommended)
 - Network access to Versa Director
 
 #### Dependencies
+
 ```plaintext
 requests>=2.31.0
 python-dotenv>=1.0.0
@@ -26,10 +28,11 @@ aiohttp>=3.9.1
 ## Contributing
 
 Contributions to this repository are welcome. To contribute:
- 1. Fork the Repository: Click on the 'Fork' button at the top right of this page.
- 2. Create a New Branch: Use a descriptive name for your branch.
- 3. Make Your Changes: Implement your enhancements or fixes.
- 4. Submit a Pull Request: Provide a clear description of your changes and the reasons for them.
+
+1.  Fork the Repository: Click on the 'Fork' button at the top right of this page.
+2.  Create a New Branch: Use a descriptive name for your branch.
+3.  Make Your Changes: Implement your enhancements or fixes.
+4.  Submit a Pull Request: Provide a clear description of your changes and the reasons for them.
 
 ## License
 
