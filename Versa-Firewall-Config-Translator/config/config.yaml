@@ -1,7 +1,7 @@
 files:
   # Path to the Panorama configuration XML file to be translated.
   # This path is relative to the project root directory and compatible with both Windows and Linux.
-  xml_source_file: "./Source_Files/Panorama_Config_8-30-23 - Copy.xml"
+  xml_source_file: "./Source_Files/Panorama_Config_8-30-23.xml"
 
 template:
   tenant: RobK
@@ -40,7 +40,7 @@ template:
   # - True: Creates a shared template.
   # - False: Copies objects from the shared template to each service group.
   # Note: Ignored if `single_template` is True.
-  create_separate_shared_template: False  
+  create_separate_shared_template: True  
 
 logging:
   # Logging level for console output. Common levels: DEBUG, INFO, WARNING, ERROR, CRITICAL.

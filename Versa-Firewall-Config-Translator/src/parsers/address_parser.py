@@ -156,7 +156,7 @@ class AddressParser(BaseParser):
                 self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
                 continue
 
-        if {len(addresses)} > 0:
+        if len(addresses) > 0:
             self.logger.info(
                 f"Parsing successful for {len(addresses)} addresses from '{source_type}' sections."
             )
