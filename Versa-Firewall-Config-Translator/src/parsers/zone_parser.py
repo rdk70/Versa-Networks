@@ -15,9 +15,13 @@ class ZoneParser(BaseParser):
                 return ntype
         return None
 
-    def _parse_section(self, sections: List[ET.Element], source_type: str) -> List[Dict[str, Any]]:
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict[str, Any]]:
         """Parse zone configurations from a list of sections."""
-        zones: List[Dict[str, Any]] = []  # Ensure it's explicitly a list of dictionaries
+        zones: List[Dict[str, Any]] = (
+            []
+        )  # Ensure it's explicitly a list of dictionaries
 
         if len(sections) == 1 and sections[0] is None:
             self.logger.debug(f"Parsing found 0 zones in '{source_type}' sections.")
@@ -26,7 +30,9 @@ class ZoneParser(BaseParser):
         for section in sections:
             try:
                 entries = section.findall("./entry")
-                self.logger.debug(f"Found {len(entries)} zone entries in '{source_type}' section")
+                self.logger.debug(
+                    f"Found {len(entries)} zone entries in '{source_type}' section"
+                )
 
                 for entry in entries:
                     try:
@@ -37,12 +43,16 @@ class ZoneParser(BaseParser):
 
                         network = entry.find("network")
                         if network is None:
-                            self.logger.debug(f"No network configuration found for zone '{name}'")
+                            self.logger.debug(
+                                f"No network configuration found for zone '{name}'"
+                            )
                             continue
 
                         network_type = self._determine_network_type(network)
                         if not network_type:
-                            self.logger.debug(f"Could not determine network type for zone '{name}'")
+                            self.logger.debug(
+                                f"Could not determine network type for zone '{name}'"
+                            )
                             continue
 
                         zone_data: Dict[str, Any] = {
@@ -58,7 +68,9 @@ class ZoneParser(BaseParser):
                         if interfaces_elem is not None:
                             for member in interfaces_elem.findall("member"):
                                 if member.text:
-                                    zone_data["interfaces"].append(member.text)  # Ensure this is a list before append
+                                    zone_data["interfaces"].append(
+                                        member.text
+                                    )  # Ensure this is a list before append
 
                         if self.validate(zone_data):
                             zones.append(zone_data)
@@ -74,7 +86,9 @@ class ZoneParser(BaseParser):
                 self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
                 continue
 
-        self.logger.info(f"Parsing successful for {len(zones)} zones from '{source_type}' section")
+        self.logger.info(
+            f"Parsing successful for {len(zones)} zones from '{source_type}' section"
+        )
         return zones  # Always return a list
 
     def parse(self) -> List[Dict[str, Any]]:
@@ -86,7 +100,9 @@ class ZoneParser(BaseParser):
             )
 
             zones = self.get_parseable_content()
-            return zones if zones is not None else []  # Ensure `parse` always returns a list
+            return (
+                zones if zones is not None else []
+            )  # Ensure `parse` always returns a list
 
         except Exception as e:
             self.logger.error(f"Error during zone parsing: {str(e)}")
