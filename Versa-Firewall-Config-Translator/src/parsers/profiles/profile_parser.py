@@ -1,6 +1,5 @@
 import xml.etree.ElementTree as ET
-from typing import Any, Dict, List
-
+from typing import Any, Dict, List, Optional
 from src.parsers.base_parser import BaseParser
 
 
