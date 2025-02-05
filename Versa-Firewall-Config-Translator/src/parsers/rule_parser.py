@@ -20,9 +20,7 @@ class FirewallRuleParser(BaseParser):
         include_shared: bool = False,
         shared_only: bool = False,
     ):
-        super().__init__(
-            xml_content, device_name, device_group, logger, include_shared, shared_only
-        )
+        super().__init__(xml_content, device_name, device_group, logger, include_shared, shared_only)
         self.element_type = "rules"
 
         self.logger.debug(
@@ -36,9 +34,7 @@ class FirewallRuleParser(BaseParser):
 
         for field in required_fields:
             if field not in data or not data[field]:
-                self.logger.warning(
-                    f"Validation failed: Missing or empty field '{field}' in data: {data}"
-                )
+                self.logger.warning(f"Validation failed: Missing or empty field '{field}' in data: {data}")
                 return False
 
         self.logger.debug(f"Validation successful for data: {data}")
@@ -51,9 +47,7 @@ class FirewallRuleParser(BaseParser):
             if element is None:
                 self.logger.debug("Error parsing members: 'element' is None")
             else:
-                members = [
-                    member.text for member in element.findall("member") if member.text
-                ]
+                members = [member.text for member in element.findall("member") if member.text]
                 self.logger.debug(
                     f"Added {len(members)} members of element type '{element_type}' to firewall rule '{rule_name}'."
                 )
@@ -72,9 +66,7 @@ class FirewallRuleParser(BaseParser):
             self.logger.error(f"Error parsing dictionary element: {str(e)}")
         return parsed_dict
 
-    def _parse_section(
-        self, sections: List[ET.Element], source_type: str
-    ) -> List[Dict]:
+    def _parse_section(self, sections: List[ET.Element], source_type: str) -> List[Dict]:
         """Parse all security rules from a list of rulebase sections."""
         rules = []
         if len(sections) == 1 and sections[0] is None:
@@ -101,8 +93,10 @@ class FirewallRuleParser(BaseParser):
                 continue
         if len(rules) > 0:
             self.logger.info(
-                f"Parsing successful for {len(rules)} rules from '{source_type}' sections{f" '{self.device_name}.{self.device_group}'" if self.device_name and self.device_group else ''}."
+                f"Parsing successful for {len(rules)} rules from '{source_type}' sections"
+                f"{f' {self.device_name}.{self.device_group}' if self.device_name and self.device_group else ''}."
             )
+
         return rules
 
     def _parse_rule_entry(self, entry: ET.Element, source_type: str) -> Dict:
@@ -119,22 +113,12 @@ class FirewallRuleParser(BaseParser):
                 "to": self._parse_members(entry.find("to"), "to", name),
                 "from": self._parse_members(entry.find("from"), "from", name),
                 "source": self._parse_members(entry.find("source"), "to", name),
-                "destination": self._parse_members(
-                    entry.find("destination"), "destination", name
-                ),
-                "source-user": self._parse_members(
-                    entry.find("source-user"), "source-user", name
-                ),
-                "category": self._parse_members(
-                    entry.find("category"), "category", name
-                ),
-                "application": self._parse_members(
-                    entry.find("application"), "application", name
-                ),
+                "destination": self._parse_members(entry.find("destination"), "destination", name),
+                "source-user": self._parse_members(entry.find("source-user"), "source-user", name),
+                "category": self._parse_members(entry.find("category"), "category", name),
+                "application": self._parse_members(entry.find("application"), "application", name),
                 "service": self._parse_members(entry.find("service"), "service", name),
-                "hip-profiles": self._parse_members(
-                    entry.find("hip-profiles"), "hip-proviles", name
-                ),
+                "hip-profiles": self._parse_members(entry.find("hip-profiles"), "hip-proviles", name),
                 "tag": self._parse_members(entry.find("tag"), "tag", name),
                 "action": entry.findtext("action", ""),
                 "log-setting": entry.findtext("log-setting", ""),
@@ -181,9 +165,7 @@ class FirewallRuleParser(BaseParser):
                         rules.extend(shared_rules)
                         # self.logger.info(f"Parsing successful for {len(shared_rules)} rules from '{rulebase.value}' rulebase in 'shared' section.")
 
-            self.logger.debug(
-                f"Successfully parsed {len(rules)} total rules from all rulebases."
-            )
+            self.logger.debug(f"Successfully parsed {len(rules)} total rules from all rulebases.")
             return rules
 
         except Exception as e:

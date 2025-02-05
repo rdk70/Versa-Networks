@@ -168,7 +168,8 @@ class AddressGroupParser(BaseParser):
         """Parse address group entries from XML."""
         try:
             self.logger.debug(
-                f"Parsing '{self.element_type}' element from section {'shared' if self.shared_only else 'device {self.device_name}/{self.device_group}'}"
+                f"Parsing '{self.element_type}' element from section "
+                f"{'shared' if self.shared_only else f'device {self.device_name}/{self.device_group}'}"
             )
             groups = self.get_parseable_content()
 

@@ -14,32 +14,36 @@ class BaseTransformer(ABC):
     """
 
     @abstractmethod
-    def transform(
-        self, data: Dict[str, Any], logger: Logger, **kwargs: Any
-    ) -> Dict[str, Any]:
+    def transform(self, data: Dict[str, Any], logger: Logger, **kwargs: Any) -> Dict[str, Any]:
         """Transforms configuration data from source to target format."""
         pass
 
-    def _optional_field(
-        self, data: Dict[str, Any], field: str, default: Any = ""
-    ) -> Any:
+    def _optional_field(self, data: Dict[str, Any], field: str, default: Any = "") -> Any:
         """Safely retrieve optional field from data dictionary."""
         return data.get(field, default)
 
-    def _validate_required_fields(
-        self, data: Dict[str, Any], required_fields: List[str], logger: Logger
-    ) -> bool:
+    def _validate_required_fields(self, data: Dict[str, Any], required_fields: List[str], logger: Logger) -> bool:
         """Validate required fields are present in data."""
         return all(field in data and data[field] for field in required_fields)
 
     def _clean_string_list(self, items: List[str], logger: Logger) -> List[str]:
-        """Clean a list of strings."""
-        return [self.clean_string(item, logger) for item in items if item]
+        """Clean a list of strings, ensuring a consistent List[str] output."""
+        if not items:
+            return []
+
+        cleaned_items: List[str] = []
+        for item in items:
+            if item:
+                result = self.clean_string(item, logger)
+                if isinstance(result, list):
+                    cleaned_items.extend(result)  # Flatten if it's a list
+                else:
+                    cleaned_items.append(result)  # Append if it's a string
+
+        return cleaned_items
 
     @staticmethod
-    def clean_string(
-        input_str: Union[str, List[str]], logger: Logger
-    ) -> Union[str, List[str]]:
+    def clean_string(input_str: Union[str, List[str]], logger: Logger) -> Union[str, List[str]]:
         """
         Clean a string or list of strings by removing invalid characters.
 
@@ -62,8 +66,7 @@ class BaseTransformer(ABC):
 
                 if invalid_chars:
                     logger.debug(
-                        f"String cleaning: '{original_item}' → '{cleaned_item}' "
-                        f"(removed invalid chars: {invalid_chars})"
+                        f"String cleaning: '{original_item}' → '{cleaned_item}' (removed invalid chars: {invalid_chars})"
                     )
             return cleaned
         else:
@@ -71,10 +74,7 @@ class BaseTransformer(ABC):
             cleaned_str = re.sub(allowed_chars, "", input_str).replace(" ", "_")
 
             if invalid_chars:
-                logger.debug(
-                    f"String cleaning: '{input_str}' → '{cleaned_str}' "
-                    f"(removed invalid chars: {invalid_chars})"
-                )
+                logger.debug(f"String cleaning: '{input_str}' → '{cleaned_str}' (removed invalid chars: {invalid_chars})")
             return cleaned_str
 
     @staticmethod
@@ -95,10 +95,7 @@ class BaseTransformer(ABC):
         original_prefix = ip_prefix
         if not ip_prefix.endswith("/32") and not re.search(r"/\d{1,2}$", ip_prefix):
             ip_prefix = f"{ip_prefix}/32"
-            logger.debug(
-                f"IP prefix validation: Added missing CIDR notation "
-                f"'{original_prefix}' → '{ip_prefix}'"
-            )
+            logger.debug(f"IP prefix validation: Added missing CIDR notation '{original_prefix}' → '{ip_prefix}'")
         return ip_prefix
 
     @staticmethod
@@ -144,8 +141,7 @@ class BaseTransformer(ABC):
                 seen_names[item_name] += 1
                 new_name = f"{item_name}-dup-{seen_names[item_name]}"
                 logger.debug(
-                    f"Duplicate item name found of parsed data type '{name}'. "
-                    f"Item '{item_name}' renamed to '{new_name}'"
+                    f"Duplicate item name found of parsed data type '{name}'. Item '{item_name}' renamed to '{new_name}'"
                 )
                 item["name"] = new_name
                 renamed_count += 1
@@ -174,9 +170,7 @@ class BaseTransformer(ABC):
             Any: Hashable version of the item
         """
         if isinstance(item, dict):
-            return tuple(
-                sorted((k, BaseTransformer.make_hashable(v)) for k, v in item.items())
-            )
+            return tuple(sorted((k, BaseTransformer.make_hashable(v)) for k, v in item.items()))
         elif isinstance(item, list):
             return tuple(BaseTransformer.make_hashable(i) for i in item)
         return item

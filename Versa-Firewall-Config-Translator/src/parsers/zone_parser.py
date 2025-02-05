@@ -108,9 +108,7 @@ class ZoneParser(BaseParser):
         include_shared: bool = False,
         shared_only: bool = False,
     ):
-        super().__init__(
-            xml_content, device_name, device_group, logger, include_shared, shared_only
-        )
+        super().__init__(xml_content, device_name, device_group, logger, include_shared, shared_only)
         self.element_type = "zone"
         self.zone_paths = [
             "./config/devices/entry/template/entry/config/devices/entry/vsys/entry/zone",
@@ -128,16 +126,12 @@ class ZoneParser(BaseParser):
         required_fields = ["name", "network_type"]
 
         if not all(field in data and data[field] for field in required_fields):
-            self.logger.warning(
-                f"Validation failed: Missing or empty required field(s) in data: {data}"
-            )
+            self.logger.warning(f"Validation failed: Missing or empty required field(s) in data: {data}")
             return False
 
         valid_network_types = {"layer3", "layer2", "virtual-wire", "tap", "external"}
         if data["network_type"] not in valid_network_types:
-            self.logger.warning(
-                f"Validation failed: Invalid network_type '{data['network_type']}' for zone '{data['name']}'"
-            )
+            self.logger.warning(f"Validation failed: Invalid network_type '{data['network_type']}' for zone '{data['name']}'")
             return False
 
         return True
@@ -150,9 +144,7 @@ class ZoneParser(BaseParser):
                 return ntype
         return None
 
-    def _parse_section(
-        self, sections: List[ET.Element], source_type: str
-    ) -> List[Dict]:
+    def _parse_section(self, sections: List[ET.Element], source_type: str) -> List[Dict]:
         """Parse zone configurations from a list of sections."""
         zones = []
         if len(sections) == 1 and sections[0] is None:
@@ -161,9 +153,7 @@ class ZoneParser(BaseParser):
         for section in sections:
             try:
                 entries = section.findall("./entry")
-                self.logger.debug(
-                    f"Found {len(entries)} zone entries in '{source_type}' section"
-                )
+                self.logger.debug(f"Found {len(entries)} zone entries in '{source_type}' section")
 
                 for entry in entries:
                     try:
@@ -174,16 +164,12 @@ class ZoneParser(BaseParser):
 
                         network = entry.find("network")
                         if network is None:
-                            self.logger.debug(
-                                f"No network configuration found for zone '{name}'"
-                            )
+                            self.logger.debug(f"No network configuration found for zone '{name}'")
                             continue
 
                         network_type = self._determine_network_type(network)
                         if not network_type:
-                            self.logger.debug(
-                                f"Could not determine network type for zone '{name}'"
-                            )
+                            self.logger.debug(f"Could not determine network type for zone '{name}'")
                             continue
 
                         zone_data = {
@@ -215,17 +201,17 @@ class ZoneParser(BaseParser):
                 self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
                 continue
 
-        self.logger.info(
-            f"Parsing successful for {len(zones)} zones from '{source_type}' section"
-        )
+        self.logger.info(f"Parsing successful for {len(zones)} zones from '{source_type}' section")
         return zones
 
     def parse(self) -> List[Dict[str, Any]]:
         """Parse all zone configurations."""
         try:
             self.logger.debug(
-                f"Parsing '{self.element_type}' elements in the section {"'shared'" if self.shared_only else f'device {self.device_name}/{self.device_group}'} section."
+                f"Parsing '{self.element_type}' elements in the section "
+                f"{'shared' if self.shared_only else f'device {self.device_name}/{self.device_group}'} section."
             )
+
             zones = self.get_parseable_content()
             return zones
 

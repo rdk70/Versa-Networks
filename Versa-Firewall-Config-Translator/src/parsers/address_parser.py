@@ -48,9 +48,7 @@ class AddressParser(BaseParser):
         include_shared: bool = False,
         shared_only: bool = False,
     ):
-        super().__init__(
-            xml_content, device_name, device_group, logger, include_shared, shared_only
-        )
+        super().__init__(xml_content, device_name, device_group, logger, include_shared, shared_only)
         self.element_type = "address"
         self.logger.debug(
             f"AddressParser initialized for {'shared' if device_name is None and device_group is None else f'device {device_name}/{device_group}'} "
@@ -63,15 +61,11 @@ class AddressParser(BaseParser):
 
         for field in required_fields:
             if field not in data or not data[field]:
-                self.logger.warning(
-                    f"Validation failed: Missing or empty field '{field}' in data: {data}"
-                )
+                self.logger.warning(f"Validation failed: Missing or empty field '{field}' in data: {data}")
                 return False
 
         if not self._validate_ip_netmask(data["ip-netmask"]):
-            self.logger.warning(
-                f"Validation failed: Invalid IP-netmask format for '{data['name']}'."
-            )
+            self.logger.warning(f"Validation failed: Invalid IP-netmask format for '{data['name']}'.")
             return False
 
         self.logger.debug(
@@ -89,9 +83,7 @@ class AddressParser(BaseParser):
                 netmask = "32"
 
             ip_parts = ip.split(".")
-            if len(ip_parts) != 4 or not all(
-                0 <= int(part) <= 255 for part in ip_parts
-            ):
+            if len(ip_parts) != 4 or not all(0 <= int(part) <= 255 for part in ip_parts):
                 return False
 
             if not (0 <= int(netmask) <= 32):
@@ -102,9 +94,7 @@ class AddressParser(BaseParser):
         except (ValueError, AttributeError):
             return False
 
-    def _parse_section(
-        self, sections: List[ET.Element], source_type: str
-    ) -> List[Dict]:
+    def _parse_section(self, sections: List[ET.Element], source_type: str) -> List[Dict]:
         """Parse addresses from a list of sections."""
         addresses = []
         if len(sections) == 1 and sections[0] is None:
@@ -113,9 +103,7 @@ class AddressParser(BaseParser):
         for section in sections:
             try:
                 entries = section.findall("./entry")
-                self.logger.debug(
-                    f"Found {len(entries)} address entries in '{source_type}' section."
-                )
+                self.logger.debug(f"Found {len(entries)} address entries in '{source_type}' section.")
 
                 for entry in entries:
                     try:
@@ -127,15 +115,11 @@ class AddressParser(BaseParser):
                         }
 
                         if not address_data["name"]:
-                            self.logger.warning(
-                                f"Skipping '{source_type}' entry with missing name."
-                            )
+                            self.logger.warning(f"Skipping '{source_type}' entry with missing name.")
                             continue
 
                         if not address_data["ip-netmask"]:
-                            self.logger.warning(
-                                f"Skipping address '{address_data['name']}' with missing ip-netmask."
-                            )
+                            self.logger.warning(f"Skipping address '{address_data['name']}' with missing ip-netmask.")
                             continue
 
                         if self.validate(address_data):
@@ -147,9 +131,7 @@ class AddressParser(BaseParser):
                             self.logger.warning(f"Invalid address data: {address_data}")
 
                     except Exception as e:
-                        self.logger.error(
-                            f"Error parsing '{source_type}' address entry: {str(e)}"
-                        )
+                        self.logger.error(f"Error parsing '{source_type}' address entry: {str(e)}")
                         continue
 
             except Exception as e:
@@ -157,9 +139,7 @@ class AddressParser(BaseParser):
                 continue
 
         if len(addresses) > 0:
-            self.logger.info(
-                f"Parsing successful for {len(addresses)} addresses from '{source_type}' sections."
-            )
+            self.logger.info(f"Parsing successful for {len(addresses)} addresses from '{source_type}' sections.")
         return addresses
 
     def parse(self) -> List[Dict]:
@@ -167,7 +147,8 @@ class AddressParser(BaseParser):
         try:
             # self.logger.debug("Starting parsing of address entries.")
             self.logger.debug(
-                f"Parsing '{self.element_type}' elements in the {"'shared'" if self.shared_only else f'device {self.device_name}/{self.device_group}'} element."
+                f"Parsing '{self.element_type}' element from section "
+                f"{'shared' if self.shared_only else f'device {self.device_name}/{self.device_group}'}"
             )
             addresses = self.get_parseable_content()
 
