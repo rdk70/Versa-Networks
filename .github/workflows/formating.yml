@@ -20,13 +20,14 @@ jobs:
         run: |
           pip install black isort ruff
           npm install -g textlint textlint-rule-terminology textlint-rule-preset-ja-technical-writing prettier
+          
 
       # Auto-fix Python files
       - name: Auto-fix Python files
         run: |
           black .  # Auto-fix Python formatting
           isort .  # Auto-sort imports
-          ruff --fix .  # Auto-fix Ruff linting issues
+          ruff check --fix .  # Corrected Ruff auto-fix command
 
       # Auto-fix Markdown files
       - name: Auto-fix all Markdown files
