@@ -60,7 +60,9 @@ class ApplicationGroupParser(BaseParser):
         include_shared: bool = False,
         shared_only: bool = False,
     ):
-        super().__init__(xml_content, device_name, device_group, logger, include_shared, shared_only)
+        super().__init__(
+            xml_content, device_name, device_group, logger, include_shared, shared_only
+        )
         self.element_type = "application-group"
 
         self.logger.debug(
@@ -71,7 +73,9 @@ class ApplicationGroupParser(BaseParser):
     def validate(self, data: Dict[str, Any]) -> bool:
         """Validate application group entry data."""
         if not data.get("name") or not isinstance(data.get("members"), list):
-            self.logger.warning(f"Validation failed: Missing 'name' or invalid 'members' for data: {data}")
+            self.logger.warning(
+                f"Validation failed: Missing 'name' or invalid 'members' for data: {data}"
+            )
             return False
 
         self.logger.debug(f"Validation successful for data: {data}")
@@ -83,37 +87,53 @@ class ApplicationGroupParser(BaseParser):
         try:
             member_elements = group_entry.findall(".//members/member")
             if not member_elements:
-                self.logger.debug(f"No members found in application group '{group_name}'.")
+                self.logger.debug(
+                    f"No members found in application group '{group_name}'."
+                )
                 return members
 
             for member in member_elements:
                 if member.text:
                     members.append(member.text)
-                    self.logger.debug(f"Added member '{member.text}' to application group '{group_name}'.")
+                    self.logger.debug(
+                        f"Added member '{member.text}' to application group '{group_name}'."
+                    )
                 else:
-                    self.logger.warning(f"Empty member element found in application group '{group_name}'.")
+                    self.logger.warning(
+                        f"Empty member element found in application group '{group_name}'."
+                    )
 
             return members
         except Exception as e:
-            self.logger.error(f"Error parsing members for application group '{group_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing members for application group '{group_name}': {str(e)}"
+            )
             return members
 
-    def _parse_section(self, sections: List[ET.Element], source_type: str) -> List[Dict]:
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
         """Parse application groups from a list of sections."""
         groups = []
         if len(sections) == 1 and sections[0] is None:
-            self.logger.info(f"Parsing found 0 application groups in '{source_type}' sections.")
+            self.logger.info(
+                f"Parsing found 0 application groups in '{source_type}' sections."
+            )
             return None
         for section in sections:
             try:
                 entries = section.findall("./entry")
-                self.logger.debug(f"Found {len(entries)} application group entries in '{source_type}' section.")
+                self.logger.debug(
+                    f"Found {len(entries)} application group entries in '{source_type}' section."
+                )
 
                 for entry in entries:
                     try:
                         name = entry.get("name")
                         if not name:
-                            self.logger.warning(f"Skipping '{source_type}' entry with missing name.")
+                            self.logger.warning(
+                                f"Skipping '{source_type}' entry with missing name."
+                            )
                             continue
 
                         group_data = {
@@ -125,7 +145,9 @@ class ApplicationGroupParser(BaseParser):
 
                         if self.validate(group_data):
                             if not group_data["members"]:
-                                self.logger.warning(f"Skipping empty application group '{name}'.")
+                                self.logger.warning(
+                                    f"Skipping empty application group '{name}'."
+                                )
                                 continue
 
                             groups.append(group_data)
@@ -134,17 +156,23 @@ class ApplicationGroupParser(BaseParser):
                                 f"with {len(group_data['members'])} members from section '{source_type}'."
                             )
                         else:
-                            self.logger.warning(f"Invalid data for '{source_type}' application group '{name}'.")
+                            self.logger.warning(
+                                f"Invalid data for '{source_type}' application group '{name}'."
+                            )
 
                     except Exception as e:
-                        self.logger.error(f"Error parsing '{source_type}' application group entry: {str(e)}")
+                        self.logger.error(
+                            f"Error parsing '{source_type}' application group entry: {str(e)}"
+                        )
                         continue
 
             except Exception as e:
                 self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
                 continue
         if {len(groups)} > 0:
-            self.logger.info(f"Parsing successful for {len(groups)} application groups from '{source_type}' sections.")
+            self.logger.info(
+                f"Parsing successful for {len(groups)} application groups from '{source_type}' sections."
+            )
         return groups
 
     def parse(self) -> List[Dict]:
@@ -159,7 +187,9 @@ class ApplicationGroupParser(BaseParser):
             valid_groups = []
             for group in groups:
                 if not group["members"]:
-                    self.logger.warning(f"Skipping empty application group '{group['name']}'.")
+                    self.logger.warning(
+                        f"Skipping empty application group '{group['name']}'."
+                    )
                     continue
                 valid_groups.append(group)
 

@@ -273,10 +273,14 @@ class DOSParser(BaseParser):
             return red_data
 
         except Exception as e:
-            self.logger.error(f"Error parsing RED configuration for {protocol}: {str(e)}")
+            self.logger.error(
+                f"Error parsing RED configuration for {protocol}: {str(e)}"
+            )
             return None
 
-    def _parse_flood_section(self, flood_element: ET.Element, profile_name: str) -> Dict:
+    def _parse_flood_section(
+        self, flood_element: ET.Element, profile_name: str
+    ) -> Dict:
         """Parse flood protection configuration section."""
         flood_data = {}
 
@@ -294,15 +298,20 @@ class DOSParser(BaseParser):
                 protocol_element = flood_element.find(xml_name)
                 if protocol_element is not None:
                     flood_data[protocol_key] = {
-                        "enable": protocol_element.findtext("enable", "true").lower() == "true",
+                        "enable": protocol_element.findtext("enable", "true").lower()
+                        == "true",
                         "red": self._parse_red_section(protocol_element, xml_name),
                     }
-                    self.logger.debug(f"Parsed {xml_name} configuration for profile '{profile_name}'")
+                    self.logger.debug(
+                        f"Parsed {xml_name} configuration for profile '{profile_name}'"
+                    )
 
             return flood_data
 
         except Exception as e:
-            self.logger.error(f"Error parsing flood section for profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing flood section for profile '{profile_name}': {str(e)}"
+            )
             return {}
 
     def _parse_resource_section(self, element: ET.Element, profile_name: str) -> Dict:
@@ -319,7 +328,9 @@ class DOSParser(BaseParser):
             resource_data = {
                 "sessions": {
                     "enabled": sessions.findtext("enabled", "false").lower() == "true",
-                    "max-concurrent-limit": sessions.findtext("max-concurrent-limit", "32768"),
+                    "max-concurrent-limit": sessions.findtext(
+                        "max-concurrent-limit", "32768"
+                    ),
                 }
             }
 
@@ -331,10 +342,14 @@ class DOSParser(BaseParser):
             return resource_data
 
         except Exception as e:
-            self.logger.error(f"Error parsing resource section for profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing resource section for profile '{profile_name}': {str(e)}"
+            )
             return {}
 
-    def _parse_classification_section(self, element: ET.Element, profile_name: str) -> Dict:
+    def _parse_classification_section(
+        self, element: ET.Element, profile_name: str
+    ) -> Dict:
         """Parse classification configuration for classified DOS profiles."""
         try:
             classification = element.find("classification")
@@ -343,7 +358,9 @@ class DOSParser(BaseParser):
 
             class_data = {
                 "criteria": classification.findtext("criteria", "destination-ip"),
-                "thresholds": self._parse_flood_section(classification.find("thresholds"), profile_name),
+                "thresholds": self._parse_flood_section(
+                    classification.find("thresholds"), profile_name
+                ),
             }
 
             self.logger.debug(
@@ -352,25 +369,35 @@ class DOSParser(BaseParser):
             return class_data
 
         except Exception as e:
-            self.logger.error(f"Error parsing classification section for profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing classification section for profile '{profile_name}': {str(e)}"
+            )
             return {}
 
-    def _parse_section(self, sections: List[ET.Element], source_type: str) -> List[Dict]:
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
         """Parse DOS profiles from a list of sections."""
         profiles = []
         if len(sections) == 1 and sections[0] is None:
-            self.logger.debug(f"Parsing found 0 DOS profiles in '{source_type}' sections.")
+            self.logger.debug(
+                f"Parsing found 0 DOS profiles in '{source_type}' sections."
+            )
             return None
         for section in sections:
             try:
                 entries = section.findall("./entry")
-                self.logger.debug(f"Found {len(entries)} DOS profile entries in '{source_type}' section")
+                self.logger.debug(
+                    f"Found {len(entries)} DOS profile entries in '{source_type}' section"
+                )
 
                 for entry in entries:
                     try:
                         name = entry.get("name")
                         if not name:
-                            self.logger.warning(f"Skipping {source_type} entry with missing name")
+                            self.logger.warning(
+                                f"Skipping {source_type} entry with missing name"
+                            )
                             continue
 
                         profile_type = entry.findtext("type", "aggregate")
@@ -384,17 +411,27 @@ class DOSParser(BaseParser):
 
                         # Parse configuration based on profile type
                         if profile_type == "aggregate":
-                            profile_data["flood"] = self._parse_flood_section(entry.find("flood"), name)
+                            profile_data["flood"] = self._parse_flood_section(
+                                entry.find("flood"), name
+                            )
                         elif profile_type == "classified":
-                            profile_data["classification"] = self._parse_classification_section(entry, name)
+                            profile_data["classification"] = (
+                                self._parse_classification_section(entry, name)
+                            )
 
-                        profile_data["resource"] = self._parse_resource_section(entry, name)
+                        profile_data["resource"] = self._parse_resource_section(
+                            entry, name
+                        )
 
                         if self.validate(profile_data):
                             profiles.append(profile_data)
-                            self.logger.debug(f"Successfully parsed DOS profile '{name}' of type '{profile_type}'")
+                            self.logger.debug(
+                                f"Successfully parsed DOS profile '{name}' of type '{profile_type}'"
+                            )
                         else:
-                            self.logger.warning(f"Validation failed for DOS profile '{name}'")
+                            self.logger.warning(
+                                f"Validation failed for DOS profile '{name}'"
+                            )
 
                     except Exception as e:
                         self.logger.error(f"Error parsing DOS profile entry: {str(e)}")
@@ -404,7 +441,9 @@ class DOSParser(BaseParser):
                 self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
                 continue
         if {len(profiles)} > 0:
-            self.logger.info(f"Parsing successful for {len(profiles)} DOS profiles from '{source_type}' sections")
+            self.logger.info(
+                f"Parsing successful for {len(profiles)} DOS profiles from '{source_type}' sections"
+            )
         return profiles
 
     def parse(self) -> List[Dict]:

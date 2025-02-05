@@ -5,7 +5,9 @@ from src.transformers.base_transformer import BaseTransformer
 
 
 class DataFilteringTransformer(BaseTransformer):
-    def transform(self, data: Dict[str, Any], logger: Logger, **kwargs: Any) -> Dict[str, Any]:
+    def transform(
+        self, data: Dict[str, Any], logger: Logger, **kwargs: Any
+    ) -> Dict[str, Any]:
         """
         Transform an antivirus entry to Versa format.
 

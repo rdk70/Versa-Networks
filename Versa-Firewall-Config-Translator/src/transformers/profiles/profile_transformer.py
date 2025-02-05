@@ -5,7 +5,9 @@ from src.transformers.base_transformer import BaseTransformer
 
 
 class ProfileTransformer(BaseTransformer):
-    def transform(self, data: Dict[str, Any], logger: logging.Logger, **kwargs: Any) -> Dict[str, Any]:
+    def transform(
+        self, data: Dict[str, Any], logger: logging.Logger, **kwargs: Any
+    ) -> Dict[str, Any]:
         """
         Transform a profile entry to Versa format.
 
@@ -50,6 +52,8 @@ class ProfileTransformer(BaseTransformer):
 
         # Other profile transformations remain unchanged...
 
-        logger.debug(f"Transformation complete for {profile_type} profile '{data['name']}'")
+        logger.debug(
+            f"Transformation complete for {profile_type} profile '{data['name']}'"
+        )
 
         return transformed
