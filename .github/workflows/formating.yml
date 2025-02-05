@@ -5,6 +5,9 @@ on: [push, pull_request]
 jobs:
   lint:
     runs-on: ubuntu-latest
+    permissions:
+      statuses: write  # Allows updating GitHub API statuses
+      checks: write     # Allows updating checks API
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
