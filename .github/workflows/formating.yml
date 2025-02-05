@@ -8,11 +8,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 2  # Ensures at least one previous commit is available
 
       - name: Run Super-Linter
-        uses: super-linter/super-linter@v6.1.0  # Use correct action reference
+        uses: super-linter/super-linter@v6.1.0
         env:
-          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_ALL_CODEBASE: true  # Forces linting on all files
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
