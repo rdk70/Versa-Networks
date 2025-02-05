@@ -64,7 +64,9 @@ class AddressGroupParser(BaseParser):
         include_shared: bool = False,
         shared_only: bool = False,
     ):
-        super().__init__(xml_content, device_name, device_group, logger, include_shared, shared_only)
+        super().__init__(
+            xml_content, device_name, device_group, logger, include_shared, shared_only
+        )
         self.element_type = "address-group"
         self.logger.debug(
             f"AddressGroupParser initialized for {'shared' if device_name is None and device_group is None else f'device {device_name}/{device_group}'} "
@@ -86,7 +88,9 @@ class AddressGroupParser(BaseParser):
 
         for field, field_type in required_fields.items():
             if not isinstance(data.get(field), field_type):
-                self.logger.warning(f"Validation failed: Field '{field}' is missing or not of type {field_type.__name__}.")
+                self.logger.warning(
+                    f"Validation failed: Field '{field}' is missing or not of type {field_type.__name__}."
+                )
                 return False
         self.logger.debug(
             f"Address group '{data['name']}' validated with {len(data['members'])} members: "
@@ -107,34 +111,50 @@ class AddressGroupParser(BaseParser):
             for member in member_elements:
                 if member.text:
                     members.append(member.text)
-                    self.logger.debug(f"Added member '{member.text}' to address group '{group_name}'.")
+                    self.logger.debug(
+                        f"Added member '{member.text}' to address group '{group_name}'."
+                    )
                 else:
-                    self.logger.warning(f"Empty member element found in address group '{group_name}'.")
+                    self.logger.warning(
+                        f"Empty member element found in address group '{group_name}'."
+                    )
 
             return members
 
         except Exception as e:
-            self.logger.error(f"Error parsing members for address group '{group_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing members for address group '{group_name}': {str(e)}"
+            )
             return members
 
-    def _parse_section(self, sections: List[ET.Element], source_type: str) -> List[Dict]:
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
         """Parse address groups from a list of sections."""
         groups = []
         if len(sections) == 1 and sections[0] is None:
-            self.logger.debug(f"Parsing found 0 application groups in '{source_type}' sections.")
+            self.logger.debug(
+                f"Parsing found 0 application groups in '{source_type}' sections."
+            )
             return None
 
         for section in sections:
             try:
                 entries = section.findall("./entry")
-                self.logger.debug(f"Found {len(entries)} address group entries in '{source_type}' section.")
+                self.logger.debug(
+                    f"Found {len(entries)} address group entries in '{source_type}' section."
+                )
 
                 for entry in entries:
                     try:
                         name = entry.get("name")
-                        self.logger.debug(f"Parsing address group '{name}' from '{source_type}' section.")
+                        self.logger.debug(
+                            f"Parsing address group '{name}' from '{source_type}' section."
+                        )
                         if not name:
-                            self.logger.warning(f"Skipping '{source_type}' entry with missing name.")
+                            self.logger.warning(
+                                f"Skipping '{source_type}' entry with missing name."
+                            )
                             continue
 
                         group_data = {
@@ -151,17 +171,23 @@ class AddressGroupParser(BaseParser):
                                 f"with {len(group_data['members'])} members from section '{source_type}'."
                             )
                         else:
-                            self.logger.warning(f"Invalid data for '{source_type}' address group '{name}'.")
+                            self.logger.warning(
+                                f"Invalid data for '{source_type}' address group '{name}'."
+                            )
 
                     except Exception as e:
-                        self.logger.error(f"Error parsing '{source_type}' address group entry: {str(e)}")
+                        self.logger.error(
+                            f"Error parsing '{source_type}' address group entry: {str(e)}"
+                        )
                         continue
 
             except Exception as e:
                 self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
                 continue
         if {len(groups)} > 0:
-            self.logger.info(f"Parsing successful for {len(groups)} address groups from '{source_type}' sections.")
+            self.logger.info(
+                f"Parsing successful for {len(groups)} address groups from '{source_type}' sections."
+            )
         return groups
 
     def parse(self) -> List[Dict]:
@@ -175,7 +201,9 @@ class AddressGroupParser(BaseParser):
             valid_groups = []
             for group in groups:
                 if not group["members"]:
-                    self.logger.warning(f"Skipping empty address group '{group['name']}'.")
+                    self.logger.warning(
+                        f"Skipping empty address group '{group['name']}'."
+                    )
                     continue
                 valid_groups.append(group)
 
