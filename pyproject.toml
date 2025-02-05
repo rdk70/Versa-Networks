@@ -1,0 +1,7 @@
+[tool.ruff]
+line-length = 128
+target-version = "py312"  # Adjust to your Python version
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]  # Enable flake8 and isort checks
+ignore = ["E501"]  # Ignore long lines
