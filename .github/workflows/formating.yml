@@ -21,6 +21,7 @@ jobs:
           pip install black isort ruff
           npm install -g textlint textlint-rule-terminology textlint-rule-preset-ja-technical-writing prettier
           
+          
 
       # Auto-fix Python files
       - name: Auto-fix Python files
@@ -56,6 +57,10 @@ jobs:
           VALIDATE_PYTHON_RUFF: true
           VALIDATE_PYTHON_BLACK: true
           VALIDATE_PYTHON_MYPY: true
+    
+          # Install dependencies inside the container
+          PYTHON_SETUP_COMMAND: "pip install --upgrade types-PyYAML types-requests"
+
 
       # Run Prettier (Check only, no auto-fix)
       - name: Run Prettier (Check)
