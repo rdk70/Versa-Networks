@@ -163,9 +163,9 @@ class FirewallRuleParser(BaseParser):
                     if shared_element is not None:
                         shared_rules = self._parse_section(shared_element, "shared")
                         rules.extend(shared_rules)
-                        # self.logger.info(f"Parsing successful for {len(shared_rules)} rules from '{rulebase.value}' rulebase in 'shared' section.")
 
-            self.logger.debug(f"Successfully parsed {len(rules)} total rules from all rulebases.")
+            # self.logger.debug(f"Successfully parsed {len(rules)} total rules from all rulebases.")
+            self.logger.debug("Successfully parsed {} total rules from all rulebases.".format(len(rules)))
             return rules
 
         except Exception as e:
