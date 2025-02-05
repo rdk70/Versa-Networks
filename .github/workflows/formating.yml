@@ -56,10 +56,6 @@ jobs:
           echo "Running Prettier..."
           prettier --write "**/*.md" || echo "Prettier failed, but continuing..."
 
-      # ✅ Run Prettier (Check Only) BEFORE committing changes
-      - name: Run Prettier (Check)
-        run: npx prettier --check .
-
       # ✅ Commit and push only if there are actual changes
       - name: Commit and Push Fixes
         run: |
