@@ -10,7 +10,9 @@ class ApplicationFilterTransformer(BaseTransformer):
     Converts PAN application filter format to Versa format.
     """
 
-    def transform(self, data: Dict[str, Any], logger: Logger, **kwargs: Any) -> Dict[str, Any]:
+    def transform(
+        self, data: Dict[str, Any], logger: Logger, **kwargs: Any
+    ) -> Dict[str, Any]:
         """
         Transform an application filter entry to Versa format.
 
@@ -56,7 +58,9 @@ class ApplicationFilterTransformer(BaseTransformer):
         transformed = {
             "application-filter": {
                 "filter-name": self.clean_string(application_filter["name"], logger),
-                "description": self.clean_string(application_filter.get("description", ""), logger),
+                "description": self.clean_string(
+                    application_filter.get("description", ""), logger
+                ),
                 "family": cleaned_categories,
                 "subfamily": cleaned_subcategories,
             }
@@ -69,7 +73,9 @@ class ApplicationFilterTransformer(BaseTransformer):
 
         return transformed
 
-    def _custom_clean_string_list(self, items: List[str], item_type: str, filter_name: str, logger: Logger) -> List[str]:
+    def _custom_clean_string_list(
+        self, items: List[str], item_type: str, filter_name: str, logger: Logger
+    ) -> List[str]:
         """
         Custom method to clean a list of strings and log the process.
 
@@ -92,8 +98,12 @@ class ApplicationFilterTransformer(BaseTransformer):
 
             if cleaned_item:
                 cleaned_items.append(cleaned_item)
-                logger.debug(f"Added cleaned {item_type} '{cleaned_item}' to filter '{filter_name}'")
+                logger.debug(
+                    f"Added cleaned {item_type} '{cleaned_item}' to filter '{filter_name}'"
+                )
             else:
-                logger.warning(f"Skipping empty {item_type} '{item}' in filter '{filter_name}'")
+                logger.warning(
+                    f"Skipping empty {item_type} '{item}' in filter '{filter_name}'"
+                )
 
         return cleaned_items

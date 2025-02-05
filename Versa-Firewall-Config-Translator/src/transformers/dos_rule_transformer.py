@@ -7,7 +7,9 @@ from src.transformers.base_transformer import BaseTransformer
 class DOSRuleTransformer(BaseTransformer):
     """Transforms PAN DOS rule configurations to Versa format."""
 
-    def transform(self, data: Dict[str, Any], logger: Logger, **kwargs: Any) -> Dict[str, Any]:
+    def transform(
+        self, data: Dict[str, Any], logger: Logger, **kwargs: Any
+    ) -> Dict[str, Any]:
         """
         Transform a DOS rule from PAN to Versa format.
 
@@ -19,11 +21,15 @@ class DOSRuleTransformer(BaseTransformer):
         Returns:
             Dict[str, Any]: Transformed DOS rule in Versa format
         """
-        logger.debug(f"Starting DOS rule transformation for '{data.get('name', 'unknown')}'")
+        logger.debug(
+            f"Starting DOS rule transformation for '{data.get('name', 'unknown')}'"
+        )
 
         # Ensure 'data' is always a dictionary
         if not isinstance(data, dict):
-            logger.error("Expected 'data' to be a dictionary but received something else.")
+            logger.error(
+                "Expected 'data' to be a dictionary but received something else."
+            )
             return {}
 
         try:
@@ -31,7 +37,9 @@ class DOSRuleTransformer(BaseTransformer):
             transformed = {
                 "dos-policy": {
                     "name": self.clean_string(data.get("name", ""), logger),
-                    "description": self.clean_string(data.get("description", ""), logger),
+                    "description": self.clean_string(
+                        data.get("description", ""), logger
+                    ),
                     "tag": data.get("tag", []),
                     "rule-disable": "true" if data.get("disabled", False) else "false",
                     "match": self._create_match_section(data, logger),
@@ -39,14 +47,20 @@ class DOSRuleTransformer(BaseTransformer):
                 }
             }
 
-            logger.debug(f"Successfully transformed DOS rule '{data.get('name', 'unknown')}'")
+            logger.debug(
+                f"Successfully transformed DOS rule '{data.get('name', 'unknown')}'"
+            )
             return transformed
 
         except Exception as e:
-            logger.error(f"Error transforming DOS rule '{data.get('name', 'unknown')}': {str(e)}")
+            logger.error(
+                f"Error transforming DOS rule '{data.get('name', 'unknown')}': {str(e)}"
+            )
             raise
 
-    def _create_match_section(self, data: Dict[str, Any], logger: Logger) -> Dict[str, Any]:
+    def _create_match_section(
+        self, data: Dict[str, Any], logger: Logger
+    ) -> Dict[str, Any]:
         """Create match section of Versa DOS rule."""
         match = {
             "source": {"address": {}},
@@ -82,7 +96,9 @@ class DOSRuleTransformer(BaseTransformer):
 
         return match
 
-    def _create_set_section(self, data: Dict[str, Any], logger: Logger) -> Dict[str, Any]:
+    def _create_set_section(
+        self, data: Dict[str, Any], logger: Logger
+    ) -> Dict[str, Any]:
         """Create set section of Versa DOS rule."""
         set_section = {"action": data.get("action", "protect").lower()}
 
@@ -91,10 +107,14 @@ class DOSRuleTransformer(BaseTransformer):
         if isinstance(protection, dict):
             dos_profile = {}
 
-            if protection.get("type") == "aggregate" and isinstance(protection.get("profile"), str):
+            if protection.get("type") == "aggregate" and isinstance(
+                protection.get("profile"), str
+            ):
                 dos_profile["aggregate"] = protection["profile"]
 
-            elif protection.get("type") == "classified" and isinstance(protection.get("profile"), str):
+            elif protection.get("type") == "classified" and isinstance(
+                protection.get("profile"), str
+            ):
                 dos_profile["classified"] = protection["profile"]
 
             if dos_profile:

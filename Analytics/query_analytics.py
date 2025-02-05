@@ -47,7 +47,9 @@ class OrderType(str, Enum):
 class AnalyticsConfig:
     tenant_name: str = "Versa"
     feature: Feature = Feature.SDWAN
-    start_date: str = "60minutesAgo"  # Format: [yyyy]-[MM]-[dd]T[HH]:[mm]:[ss]Z or relative
+    start_date: str = (
+        "60minutesAgo"  # Format: [yyyy]-[MM]-[dd]T[HH]:[mm]:[ss]Z or relative
+    )
     end_date: str = "today"  # Format: same as start_date
     count: int = 10  # -1 for all items
     from_count: int = 0  # Starting index for pagination
@@ -98,7 +100,9 @@ class NetworkMonitor:
             logger.error(f"Login failed: {e}")
             return False
 
-    def get_analytics_data(self, site_name: str, config: Optional[AnalyticsConfig] = None) -> Optional[Dict[str, Any]]:
+    def get_analytics_data(
+        self, site_name: str, config: Optional[AnalyticsConfig] = None
+    ) -> Optional[Dict[str, Any]]:
         if config is None:
             config = AnalyticsConfig()
             config.metrics = [

@@ -129,7 +129,9 @@ def main():
         separator = "~" * 78
         print(f"{Colors.GREEN}{separator}{Colors.NONE}")
         print(f"{Colors.GREEN}Traffic generator started{Colors.NONE}")
-        print(f"{Colors.GREEN}This script will run indefinitely. Ctrl+C to stop.{Colors.NONE}")
+        print(
+            f"{Colors.GREEN}This script will run indefinitely. Ctrl+C to stop.{Colors.NONE}"
+        )
         print(f"{Colors.GREEN}{separator}{Colors.NONE}")
 
         # Configuration info
@@ -157,7 +159,9 @@ def main():
             print("\nStarting Web Traffic Generation...")
             for url in urls:
                 print(f"\nBrowsing from starting URL: {url}")
-                random_depth = random.randint(config_data["min_depth"], config_data["max_depth"])
+                random_depth = random.randint(
+                    config_data["min_depth"], config_data["max_depth"]
+                )
                 do_request(url)
 
         # Display final statistics
