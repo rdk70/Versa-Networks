@@ -11,7 +11,7 @@ This repository contains multiple tools for Versa Networks infrastructure manage
 ## Requirements
 
 #### System Requirements
-- Python 3.8 or higher
+- Python 3.12 or higher
 - Minimum 4GB RAM (8GB recommended)
 - Network access to Versa Director
 
