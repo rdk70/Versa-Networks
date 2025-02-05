@@ -5,7 +5,9 @@ from src.transformers.base_transformer import BaseTransformer
 
 
 class SCTPProtectionTransformer(BaseTransformer):
-    def transform(self, data: Dict[str, Any], logger: logging.Logger, **kwargs: Any) -> Dict[str, Any]:
+    def transform(
+        self, data: Dict[str, Any], logger: logging.Logger, **kwargs: Any
+    ) -> Dict[str, Any]:
         """
         Transform the antivirus data.
 

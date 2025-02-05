@@ -7,7 +7,9 @@ from .base_transformer import BaseTransformer
 class ServiceGroupTransformer(BaseTransformer):
     """Transforms PAN service group configurations to Versa format."""
 
-    def transform(self, data: Dict[str, Any], logger: Logger, **kwargs: Any) -> Dict[str, Any]:
+    def transform(
+        self, data: Dict[str, Any], logger: Logger, **kwargs: Any
+    ) -> Dict[str, Any]:
         """
         Transform service group entry to Versa format.
 
@@ -23,11 +25,17 @@ class ServiceGroupTransformer(BaseTransformer):
         service_group = data
         existing_services = kwargs.get("existing_services", [])
 
-        logger.debug(f"Processing group '{service_group['name']}' with {len(service_group['members'])} members")
+        logger.debug(
+            f"Processing group '{service_group['name']}' with {len(service_group['members'])} members"
+        )
 
-        service_names = [service.get("name") for service in existing_services if service.get("name")]
+        service_names = [
+            service.get("name") for service in existing_services if service.get("name")
+        ]
 
-        cleaned_members, skipped = self._process_members(service_group["members"], service_names, service_group["name"], logger)
+        cleaned_members, skipped = self._process_members(
+            service_group["members"], service_names, service_group["name"], logger
+        )
 
         transformed = {
             "name": self.clean_string(service_group["name"], logger),
@@ -35,7 +43,9 @@ class ServiceGroupTransformer(BaseTransformer):
         }
 
         if skipped:
-            logger.warning(f"Skipped invalid members in {service_group['name']}: {skipped}")
+            logger.warning(
+                f"Skipped invalid members in {service_group['name']}: {skipped}"
+            )
 
         return transformed
 
@@ -62,6 +72,8 @@ class ServiceGroupTransformer(BaseTransformer):
                 logger.debug(f"Added member '{cleaned}' to group '{group_name}'")
             else:
                 skipped_members.append(cleaned)
-                logger.debug(f"Skipping invalid member '{cleaned}' in group '{group_name}'")
+                logger.debug(
+                    f"Skipping invalid member '{cleaned}' in group '{group_name}'"
+                )
 
         return cleaned_members, skipped_members

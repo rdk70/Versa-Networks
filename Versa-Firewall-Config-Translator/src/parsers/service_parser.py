@@ -100,7 +100,9 @@ class ServiceParser(BaseParser):
         include_shared: bool = False,
         shared_only: bool = False,
     ):
-        super().__init__(xml_content, device_name, device_group, logger, include_shared, shared_only)
+        super().__init__(
+            xml_content, device_name, device_group, logger, include_shared, shared_only
+        )
         self.element_type = "service"
 
         self.logger.debug(
@@ -114,7 +116,9 @@ class ServiceParser(BaseParser):
 
         for field in required_fields:
             if field not in data or not data[field]:
-                self.logger.debug(f"Validation failed: Missing or empty field '{field}' in data: {data}")
+                self.logger.debug(
+                    f"Validation failed: Missing or empty field '{field}' in data: {data}"
+                )
                 return False
 
         self.logger.debug(f"Validation successful for data: {data}")
@@ -138,10 +142,14 @@ class ServiceParser(BaseParser):
             return valid
 
         except ValueError:
-            self.logger.debug(f"Invalid port format '{port}' in service: {service_name}")
+            self.logger.debug(
+                f"Invalid port format '{port}' in service: {service_name}"
+            )
             return False
 
-    def _parse_section(self, sections: List[ET.Element], source_type: str) -> List[Dict]:
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
         """Parse services from a list of sections."""
         services = []
         if len(sections) == 1 and sections[0] is None:
@@ -150,13 +158,17 @@ class ServiceParser(BaseParser):
         for section in sections:
             try:
                 entries = section.findall("./entry")
-                self.logger.debug(f"Found {len(entries)} service entries in '{source_type}' section.")
+                self.logger.debug(
+                    f"Found {len(entries)} service entries in '{source_type}' section."
+                )
 
                 for entry in entries:
                     try:
                         name = entry.get("name")
                         if not name:
-                            self.logger.warning(f"Skipping '{source_type}' entry with missing name.")
+                            self.logger.warning(
+                                f"Skipping '{source_type}' entry with missing name."
+                            )
                             continue
 
                         service_data = {
@@ -193,14 +205,18 @@ class ServiceParser(BaseParser):
                             self.logger.warning(f"Invalid service data: {service_data}")
 
                     except Exception as e:
-                        self.logger.error(f"Error parsing '{source_type}' service '{name}': {str(e)}")
+                        self.logger.error(
+                            f"Error parsing '{source_type}' service '{name}': {str(e)}"
+                        )
                         continue
 
             except Exception as e:
                 self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
                 continue
         if len(services) > 0:
-            self.logger.info(f"Parsing successful for {len(services)} services from '{source_type}' sections.")
+            self.logger.info(
+                f"Parsing successful for {len(services)} services from '{source_type}' sections."
+            )
         return services
 
     def parse(self) -> List[Dict]:
@@ -213,7 +229,9 @@ class ServiceParser(BaseParser):
 
             services = self.get_parseable_content()
 
-            self.logger.debug(f"Completed parsing of services. {len(services)} valid entries found.")
+            self.logger.debug(
+                f"Completed parsing of services. {len(services)} valid entries found."
+            )
             return services
 
         except Exception as e:

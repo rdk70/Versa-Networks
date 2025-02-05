@@ -10,7 +10,9 @@ class DOSTransformer(BaseTransformer):
     Maintains the original profile type (aggregate or classified).
     """
 
-    def transform(self, data: Dict[str, Any], logger: Logger, **kwargs: Any) -> Dict[str, Any]:
+    def transform(
+        self, data: Dict[str, Any], logger: Logger, **kwargs: Any
+    ) -> Dict[str, Any]:
         """
         Transform a DOS profile from PAN to Versa format based on its type.
 
@@ -31,7 +33,9 @@ class DOSTransformer(BaseTransformer):
             profile = {
                 "dos-profile": {
                     "name": self.clean_string(data["name"], logger),
-                    "description": self.clean_string(data.get("description", ""), logger),
+                    "description": self.clean_string(
+                        data.get("description", ""), logger
+                    ),
                     "flood": self._transform_flood_protection(data, logger),
                 }
             }
@@ -48,19 +52,27 @@ class DOSTransformer(BaseTransformer):
                     "source-ip": "source-ip-only",
                 }
 
-                profile["dos-profile"]["classification-key"] = criteria_mapping.get(criteria, "destination-ip-only")
+                profile["dos-profile"]["classification-key"] = criteria_mapping.get(
+                    criteria, "destination-ip-only"
+                )
 
             # Add metadata to help APIHandler determine the correct endpoint
             profile["profile_type"] = profile_type
 
-            logger.debug(f"Successfully transformed DOS profile '{data['name']}' as {profile_type} profile")
+            logger.debug(
+                f"Successfully transformed DOS profile '{data['name']}' as {profile_type} profile"
+            )
             return profile
 
         except Exception as e:
-            logger.error(f"Error transforming DOS profile '{data.get('name', 'unknown')}': {str(e)}")
+            logger.error(
+                f"Error transforming DOS profile '{data.get('name', 'unknown')}': {str(e)}"
+            )
             raise
 
-    def _transform_flood_protection(self, data: Dict[str, Any], logger: Logger) -> Dict[str, Any]:
+    def _transform_flood_protection(
+        self, data: Dict[str, Any], logger: Logger
+    ) -> Dict[str, Any]:
         """
         Transform flood protection settings.
 

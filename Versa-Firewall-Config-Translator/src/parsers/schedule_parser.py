@@ -106,7 +106,9 @@ class ScheduleParser(BaseParser):
         include_shared: bool = False,
         shared_only: bool = False,
     ):
-        super().__init__(xml_content, device_name, device_group, logger, include_shared, shared_only)
+        super().__init__(
+            xml_content, device_name, device_group, logger, include_shared, shared_only
+        )
         self.element_type = "schedule"
 
         self.logger.debug(
@@ -123,13 +125,17 @@ class ScheduleParser(BaseParser):
 
         for field in required:
             if field not in data or not data[field]:
-                self.logger.warning(f"Validation failed: Missing or empty field '{field}' in data: {data}")
+                self.logger.warning(
+                    f"Validation failed: Missing or empty field '{field}' in data: {data}"
+                )
                 return False
 
         self.logger.debug(f"Validation successful for data: {data}")
         return True
 
-    def _parse_section(self, sections: List[ET.Element], source_type: str) -> List[Dict]:
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
         """Parse schedules from a list of sections."""
         schedules = []
         if len(sections) == 1 and sections[0] is None:
@@ -138,13 +144,17 @@ class ScheduleParser(BaseParser):
         for section in sections:
             try:
                 entries = section.findall("./entry")
-                self.logger.debug(f"Found {len(entries)} schedule entries in '{source_type}' section.")
+                self.logger.debug(
+                    f"Found {len(entries)} schedule entries in '{source_type}' section."
+                )
 
                 for entry in entries:
                     try:
                         name = entry.get("name")
                         if not name:
-                            self.logger.warning(f"Skipping '{source_type}' entry with missing name.")
+                            self.logger.warning(
+                                f"Skipping '{source_type}' entry with missing name."
+                            )
                             continue
 
                         schedule_type = entry.find("schedule-type")
@@ -158,7 +168,9 @@ class ScheduleParser(BaseParser):
                             members = non_recurring.findall("member")
                             for member in members:
                                 if member.text:
-                                    start_time, end_time = self._parse_time_range(member.text, name)
+                                    start_time, end_time = self._parse_time_range(
+                                        member.text, name
+                                    )
                                     if start_time and end_time:
                                         schedules.append(
                                             {
@@ -178,7 +190,9 @@ class ScheduleParser(BaseParser):
                                 time_slots = []
                                 for member in daily.findall("member"):
                                     if member.text:
-                                        start, end = self._parse_time_range(member.text, name)
+                                        start, end = self._parse_time_range(
+                                            member.text, name
+                                        )
                                         if start and end:
                                             time_slots.append(f"{start}-{end}")
                                 if time_slots:
@@ -200,7 +214,9 @@ class ScheduleParser(BaseParser):
                 self.logger.error(f"Error processing '{source_type}' section: {str(e)}")
                 continue
         if len(schedules) > 0:
-            self.logger.info(f"Parsing successful for {len(schedules)} schedules from '{source_type}' sections.")
+            self.logger.info(
+                f"Parsing successful for {len(schedules)} schedules from '{source_type}' sections."
+            )
         return schedules
 
     def _parse_time_range(self, member_text: str, schedule_name: str) -> tuple:
@@ -215,7 +231,9 @@ class ScheduleParser(BaseParser):
             )
             return start.strip(), end.strip()
         except Exception as e:
-            self.logger.error(f"Error parsing time range for schedule '{schedule_name}': {str(e)}\nMember text: {member_text}")
+            self.logger.error(
+                f"Error parsing time range for schedule '{schedule_name}': {str(e)}\nMember text: {member_text}"
+            )
             return None, None
 
     def parse(self) -> List[Dict]:

@@ -14,7 +14,9 @@ class ProfileParser(BaseParser):
         include_shared: bool = False,
         shared_only: bool = False,
     ):
-        super().__init__(xml_content, device_name, device_group, logger, include_shared, shared_only)
+        super().__init__(
+            xml_content, device_name, device_group, logger, include_shared, shared_only
+        )
         self.element_type = "profiles"
         self.logger.debug(
             f"ProfilesParser initialized for {'shared' if device_name is None and device_group is None else f'device {device_name}/{device_group}'} "
@@ -52,9 +54,15 @@ class ProfileParser(BaseParser):
                             if protocol_element is not None:
                                 profile_data["flood_protection"][protocol] = {
                                     "action": protocol_element.findtext("action", ""),
-                                    "alarm_rate": protocol_element.findtext("alarm-rate", ""),
-                                    "activate_rate": protocol_element.findtext("activate-rate", ""),
-                                    "maximum_rate": protocol_element.findtext("maximum-rate", ""),
+                                    "alarm_rate": protocol_element.findtext(
+                                        "alarm-rate", ""
+                                    ),
+                                    "activate_rate": protocol_element.findtext(
+                                        "activate-rate", ""
+                                    ),
+                                    "maximum_rate": protocol_element.findtext(
+                                        "maximum-rate", ""
+                                    ),
                                 }
 
             return profile_data
@@ -85,10 +93,14 @@ class ProfileParser(BaseParser):
 
             return profile_data
         except Exception as e:
-            self.logger.error(f"Error parsing antivirus profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing antivirus profile '{profile_name}': {str(e)}"
+            )
             return None
 
-    def _parse_vulnerability_profile(self, entry: ET.Element, profile_name: str) -> Dict:
+    def _parse_vulnerability_profile(
+        self, entry: ET.Element, profile_name: str
+    ) -> Dict:
         """Parse vulnerability profile configuration."""
         try:
             profile_data = {
@@ -102,7 +114,9 @@ class ProfileParser(BaseParser):
                 rule_data = {
                     "name": rule.get("name", ""),
                     "host": rule.findtext("host", "any"),
-                    "vendor_ids": [vid.text for vid in rule.findall(".//vendor-id/member")],
+                    "vendor_ids": [
+                        vid.text for vid in rule.findall(".//vendor-id/member")
+                    ],
                     "severity": [s.text for s in rule.findall(".//severity/member")],
                     "cve": [c.text for c in rule.findall(".//cve/member")],
                     "action": rule.findtext(".//action/default", "default"),
@@ -111,17 +125,25 @@ class ProfileParser(BaseParser):
 
             return profile_data
         except Exception as e:
-            self.logger.error(f"Error parsing vulnerability profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing vulnerability profile '{profile_name}': {str(e)}"
+            )
             return None
 
-    def _parse_url_filtering_profile(self, entry: ET.Element, profile_name: str) -> Dict:
+    def _parse_url_filtering_profile(
+        self, entry: ET.Element, profile_name: str
+    ) -> Dict:
         """Parse URL filtering profile configuration."""
         try:
             profile_data = {
                 "name": profile_name,
                 "type": "url-filtering",
-                "block_list": [url.text for url in entry.findall(".//block-list/member")],
-                "allow_list": [url.text for url in entry.findall(".//allow-list/member")],
+                "block_list": [
+                    url.text for url in entry.findall(".//block-list/member")
+                ],
+                "allow_list": [
+                    url.text for url in entry.findall(".//allow-list/member")
+                ],
                 "categories": [],
             }
 
@@ -135,10 +157,14 @@ class ProfileParser(BaseParser):
 
             return profile_data
         except Exception as e:
-            self.logger.error(f"Error parsing URL filtering profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing URL filtering profile '{profile_name}': {str(e)}"
+            )
             return None
 
-    def _parse_file_blocking_profile(self, entry: ET.Element, profile_name: str) -> Dict:
+    def _parse_file_blocking_profile(
+        self, entry: ET.Element, profile_name: str
+    ) -> Dict:
         """Parse file blocking profile configuration."""
         try:
             profile_data = {"name": profile_name, "type": "file-blocking", "rules": []}
@@ -146,7 +172,9 @@ class ProfileParser(BaseParser):
             for rule in entry.findall(".//rules/entry"):
                 rule_data = {
                     "name": rule.get("name", ""),
-                    "file_types": [ft.text for ft in rule.findall(".//file-type/member")],
+                    "file_types": [
+                        ft.text for ft in rule.findall(".//file-type/member")
+                    ],
                     "direction": rule.findtext("direction", "both"),
                     "action": rule.findtext(".//action/block", "alert"),
                 }
@@ -154,7 +182,9 @@ class ProfileParser(BaseParser):
 
             return profile_data
         except Exception as e:
-            self.logger.error(f"Error parsing file blocking profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing file blocking profile '{profile_name}': {str(e)}"
+            )
             return None
 
     def _parse_wildfire_profile(self, entry: ET.Element, profile_name: str) -> Dict:
@@ -169,7 +199,9 @@ class ProfileParser(BaseParser):
             for rule in entry.findall(".//rules/entry"):
                 rule_data = {
                     "name": rule.get("name", ""),
-                    "file_types": [ft.text for ft in rule.findall(".//file-type/member")],
+                    "file_types": [
+                        ft.text for ft in rule.findall(".//file-type/member")
+                    ],
                     "direction": rule.findtext("direction", "both"),
                     "analysis": rule.findtext("analysis", "public-cloud"),
                 }
@@ -177,10 +209,14 @@ class ProfileParser(BaseParser):
 
             return profile_data
         except Exception as e:
-            self.logger.error(f"Error parsing WildFire profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing WildFire profile '{profile_name}': {str(e)}"
+            )
             return None
 
-    def _parse_data_filtering_profile(self, entry: ET.Element, profile_name: str) -> Dict:
+    def _parse_data_filtering_profile(
+        self, entry: ET.Element, profile_name: str
+    ) -> Dict:
         """Parse data filtering profile configuration."""
         try:
             profile_data = {"name": profile_name, "type": "data-filtering", "rules": []}
@@ -189,7 +225,9 @@ class ProfileParser(BaseParser):
                 rule_data = {
                     "name": rule.get("name", ""),
                     "patterns": [p.text for p in rule.findall(".//pattern/member")],
-                    "file_types": [ft.text for ft in rule.findall(".//file-type/member")],
+                    "file_types": [
+                        ft.text for ft in rule.findall(".//file-type/member")
+                    ],
                     "direction": rule.findtext("direction", "both"),
                     "action": rule.findtext(".//action/block", "alert"),
                 }
@@ -197,10 +235,14 @@ class ProfileParser(BaseParser):
 
             return profile_data
         except Exception as e:
-            self.logger.error(f"Error parsing data filtering profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing data filtering profile '{profile_name}': {str(e)}"
+            )
             return None
 
-    def _parse_sctp_protection_profile(self, entry: ET.Element, profile_name: str) -> Dict:
+    def _parse_sctp_protection_profile(
+        self, entry: ET.Element, profile_name: str
+    ) -> Dict:
         """Parse SCTP protection profile configuration."""
         try:
             profile_data = {
@@ -213,16 +255,22 @@ class ProfileParser(BaseParser):
                 rule_data = {
                     "name": rule.get("name", ""),
                     "action": rule.findtext(".//action/block", "alert"),
-                    "parameters": [p.text for p in rule.findall(".//parameters/member")],
+                    "parameters": [
+                        p.text for p in rule.findall(".//parameters/member")
+                    ],
                 }
                 profile_data["rules"].append(rule_data)
 
             return profile_data
         except Exception as e:
-            self.logger.error(f"Error parsing SCTP protection profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing SCTP protection profile '{profile_name}': {str(e)}"
+            )
             return None
 
-    def _parse_mobile_security_profile(self, entry: ET.Element, profile_name: str) -> Dict:
+    def _parse_mobile_security_profile(
+        self, entry: ET.Element, profile_name: str
+    ) -> Dict:
         """Parse mobile security profile configuration."""
         try:
             profile_data = {
@@ -241,7 +289,9 @@ class ProfileParser(BaseParser):
 
             return profile_data
         except Exception as e:
-            self.logger.error(f"Error parsing mobile security profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing mobile security profile '{profile_name}': {str(e)}"
+            )
             return None
 
     def _parse_decryption_profile(self, entry: ET.Element, profile_name: str) -> Dict:
@@ -250,13 +300,19 @@ class ProfileParser(BaseParser):
             profile_data = {
                 "name": profile_name,
                 "type": "decryption",
-                "ssl_forward_proxy": entry.findtext(".//ssl-forward-proxy/enabled", "no"),
-                "ssl_inbound_inspection": entry.findtext(".//ssl-inbound-inspection/enabled", "no"),
+                "ssl_forward_proxy": entry.findtext(
+                    ".//ssl-forward-proxy/enabled", "no"
+                ),
+                "ssl_inbound_inspection": entry.findtext(
+                    ".//ssl-inbound-inspection/enabled", "no"
+                ),
                 "ssh_proxy": entry.findtext(".//ssh-proxy/enabled", "no"),
             }
             return profile_data
         except Exception as e:
-            self.logger.error(f"Error parsing decryption profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing decryption profile '{profile_name}': {str(e)}"
+            )
             return None
 
     def _parse_dns_security_profile(self, entry: ET.Element, profile_name: str) -> Dict:
@@ -279,7 +335,9 @@ class ProfileParser(BaseParser):
 
             return profile_data
         except Exception as e:
-            self.logger.error(f"Error parsing DNS security profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing DNS security profile '{profile_name}': {str(e)}"
+            )
             return None
 
     def _parse_pcap_profile(self, entry: ET.Element, profile_name: str) -> Dict:
@@ -321,7 +379,9 @@ class ProfileParser(BaseParser):
                     "name": rule.get("name", ""),
                     "severity": [s.text for s in rule.findall(".//severity/member")],
                     "action": rule.findtext(".//action/default", "default"),
-                    "signature_flags": [f.text for f in rule.findall(".//signature-flags/member")],
+                    "signature_flags": [
+                        f.text for f in rule.findall(".//signature-flags/member")
+                    ],
                 }
                 profile_data["rules"].append(rule_data)
 
@@ -373,10 +433,14 @@ class ProfileParser(BaseParser):
 
             return profile_data
         except Exception as e:
-            self.logger.error(f"Error parsing spyware profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing spyware profile '{profile_name}': {str(e)}"
+            )
             return None
 
-    def _parse_section(self, sections: List[ET.Element], source_type: str) -> List[Dict]:
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict]:
         """Parse profiles from a list of sections."""
         profiles = []
         try:
@@ -406,20 +470,28 @@ class ProfileParser(BaseParser):
                         for entry in profile_section.findall("entry"):
                             name = entry.get("name")
                             if not name:
-                                self.logger.warning(f"Skipping {profile_type} entry with missing name")
+                                self.logger.warning(
+                                    f"Skipping {profile_type} entry with missing name"
+                                )
                                 continue
 
                             profile_data = parser_func(entry, name)
                             if profile_data and self.validate(profile_data):
                                 profile_data["source"] = source_type
                                 profiles.append(profile_data)
-                                self.logger.debug(f"Successfully parsed {profile_type} profile '{name}' from {source_type}")
+                                self.logger.debug(
+                                    f"Successfully parsed {profile_type} profile '{name}' from {source_type}"
+                                )
 
-            self.logger.info(f"Parsing successful for {len(profiles)} profiles from '{source_type}' sections")
+            self.logger.info(
+                f"Parsing successful for {len(profiles)} profiles from '{source_type}' sections"
+            )
             return profiles
 
         except Exception as e:
-            self.logger.error(f"Error parsing '{source_type}' profiles sections: {str(e)}")
+            self.logger.error(
+                f"Error parsing '{source_type}' profiles sections: {str(e)}"
+            )
             return profiles
 
     def parse(self) -> List[Dict]:
