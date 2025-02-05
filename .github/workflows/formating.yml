@@ -20,6 +20,8 @@ jobs:
           VALIDATE_ALL_CODEBASE: true  # Forces linting on all files
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LINTER_RULES_PATH: .  # Ensure it picks up your `pyproject.toml`
+          VALIDATE_PYTHON_RUFF: true  # ✅ Enable Ruff
 
       - name: Run Prettier
         run: npx prettier --check .
