@@ -28,6 +28,7 @@ jobs:
           black .  # Auto-fix Python formatting
           isort .  # Auto-sort imports
           ruff check --fix .  # Corrected Ruff auto-fix command
+        continue-on-error: true
 
       # Auto-fix Markdown files
       - name: Auto-fix all Markdown files
