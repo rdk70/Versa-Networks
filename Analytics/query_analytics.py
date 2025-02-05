@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Optional
 
 import requests
 from requests.exceptions import RequestException
-from urllib3.exceptions import InsecureRequestWarning
 
 logging.basicConfig(
     level=logging.INFO,
@@ -48,9 +47,7 @@ class OrderType(str, Enum):
 class AnalyticsConfig:
     tenant_name: str = "Versa"
     feature: Feature = Feature.SDWAN
-    start_date: str = (
-        "60minutesAgo"  # Format: [yyyy]-[MM]-[dd]T[HH]:[mm]:[ss]Z or relative
-    )
+    start_date: str = "60minutesAgo"  # Format: [yyyy]-[MM]-[dd]T[HH]:[mm]:[ss]Z or relative
     end_date: str = "today"  # Format: same as start_date
     count: int = 10  # -1 for all items
     from_count: int = 0  # Starting index for pagination
@@ -70,7 +67,7 @@ class NetworkMonitor:
         self.password: str = password
         self.session: requests.Session = requests.Session()
         self.session.verify = False
-        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        # requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
     def _get_csrf_token(self) -> Optional[str]:
         try:
@@ -101,9 +98,7 @@ class NetworkMonitor:
             logger.error(f"Login failed: {e}")
             return False
 
-    def get_analytics_data(
-        self, site_name: str, config: Optional[AnalyticsConfig] = None
-    ) -> Optional[Dict[str, Any]]:
+    def get_analytics_data(self, site_name: str, config: Optional[AnalyticsConfig] = None) -> Optional[Dict[str, Any]]:
         if config is None:
             config = AnalyticsConfig()
             config.metrics = [
