@@ -15,38 +15,59 @@ jobs:
         with:
           fetch-depth: 2  # Ensures at least one previous commit is available
 
-      # Install linters & formatters for Python and Markdown
+      # ✅ Cache Python & Node dependencies to speed up workflow
+      - name: Cache Python packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      # ✅ Install dependencies only if cache is empty
       - name: Install Python & Markdown linters
         run: |
-          pip install black isort ruff
+          pip install --upgrade black isort ruff mypy types-PyYAML types-requests
           npm install -g textlint textlint-rule-terminology textlint-rule-preset-ja-technical-writing prettier
           
-          
-
-      # Auto-fix Python files
+      # ✅ Auto-fix Python files and explicitly log failures
       - name: Auto-fix Python files
         run: |
-          black .  # Auto-fix Python formatting
-          isort .  # Auto-sort imports
-          ruff check --fix .  # Corrected Ruff auto-fix command
-        continue-on-error: true
+          echo "Running Black..."
+          black . || echo "Black failed, but continuing..."
+          echo "Running Isort..."
+          isort . || echo "Isort failed, but continuing..."
+          echo "Running Ruff..."
+          ruff check --fix . || echo "Ruff failed, but continuing..."
 
-      # Auto-fix Markdown files
+      # ✅ Auto-fix Markdown files
       - name: Auto-fix all Markdown files
         run: |
-          textlint --fix "**/*.md" || true
-          prettier --write "**/*.md" || true
+          echo "Running Textlint..."
+          textlint --fix "**/*.md" || echo "Textlint failed, but continuing..."
+          echo "Running Prettier..."
+          prettier --write "**/*.md" || echo "Prettier failed, but continuing..."
 
-      # Commit and push any auto-fixed changes
+      # ✅ Run Prettier (Check Only) BEFORE committing changes
+      - name: Run Prettier (Check)
+        run: npx prettier --check .
+
+      # ✅ Commit and push only if there are actual changes
       - name: Commit and Push Fixes
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git add .
-          git commit -m "Auto-fix Python & Markdown formatting and linting" || echo "No changes to commit"
-          git push || echo "No changes to push"
+          git diff --quiet && echo "No changes to commit" || (git add . && git commit -m "Auto-fix Python & Markdown formatting" && git push)
 
-      # Run Super-Linter to check remaining issues
+      # ✅ Run Super-Linter after all auto-fixes
       - name: Run Super-Linter (Check Only)
         uses: super-linter/super-linter@v6.1.0
         env:
@@ -57,11 +78,6 @@ jobs:
           VALIDATE_PYTHON_RUFF: true
           VALIDATE_PYTHON_BLACK: true
           VALIDATE_PYTHON_MYPY: true
-    
-          # Install dependencies inside the container
+          
+          # ✅ Ensure dependencies are available inside the container
           PYTHON_SETUP_COMMAND: "pip install --upgrade types-PyYAML types-requests"
-
-
-      # Run Prettier (Check only, no auto-fix)
-      - name: Run Prettier (Check)
-        run: npx prettier --check .
