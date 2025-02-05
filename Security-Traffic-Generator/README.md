@@ -55,7 +55,7 @@ User Agent
 
 - `userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3).......'` The user-agent of our headless browser hands over to the web server. You can leave it set to the default, but feel free to change it. I would strongly suggest using a common/valid one, or else you'll likely get rate-limited quickly.
 
-URLS
+URLs
 
 All URL lists will be randomly combined into a single list. The script will work through this single list until all URLs have been attempted then, the lists above will be randomly combined into a new single list. You can comment out any URLs you do not want to use
 
