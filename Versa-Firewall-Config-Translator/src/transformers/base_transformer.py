@@ -130,7 +130,7 @@ class BaseTransformer(ABC):
                 duplicates.append(item)
                 logger.debug(
                     f"Duplicate item hash found of parsed data type '{name}'. "
-                    f"Item '{item.get('name', str(item)[:100])}' removed."
+                    f"Item '{str(item.get('name', str(item))[:100])}' removed."
                 )
                 continue
 

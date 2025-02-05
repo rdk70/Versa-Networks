@@ -10,7 +10,7 @@ import config
 import requests
 import yaml
 
-requests.packages.urllib3.disable_warnings()
+# requests.packages.urllib3.disable_warnings()
 
 """
 # written by Rob Kauffman
@@ -121,9 +121,7 @@ def get_links(page):
 
     pattern = r"(?:href\=\")(https?:\/\/[^\"]+)(?:\")"
     links = re.findall(pattern, str(page.content))
-    valid_links = [
-        link for link in links if not any(b in link for b in config.IGNORE_LIST)
-    ]
+    valid_links = [link for link in links if not any(b in link for b in config.IGNORE_LIST)]
     return valid_links
 
 
@@ -132,9 +130,7 @@ def recursive_browse(url, depth):
     # Base: load current page and return
     # Recursively: load page, pick random link and browse with decremented depth
 
-    debug_print(
-        "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    )
+    debug_print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     debug_print("Recursively browsing [{}] ~~~ [depth = {}]".format(url, depth))
 
     if not depth:  # base case: depth of zero, load page
@@ -187,9 +183,7 @@ def DOS_creation(value, config):
 
     if value == "UDP Scan":
         print((" Starting " + value + " ").center(92, "~"))
-        p = subprocess.Popen(
-            ["nmap", "-sU", config["dos_testing"]["target"]["dst_ip"], "-min-rate 600"]
-        )
+        p = subprocess.Popen(["nmap", "-sU", config["dos_testing"]["target"]["dst_ip"], "-min-rate 600"])
         debug_print("nmap -sU " + config["dos_testing"]["target"]["dst_ip"])
         print(
             " Scan automatically terminates in",
@@ -203,9 +197,7 @@ def DOS_creation(value, config):
 
     if value == "HostSweep Flood":
         print((" Starting " + value + " ").center(92, "~"))
-        p = subprocess.Popen(
-            ["nmap", "-sn", config["dos_testing"]["target"]["dst_ip"] + "/24"]
-        )
+        p = subprocess.Popen(["nmap", "-sn", config["dos_testing"]["target"]["dst_ip"] + "/24"])
         debug_print("nmap -sn " + config["dos_testing"]["target"]["dst_ip"] + "/24")
         print(
             " Scan automatically terminates in",
@@ -248,12 +240,8 @@ def DOS_creation(value, config):
 
     if value == "UDP Flood":
         print((" Starting " + value + " ").center(92, "~"))
-        p = subprocess.Popen(
-            ["hping3", "-2", config["dos_testing"]["target"]["dst_ip"], "--faster"]
-        )
-        debug_print(
-            "hping3 -2 " + config["dos_testing"]["target"]["dst_ip"] + " --faster"
-        )
+        p = subprocess.Popen(["hping3", "-2", config["dos_testing"]["target"]["dst_ip"], "--faster"])
+        debug_print("hping3 -2 " + config["dos_testing"]["target"]["dst_ip"] + " --faster")
         print(
             " Flood automatically terminates in",
             config["dos_testing"]["target"]["duration_sec"],
@@ -307,11 +295,7 @@ def DOS_creation(value, config):
                 "7654",
             ]
         )
-        debug_print(
-            "hping3 -n "
-            + config["dos_testing"]["target"]["dst_ip"]
-            + " -0 --ipproto 132 --flood --destport 7654"
-        )
+        debug_print("hping3 -n " + config["dos_testing"]["target"]["dst_ip"] + " -0 --ipproto 132 --flood --destport 7654")
         print(
             " Flood automatically terminates in",
             config["dos_testing"]["target"]["duration_sec"],
@@ -337,11 +321,7 @@ def DOS_creation(value, config):
                 "7654",
             ]
         )
-        debug_print(
-            "hping3 -n "
-            + config["dos_testing"]["target"]["dst_ip"]
-            + " -0 --ipproto 47 --flood --destport 7654"
-        )
+        debug_print("hping3 -n " + config["dos_testing"]["target"]["dst_ip"] + " -0 --ipproto 47 --flood --destport 7654")
         print(
             " Flood automatically terminates in",
             config["dos_testing"]["target"]["duration_sec"],
@@ -383,9 +363,7 @@ def DOS_creation(value, config):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        debug_print(
-            "hping3 -1" + config["dos_testing"]["target"]["dst_ip"] + "--icmp-ipid 0"
-        )
+        debug_print("hping3 -1" + config["dos_testing"]["target"]["dst_ip"] + "--icmp-ipid 0")
         print(
             " Traffic automatically terminates in",
             config["dos_testing"]["target"]["duration_sec"],
@@ -468,9 +446,7 @@ def DOS_creation(value, config):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        debug_print(
-            "hping3 " + config["dos_testing"]["target"]["dst_ip"] + "--rroute --icmp"
-        )
+        debug_print("hping3 " + config["dos_testing"]["target"]["dst_ip"] + "--rroute --icmp")
         print(
             " Traffic automatically terminates in",
             config["dos_testing"]["target"]["duration_sec"],
@@ -498,11 +474,7 @@ def DOS_creation(value, config):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        debug_print(
-            "nping --tcp"
-            + config["dos_testing"]["target"]["dst_ip"]
-            + "--ip-options S --rate 100 -c 1000000"
-        )
+        debug_print("nping --tcp" + config["dos_testing"]["target"]["dst_ip"] + "--ip-options S --rate 100 -c 1000000")
         print(
             " Traffic automatically terminates in",
             config["dos_testing"]["target"]["duration_sec"],
@@ -530,11 +502,7 @@ def DOS_creation(value, config):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        debug_print(
-            "nping --tcp"
-            + config["dos_testing"]["target"]["dst_ip"]
-            + "--ip-options L --rate 100 -c 1000000"
-        )
+        debug_print("nping --tcp" + config["dos_testing"]["target"]["dst_ip"] + "--ip-options L --rate 100 -c 1000000")
         print(
             " Traffic automatically terminates in",
             config["dos_testing"]["target"]["duration_sec"],
@@ -562,11 +530,7 @@ def DOS_creation(value, config):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        debug_print(
-            "nping --tcp "
-            + config["dos_testing"]["target"]["dst_ip"]
-            + " --ip-options T --rate 100 -c 1000000"
-        )
+        debug_print("nping --tcp " + config["dos_testing"]["target"]["dst_ip"] + " --ip-options T --rate 100 -c 1000000")
         print(
             " Traffic automatically terminates in ",
             config["dos_testing"]["target"]["duration_sec"],
@@ -623,9 +587,7 @@ def main():
         separator = "~" * 78
         print(f"{Colors.GREEN}{separator}{Colors.NONE}")
         print(f"{Colors.GREEN}Traffic generator started{Colors.NONE}")
-        print(
-            f"{Colors.GREEN}This script will run indefinitely. Ctrl+C to stop.{Colors.NONE}"
-        )
+        print(f"{Colors.GREEN}This script will run indefinitely. Ctrl+C to stop.{Colors.NONE}")
         print(f"{Colors.GREEN}{separator}{Colors.NONE}")
 
         # Configuration info
@@ -633,9 +595,7 @@ def main():
         print(
             f"{Colors.BLUE}Running Denial of Service (DOS) attacks once every {config['dos_testing']['frequency']} URL requests.{Colors.NONE}"
         )
-        print(
-            f"{Colors.BLUE}Diving between 3 and {config['max_depth']} links deep into {len(urls)} root URLs,{Colors.NONE}"
-        )
+        print(f"{Colors.BLUE}Diving between 3 and {config['max_depth']} links deep into {len(urls)} root URLs,{Colors.NONE}")
         print(
             f"{Colors.BLUE}Waiting between {config['min_wait']} and {config['max_wait']} seconds between requests.{Colors.NONE}"
         )

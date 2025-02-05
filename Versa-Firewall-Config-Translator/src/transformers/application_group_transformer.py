@@ -7,9 +7,7 @@ from .base_transformer import BaseTransformer
 class ApplicationGroupTransformer(BaseTransformer):
     """Transformer for PAN application group configurations to Versa format."""
 
-    def transform(
-        self, data: Dict[str, Any], logger: Logger, **kwargs: Any
-    ) -> Dict[str, Any]:
+    def transform(self, data: Dict[str, Any], logger: Logger, **kwargs: Any) -> Dict[str, Any]:
         """
         Transform an application group entry to Versa format.
 
@@ -22,23 +20,6 @@ class ApplicationGroupTransformer(BaseTransformer):
 
         Returns:
             Dict[str, Any]: Transformed application group
-
-        Example input:
-        {
-            "name": "web_apps",
-            "members": ["http", "https"],
-            "description": "Web applications"
-        }
-
-        Example output:
-        {
-            "application-group": {
-                "group-name": "web_apps",
-                "description": "Web applications",
-                "tag": "",
-                "user-defined-application-list": ["http", "https"]
-            }
-        }
         """
         application_group = data
         existing_applications = kwargs.get("existing_applications", [])
@@ -63,24 +44,20 @@ class ApplicationGroupTransformer(BaseTransformer):
         transformed = {
             "application-group": {
                 "group-name": self.clean_string(application_group["name"], logger),
-                "description": self.clean_string(
-                    application_group.get("description", ""), logger
-                ),
+                "description": self.clean_string(application_group.get("description", ""), logger),
                 "tag": "",
                 "user-defined-application-list": cleaned_members,
             }
         }
 
         if skipped:
-            logger.warning(
-                f"Skipped invalid members in {application_group['name']}: {skipped}"
-            )
+            logger.warning(f"Skipped invalid members in {application_group['name']}: {skipped}")
 
         return transformed
 
     def _get_valid_names(self, items: List[Dict[str, Any]]) -> List[str]:
-        """Extract valid names from items list."""
-        return [item.get("name") for item in items if item.get("name")]
+        """Extract valid names from items list, ensuring all names are strings."""
+        return [str(item.get("name", "")) for item in items if isinstance(item.get("name"), str)]
 
     def _process_members(
         self,
@@ -91,18 +68,21 @@ class ApplicationGroupTransformer(BaseTransformer):
         logger: Logger,
     ) -> tuple[List[str], List[str]]:
         """Process and validate group members."""
-        cleaned_members = []
-        skipped_members = []
+        cleaned_members: List[str] = []
+        skipped_members: List[str] = []
 
         for member in members:
             cleaned = self.clean_string(member, logger)
+
+            # Ensure cleaned is always a string, even if clean_string returns a list
+            if isinstance(cleaned, list):
+                cleaned = " ".join(cleaned)
+
             if cleaned in valid_apps or cleaned in valid_services:
                 cleaned_members.append(cleaned)
                 logger.debug(f"Added member '{cleaned}' to group '{group_name}'")
             else:
                 skipped_members.append(cleaned)
-                logger.debug(
-                    f"Skipping invalid member '{cleaned}' in group '{group_name}'"
-                )
+                logger.debug(f"Skipping invalid member '{cleaned}' in group '{group_name}'")
 
         return cleaned_members, skipped_members

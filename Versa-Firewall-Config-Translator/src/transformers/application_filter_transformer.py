@@ -10,9 +10,7 @@ class ApplicationFilterTransformer(BaseTransformer):
     Converts PAN application filter format to Versa format.
     """
 
-    def transform(
-        self, data: Dict[str, Any], logger: Logger, **kwargs: Any
-    ) -> Dict[str, Any]:
+    def transform(self, data: Dict[str, Any], logger: Logger, **kwargs: Any) -> Dict[str, Any]:
         """
         Transform an application filter entry to Versa format.
 
@@ -28,25 +26,6 @@ class ApplicationFilterTransformer(BaseTransformer):
 
         Returns:
             Dict[str, Any]: Transformed application filter in Versa format
-
-        Example input:
-        {
-            "name": "business_apps",
-            "category": ["business-systems", "collaboration"],
-            "subcategories": ["crm", "email"],
-            "technologies": ["client-server", "browser-based"],
-            "description": "Business applications filter"
-        }
-
-        Example output:
-        {
-            "application-filter": {
-                "filter-name": "business_apps",
-                "description": "Business applications filter",
-                "family": ["business-systems", "collaboration"],
-                "subfamily": ["crm", "email"]
-            }
-        }
         """
         application_filter = data
 
@@ -59,14 +38,14 @@ class ApplicationFilterTransformer(BaseTransformer):
         )
 
         # Clean and transform category lists
-        cleaned_categories = self._clean_string_list(
+        cleaned_categories = self._custom_clean_string_list(
             application_filter.get("category", []),
             "category",
             application_filter["name"],
             logger,
         )
 
-        cleaned_subcategories = self._clean_string_list(
+        cleaned_subcategories = self._custom_clean_string_list(
             application_filter.get("subcategories", []),
             "subcategory",
             application_filter["name"],
@@ -77,9 +56,7 @@ class ApplicationFilterTransformer(BaseTransformer):
         transformed = {
             "application-filter": {
                 "filter-name": self.clean_string(application_filter["name"], logger),
-                "description": self.clean_string(
-                    application_filter.get("description", ""), logger
-                ),
+                "description": self.clean_string(application_filter.get("description", ""), logger),
                 "family": cleaned_categories,
                 "subfamily": cleaned_subcategories,
             }
@@ -92,11 +69,9 @@ class ApplicationFilterTransformer(BaseTransformer):
 
         return transformed
 
-    def _clean_string_list(
-        self, items: List[str], item_type: str, filter_name: str, logger: Logger
-    ) -> List[str]:
+    def _custom_clean_string_list(self, items: List[str], item_type: str, filter_name: str, logger: Logger) -> List[str]:
         """
-        Clean a list of strings and log the process.
+        Custom method to clean a list of strings and log the process.
 
         Args:
             items: List of strings to clean
@@ -110,14 +85,15 @@ class ApplicationFilterTransformer(BaseTransformer):
         cleaned_items = []
         for item in items:
             cleaned_item = self.clean_string(item, logger)
+
+            # Ensure cleaned_item is always a string, even if clean_string returns a list
+            if isinstance(cleaned_item, list):
+                cleaned_item = " ".join(cleaned_item)
+
             if cleaned_item:
                 cleaned_items.append(cleaned_item)
-                logger.debug(
-                    f"Added cleaned {item_type} '{cleaned_item}' to filter '{filter_name}'"
-                )
+                logger.debug(f"Added cleaned {item_type} '{cleaned_item}' to filter '{filter_name}'")
             else:
-                logger.warning(
-                    f"Skipping empty {item_type} '{item}' in filter '{filter_name}'"
-                )
+                logger.warning(f"Skipping empty {item_type} '{item}' in filter '{filter_name}'")
 
         return cleaned_items

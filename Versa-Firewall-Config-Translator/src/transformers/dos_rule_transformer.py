@@ -7,27 +7,31 @@ from src.transformers.base_transformer import BaseTransformer
 class DOSRuleTransformer(BaseTransformer):
     """Transforms PAN DOS rule configurations to Versa format."""
 
-    def transform(self, data: Dict[str, Any], logger: Logger) -> Dict[str, Any]:
+    def transform(self, data: Dict[str, Any], logger: Logger, **kwargs: Any) -> Dict[str, Any]:
         """
         Transform a DOS rule from PAN to Versa format.
 
         Args:
             data: Source DOS rule data
             logger: Logger instance
+            **kwargs: Additional parameters.
 
         Returns:
             Dict[str, Any]: Transformed DOS rule in Versa format
         """
-        logger.debug(f"Starting DOS rule transformation for '{data['name']}'")
+        logger.debug(f"Starting DOS rule transformation for '{data.get('name', 'unknown')}'")
+
+        # Ensure 'data' is always a dictionary
+        if not isinstance(data, dict):
+            logger.error("Expected 'data' to be a dictionary but received something else.")
+            return {}
 
         try:
             # Create base rule structure
             transformed = {
                 "dos-policy": {
-                    "name": self.clean_string(data["name"], logger),
-                    "description": self.clean_string(
-                        data.get("description", ""), logger
-                    ),
+                    "name": self.clean_string(data.get("name", ""), logger),
+                    "description": self.clean_string(data.get("description", ""), logger),
                     "tag": data.get("tag", []),
                     "rule-disable": "true" if data.get("disabled", False) else "false",
                     "match": self._create_match_section(data, logger),
@@ -35,18 +39,14 @@ class DOSRuleTransformer(BaseTransformer):
                 }
             }
 
-            logger.debug(f"Successfully transformed DOS rule '{data['name']}'")
+            logger.debug(f"Successfully transformed DOS rule '{data.get('name', 'unknown')}'")
             return transformed
 
         except Exception as e:
-            logger.error(
-                f"Error transforming DOS rule '{data.get('name', 'unknown')}': {str(e)}"
-            )
+            logger.error(f"Error transforming DOS rule '{data.get('name', 'unknown')}': {str(e)}")
             raise
 
-    def _create_match_section(
-        self, data: Dict[str, Any], logger: Logger
-    ) -> Dict[str, Any]:
+    def _create_match_section(self, data: Dict[str, Any], logger: Logger) -> Dict[str, Any]:
         """Create match section of Versa DOS rule."""
         match = {
             "source": {"address": {}},
@@ -54,56 +54,49 @@ class DOSRuleTransformer(BaseTransformer):
             "ip-version": "ipv4",
         }
 
-        # Handle source addresses and groups
+        # Ensure 'source' and 'destination' are lists
         source_addrs = data.get("source", [])
-        if source_addrs:
-            # Check if addresses are groups or individual addresses
-            # This is a simplified check - you might need more sophisticated logic
+        dest_addrs = data.get("destination", [])
+
+        if isinstance(source_addrs, list):
             if any("-G" in addr for addr in source_addrs):
                 match["source"]["address"]["address-group-list"] = source_addrs
             else:
                 match["source"]["address"]["address-list"] = source_addrs
 
-        # Handle destination addresses and groups
-        dest_addrs = data.get("destination", [])
-        if dest_addrs:
+        if isinstance(dest_addrs, list):
             if any("-G" in addr for addr in dest_addrs):
                 match["destination"]["address"]["address-group-list"] = dest_addrs
             else:
                 match["destination"]["address"]["address-list"] = dest_addrs
 
-        # Handle services
+        # Ensure 'service' is a list
         services = data.get("service", [])
-        if services:
+        if isinstance(services, list):
             match["services"] = {"predefined-services-list": services}
 
-        # Add schedule if present
+        # Ensure 'schedule' is a string before adding it
         schedule = data.get("schedule")
-        if schedule:
+        if isinstance(schedule, str):
             match["schedule"] = schedule
 
         return match
 
-    def _create_set_section(
-        self, data: Dict[str, Any], logger: Logger
-    ) -> Dict[str, Any]:
+    def _create_set_section(self, data: Dict[str, Any], logger: Logger) -> Dict[str, Any]:
         """Create set section of Versa DOS rule."""
         set_section = {"action": data.get("action", "protect").lower()}
 
-        # Handle DOS profiles
+        # Ensure 'protection' is a dictionary
         protection = data.get("protection", {})
-        if protection:
+        if isinstance(protection, dict):
             dos_profile = {}
 
-            # Check for aggregate profile
-            if protection.get("type") == "aggregate" and protection.get("profile"):
+            if protection.get("type") == "aggregate" and isinstance(protection.get("profile"), str):
                 dos_profile["aggregate"] = protection["profile"]
 
-            # Check for classified profile
-            elif protection.get("type") == "classified" and protection.get("profile"):
+            elif protection.get("type") == "classified" and isinstance(protection.get("profile"), str):
                 dos_profile["classified"] = protection["profile"]
 
-            # Add profiles if any were configured
             if dos_profile:
                 set_section["dos-profile"] = dos_profile
 
