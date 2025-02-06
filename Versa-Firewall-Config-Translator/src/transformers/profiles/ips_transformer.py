@@ -17,10 +17,16 @@ class ProfileParser(BaseParser):
         self.logger.debug(f"Validation successful for data: {data}")
         return True
 
-    def _parse_dos_profile(self, entry: ET.Element, profile_name: str) -> Dict[str, Any]:
+    def _parse_dos_profile(
+        self, entry: ET.Element, profile_name: str
+    ) -> Dict[str, Any]:
         """Parse DoS protection profile configuration."""
         try:
-            profile_data: Dict[str, Any] = {"name": profile_name, "type": "dos", "flood_protection": {}}
+            profile_data: Dict[str, Any] = {
+                "name": profile_name,
+                "type": "dos",
+                "flood_protection": {},
+            }
 
             for mode in ["aggregate", "classified", ""]:
                 mode_element = entry.find(mode) if mode else entry
@@ -32,9 +38,15 @@ class ProfileParser(BaseParser):
                             if protocol_element is not None:
                                 profile_data["flood_protection"][protocol] = {
                                     "action": protocol_element.findtext("action", ""),
-                                    "alarm_rate": protocol_element.findtext("alarm-rate", ""),
-                                    "activate_rate": protocol_element.findtext("activate-rate", ""),
-                                    "maximum_rate": protocol_element.findtext("maximum-rate", ""),
+                                    "alarm_rate": protocol_element.findtext(
+                                        "alarm-rate", ""
+                                    ),
+                                    "activate_rate": protocol_element.findtext(
+                                        "activate-rate", ""
+                                    ),
+                                    "maximum_rate": protocol_element.findtext(
+                                        "maximum-rate", ""
+                                    ),
                                 }
 
             return profile_data
@@ -42,7 +54,9 @@ class ProfileParser(BaseParser):
             self.logger.error(f"Error parsing DoS profile '{profile_name}': {str(e)}")
             return {}
 
-    def _parse_antivirus_profile(self, entry: ET.Element, profile_name: str) -> Dict[str, Any]:
+    def _parse_antivirus_profile(
+        self, entry: ET.Element, profile_name: str
+    ) -> Dict[str, Any]:
         """Parse antivirus profile configuration."""
         try:
             profile_data: Dict[str, Any] = {
@@ -57,18 +71,26 @@ class ProfileParser(BaseParser):
                 rule_data = {
                     "name": rule.get("name", ""),
                     "threat_name": rule.findtext("threat-name", "any"),
-                    "decoders": [d.text or "" for d in rule.findall(".//decoder/member")],
+                    "decoders": [
+                        d.text or "" for d in rule.findall(".//decoder/member")
+                    ],
                     "action": rule.findtext(".//action/default", "default"),
-                    "severity": [s.text or "" for s in rule.findall(".//severity/member")],
+                    "severity": [
+                        s.text or "" for s in rule.findall(".//severity/member")
+                    ],
                 }
                 profile_data["rules"].append(rule_data)
 
             return profile_data
         except Exception as e:
-            self.logger.error(f"Error parsing antivirus profile '{profile_name}': {str(e)}")
+            self.logger.error(
+                f"Error parsing antivirus profile '{profile_name}': {str(e)}"
+            )
             return {}
 
-    def _parse_section(self, sections: List[ET.Element], source_type: str) -> List[Dict[str, Any]]:
+    def _parse_section(
+        self, sections: List[ET.Element], source_type: str
+    ) -> List[Dict[str, Any]]:
         """Parse profiles from a list of sections."""
         profiles: List[Dict[str, Any]] = []
 
@@ -85,20 +107,28 @@ class ProfileParser(BaseParser):
                         for entry in profile_section.findall("entry"):
                             name = entry.get("name", "")
                             if not name:
-                                self.logger.warning(f"Skipping {profile_type} entry with missing name")
+                                self.logger.warning(
+                                    f"Skipping {profile_type} entry with missing name"
+                                )
                                 continue
 
                             profile_data = parser_func(entry, name)
                             if profile_data and self.validate(profile_data):
                                 profile_data["source"] = source_type
                                 profiles.append(profile_data)
-                                self.logger.debug(f"Successfully parsed {profile_type} profile '{name}' from {source_type}")
+                                self.logger.debug(
+                                    f"Successfully parsed {profile_type} profile '{name}' from {source_type}"
+                                )
 
-            self.logger.info(f"Parsing successful for {len(profiles)} profiles from '{source_type}' sections")
+            self.logger.info(
+                f"Parsing successful for {len(profiles)} profiles from '{source_type}' sections"
+            )
             return profiles
 
         except Exception as e:
-            self.logger.error(f"Error parsing '{source_type}' profiles sections: {str(e)}")
+            self.logger.error(
+                f"Error parsing '{source_type}' profiles sections: {str(e)}"
+            )
             return []
 
     def parse(self) -> List[Dict[str, Any]]:

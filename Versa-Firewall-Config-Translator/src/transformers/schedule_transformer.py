@@ -7,7 +7,9 @@ from .base_transformer import BaseTransformer
 class ScheduleTransformer(BaseTransformer):
     """Transforms PAN schedule configurations to Versa format."""
 
-    def transform(self, data: Dict[str, Any], logger: Logger, **kwargs: Any) -> Dict[str, Any]:
+    def transform(
+        self, data: Dict[str, Any], logger: Logger, **kwargs: Any
+    ) -> Dict[str, Any]:
         """
         Transform schedule entry to Versa format.
 
@@ -20,7 +22,9 @@ class ScheduleTransformer(BaseTransformer):
             Dict[str, Any]: Transformed schedule configuration
         """
         schedule = data
-        logger.debug(f"Processing schedule '{schedule['name']}' of type {schedule['schedule_type']}")
+        logger.debug(
+            f"Processing schedule '{schedule['name']}' of type {schedule['schedule_type']}"
+        )
 
         transformed = {
             "schedule": {
@@ -31,13 +35,19 @@ class ScheduleTransformer(BaseTransformer):
         }
 
         if schedule["schedule_type"] == "non-recurring":
-            transformed["schedule"]["non-recurring"] = self._format_time_range(schedule["start_time"], schedule["end_time"])
-            logger.debug(f"Non-recurring schedule: {schedule['start_time']} to {schedule['end_time']}")
+            transformed["schedule"]["non-recurring"] = self._format_time_range(
+                schedule["start_time"], schedule["end_time"]
+            )
+            logger.debug(
+                f"Non-recurring schedule: {schedule['start_time']} to {schedule['end_time']}"
+            )
 
         elif schedule["schedule_type"] == "recurring":
             recurring = self._process_recurring_schedule(schedule, logger)
             if recurring:
-                transformed["schedule"]["recurring"] = [f"{item['when']}: {item['time-of-day']}" for item in recurring]
+                transformed["schedule"]["recurring"] = [
+                    f"{item['when']}: {item['time-of-day']}" for item in recurring
+                ]
 
         return transformed
 
@@ -47,7 +57,9 @@ class ScheduleTransformer(BaseTransformer):
         end_time = end.split("@")[1] if "@" in end else end
         return f"{start_time}-{end_time}"
 
-    def _process_recurring_schedule(self, data: Dict[str, Any], logger: Logger) -> List[Dict[str, Any]]:
+    def _process_recurring_schedule(
+        self, data: Dict[str, Any], logger: Logger
+    ) -> List[Dict[str, Any]]:
         """Process recurring schedule data."""
         recurring = []
 
