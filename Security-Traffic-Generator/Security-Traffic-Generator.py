@@ -135,7 +135,9 @@ def main():
         separator = "~" * 78
         print(f"{Colors.GREEN}{separator}{Colors.NONE}")
         print(f"{Colors.GREEN}Traffic generator started{Colors.NONE}")
-        print(f"{Colors.GREEN}This script will run indefinitely. Ctrl+C to stop.{Colors.NONE}")
+        print(
+            f"{Colors.GREEN}This script will run indefinitely. Ctrl+C to stop.{Colors.NONE}"
+        )
         print(f"{Colors.GREEN}{separator}{Colors.NONE}")
 
         # Configuration info
