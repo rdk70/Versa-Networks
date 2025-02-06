@@ -4,6 +4,7 @@ from logging import Logger
 from typing import Any, Dict, List, Optional
 
 from lxml import etree as ET
+from lxml.etree import _Element
 
 
 class BaseParser(ABC):
@@ -24,7 +25,7 @@ class BaseParser(ABC):
         self.logger = logger
         self.include_shared = include_shared
         self.shared_only = shared_only
-        self.element_type = None
+        self.element_type: Optional[str] = None
 
         try:
             self.tree = ET.ElementTree(ET.fromstring(xml_content))
@@ -43,7 +44,7 @@ class BaseParser(ABC):
             return "shared"
         return f"device {self.device_name}/{self.device_group}"
 
-    def get_device_group_element(self) -> Optional[ET.Element]:
+    def get_device_group_element(self) -> Optional[_Element]:
         """Get the specific device-group entry element for parsing."""
 
         try:
@@ -76,9 +77,7 @@ class BaseParser(ABC):
                 alt_xpath = f".//entry[@name='{self.device_group}']"
                 element = self.tree.find(alt_xpath)
                 if element is not None:
-                    self.logger.debug(
-                        f"Found device group using alternative XML format: '{self.device_group}'"
-                    )
+                    self.logger.debug(f"Found device group using alternative XML format: '{self.device_group}'")
                     return element
 
             if element is None:
@@ -93,7 +92,7 @@ class BaseParser(ABC):
             )
             return None
 
-    def get_shared_element(self, element_type: str) -> Optional[ET.Element]:
+    def get_shared_element(self, element_type: str) -> Optional[_Element]:
         """Get a configuration element from the shared section."""
         if not self.include_shared:
             self.logger.debug("Shared elements are not included as per configuration.")
@@ -119,12 +118,10 @@ class BaseParser(ABC):
                 self.logger.debug(f"No shared {element_type} configuration found.")
             return element
         except Exception as e:
-            self.logger.error(
-                f"Error finding shared element '{element_type}': {str(e)}"
-            )
+            self.logger.error(f"Error finding shared element '{element_type}': {str(e)}")
             return None
 
-    def get_config_element(self, element_type: str) -> Optional[ET.Element]:
+    def get_config_element(self, element_type: str) -> Optional[Any]:
         """Get a specific configuration element from the device-group."""
         device_group = self.get_device_group_element()
         if device_group is None:
@@ -155,7 +152,7 @@ class BaseParser(ABC):
         if not self.element_type:
             raise ValueError("element_type must be set by the child class")
 
-        content = []
+        content: List[Dict] = []
 
         try:
             if not self.shared_only:
@@ -181,9 +178,7 @@ class BaseParser(ABC):
             return content
 
         except Exception as e:
-            self.logger.error(
-                f"Error parsing content for element type '{self.element_type}': {str(e)}"
-            )
+            self.logger.error(f"Error parsing content for element type '{self.element_type}': {str(e)}")
             return content
 
     @abstractmethod
@@ -197,6 +192,6 @@ class BaseParser(ABC):
         pass
 
     @abstractmethod
-    def _parse_section(self, section: ET.Element, source_type: str) -> List[Dict]:
+    def _parse_section(self, section: _Element, source_type: str) -> List[Dict]:
         """Parse a specific section of the configuration."""
         pass

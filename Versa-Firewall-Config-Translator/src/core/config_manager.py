@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import yaml
 from dotenv import load_dotenv
@@ -44,11 +44,9 @@ class Config:
 
         if not all(self.config["api"].values()):
             missing = [k for k, v in self.config["api"].items() if not v]
-            raise ConfigError(
-                f"Missing required environment variables: {', '.join(missing)}"
-            )
+            raise ConfigError(f"Missing required environment variables: {', '.join(missing)}")
 
-    def get_template_name(self, device_name: str = None, group_name: str = None) -> str:
+    def get_template_name(self, device_name: Optional[str] = None, group_name: Optional[str] = None) -> str:
         """Generate template name based on configuration."""
         format_string = self.config["service_template_name_format"]
         prefix = self.config["template"]["prefix"]

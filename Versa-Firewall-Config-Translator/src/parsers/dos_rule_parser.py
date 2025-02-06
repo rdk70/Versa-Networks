@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from src.parsers.base_parser import BaseParser
 
@@ -135,9 +135,7 @@ class DOSRuleParser(BaseParser):
         include_shared: bool = False,
         shared_only: bool = False,
     ):
-        super().__init__(
-            xml_content, device_name, device_group, logger, include_shared, shared_only
-        )
+        super().__init__(xml_content, device_name, device_group, logger, include_shared, shared_only)
         self.element_type = "dos-rules"
 
     def validate(self, data: Dict) -> bool:
@@ -146,31 +144,25 @@ class DOSRuleParser(BaseParser):
 
         for field in required_fields:
             if field not in data or not data[field]:
-                self.logger.warning(
-                    f"Validation failed: Missing or empty field '{field}' in data: {data}"
-                )
+                self.logger.warning(f"Validation failed: Missing or empty field '{field}' in data: {data}")
                 return False
 
         self.logger.debug(f"Validation successful for DOS rule: {data['name']}")
         return True
 
-    def _parse_members(
-        self, element: ET.Element, element_type: str, rule_name: str
-    ) -> List[str]:
+    def _parse_members(self, element: Optional[ET.Element], element_type: str, rule_name: str) -> List[str]:
         """Parse member elements from a rule section."""
         members = []
         try:
+            if element is None:
+                self.logger.debug(f"No '{element_type}' element found for rule '{rule_name}'")
+                return []
+
             if element is not None:
-                members = [
-                    member.text for member in element.findall("member") if member.text
-                ]
-                self.logger.debug(
-                    f"Added {len(members)} members of type '{element_type}' to DOS rule '{rule_name}'."
-                )
+                members = [member.text for member in element.findall("member") if member.text]
+                self.logger.debug(f"Added {len(members)} members of type '{element_type}' to DOS rule '{rule_name}'.")
         except Exception as e:
-            self.logger.error(
-                f"Error parsing members for element '{element_type}' in rule '{rule_name}': {str(e)}"
-            )
+            self.logger.error(f"Error parsing members for element '{element_type}' in rule '{rule_name}': {str(e)}")
         return members
 
     def _parse_protection(self, entry: ET.Element, rule_name: str) -> Dict:
@@ -208,9 +200,7 @@ class DOSRuleParser(BaseParser):
             return {}
 
         except Exception as e:
-            self.logger.error(
-                f"Error parsing protection configuration for rule '{rule_name}': {str(e)}"
-            )
+            self.logger.error(f"Error parsing protection configuration for rule '{rule_name}': {str(e)}")
             return {}
 
     def _parse_rule_entry(self, entry: ET.Element, source_type: str) -> Dict:
@@ -219,7 +209,7 @@ class DOSRuleParser(BaseParser):
             name = entry.get("name")
             if not name:
                 self.logger.warning("Skipping DOS rule entry with missing name")
-                return None
+                return {}
 
             rule_data = {
                 "name": name,
@@ -228,9 +218,7 @@ class DOSRuleParser(BaseParser):
                 "from": self._parse_members(entry.find("from"), "from", name),
                 "to": self._parse_members(entry.find("to"), "to", name),
                 "source": self._parse_members(entry.find("source"), "source", name),
-                "destination": self._parse_members(
-                    entry.find("destination"), "destination", name
-                ),
+                "destination": self._parse_members(entry.find("destination"), "destination", name),
                 "service": self._parse_members(entry.find("service"), "service", name),
                 "action": entry.findtext("action", "protect"),
                 "log-setting": entry.findtext("log-setting", ""),
@@ -248,15 +236,13 @@ class DOSRuleParser(BaseParser):
                 return rule_data
             else:
                 self.logger.warning(f"Invalid DOS rule data for '{name}': {rule_data}")
-                return None
+                return {}
 
         except Exception as e:
             self.logger.error(f"Error parsing DOS rule entry '{name}': {str(e)}")
-            return None
+            return {}
 
-    def _parse_section(
-        self, sections: List[ET.Element], source_type: str
-    ) -> List[Dict]:
+    def _parse_section(self, sections: List[ET.Element], source_type: str) -> List[Dict]:
         """Parse DOS rules from a list of sections."""
         rules = []
 
@@ -268,9 +254,7 @@ class DOSRuleParser(BaseParser):
                 dos_section = section.find("dos/rules")
                 if dos_section is not None:
                     entries = dos_section.findall("entry")
-                    self.logger.debug(
-                        f"Found {len(entries)} DOS rule entries in '{source_type}' section."
-                    )
+                    self.logger.debug(f"Found {len(entries)} DOS rule entries in '{source_type}' section.")
 
                     for entry in entries:
                         rule = self._parse_rule_entry(entry, source_type)
@@ -278,14 +262,10 @@ class DOSRuleParser(BaseParser):
                             rules.append(rule)
 
             except Exception as e:
-                self.logger.error(
-                    f"Error processing '{source_type}' DOS rules section: {str(e)}"
-                )
+                self.logger.error(f"Error processing '{source_type}' DOS rules section: {str(e)}")
                 continue
         if len(rules) > 0:
-            self.logger.info(
-                f"Parsing successful for {len(rules)} DOS rules from '{source_type}' sections."
-            )
+            self.logger.info(f"Parsing successful for {len(rules)} DOS rules from '{source_type}' sections.")
         return rules
 
     def parse(self) -> List[Dict]:
