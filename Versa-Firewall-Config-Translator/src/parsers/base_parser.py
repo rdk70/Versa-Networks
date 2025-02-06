@@ -77,7 +77,9 @@ class BaseParser(ABC):
                 alt_xpath = f".//entry[@name='{self.device_group}']"
                 element = self.tree.find(alt_xpath)
                 if element is not None:
-                    self.logger.debug(f"Found device group using alternative XML format: '{self.device_group}'")
+                    self.logger.debug(
+                        f"Found device group using alternative XML format: '{self.device_group}'"
+                    )
                     return element
 
             if element is None:
@@ -118,7 +120,9 @@ class BaseParser(ABC):
                 self.logger.debug(f"No shared {element_type} configuration found.")
             return element
         except Exception as e:
-            self.logger.error(f"Error finding shared element '{element_type}': {str(e)}")
+            self.logger.error(
+                f"Error finding shared element '{element_type}': {str(e)}"
+            )
             return None
 
     def get_config_element(self, element_type: str) -> Optional[Any]:
@@ -178,7 +182,9 @@ class BaseParser(ABC):
             return content
 
         except Exception as e:
-            self.logger.error(f"Error parsing content for element type '{self.element_type}': {str(e)}")
+            self.logger.error(
+                f"Error parsing content for element type '{self.element_type}': {str(e)}"
+            )
             return content
 
     @abstractmethod

@@ -41,7 +41,9 @@ class APIHandler:
         if elapsed_time < 1 / self.rate_limit:
             delay = (1 / self.rate_limit) - elapsed_time
             if delay > 0.05:
-                self.logger.debug(f"Rate limiting active: elapsed={elapsed_time:.3f}s, delaying for {delay:.3f}s.")
+                self.logger.debug(
+                    f"Rate limiting active: elapsed={elapsed_time:.3f}s, delaying for {delay:.3f}s."
+                )
             await asyncio.sleep(delay)
 
         self.last_request_time = time.time()
@@ -77,7 +79,9 @@ class APIHandler:
                         f"Attempting API request: type={item_type}, name={item_name}, attempt={retries + 1}/{self.MAX_RETRIES}."
                     )
 
-                async with await self._rate_limited_request(session, method, url, json=payload, headers=headers) as response:
+                async with await self._rate_limited_request(
+                    session, method, url, json=payload, headers=headers
+                ) as response:
                     response_text = await response.text()
 
                     if response.status == 409:
@@ -90,7 +94,9 @@ class APIHandler:
                         continue
 
                     if response.status in (200, 201):
-                        self.logger.debug(f"Request successful: type={item_type}, name={item_name}, status={response.status}.")
+                        self.logger.debug(
+                            f"Request successful: type={item_type}, name={item_name}, status={response.status}."
+                        )
                     else:
                         self.logger.warning(
                             f"Unexpected status: type={item_type}, name={item_name}, "
@@ -130,7 +136,9 @@ class APIHandler:
         }
 
         async with aiohttp.ClientSession() as session:
-            async with await self._rate_limited_request(session, "POST", url, json=payload) as response:
+            async with await self._rate_limited_request(
+                session, "POST", url, json=payload
+            ) as response:
                 if response.status == 200:
                     return await response.json()
 
@@ -155,7 +163,9 @@ class APIHandler:
             }
             headers = {"Content-Type": "application/json"}
 
-            self.logger.debug(f"Requesting OAuth token: url={url}, username={self.user_name}, client_id={self.client_id}.")
+            self.logger.debug(
+                f"Requesting OAuth token: url={url}, username={self.user_name}, client_id={self.client_id}."
+            )
 
             async with aiohttp.ClientSession() as session:
                 retries = 0
@@ -170,7 +180,9 @@ class APIHandler:
                                 data = await response.json()
                                 token = data.get("access_token")
                                 if token:
-                                    self.logger.info("OAuth token obtained successfully.")
+                                    self.logger.info(
+                                        "OAuth token obtained successfully."
+                                    )
                                     self.token_cache._update_tokens(data)
                                     return token
 
@@ -195,11 +207,15 @@ class APIHandler:
                             )
                             await asyncio.sleep(self.RETRY_DELAY * retries)
                             continue
-                        self.logger.error(f"OAuth token request failed permanently: error='{str(e)}'.")
+                        self.logger.error(
+                            f"OAuth token request failed permanently: error='{str(e)}'."
+                        )
                         sys.exit(1)
             return None
 
-    async def create_dos_policy(self, access_token: str, template_name: str, tenant: str) -> Optional[bool]:
+    async def create_dos_policy(
+        self, access_token: str, template_name: str, tenant: str
+    ) -> Optional[bool]:
         """Create the default DOS policy group."""
         endpoint = f"{self.endpoints['base_path'].format(template_name=template_name, tenant=tenant)}/security/dos-policies"
         payload = {"dos-policy-group": {"name": "Default-Policy"}}
@@ -222,7 +238,9 @@ class APIHandler:
                         201,
                         409,
                     ):  # Include 409 as it might already exist
-                        self.logger.debug(f"Successfully created or verified DOS policy group in template '{template_name}'")
+                        self.logger.debug(
+                            f"Successfully created or verified DOS policy group in template '{template_name}'"
+                        )
                         return True
                     else:
                         response_text = await response.text()
@@ -235,7 +253,9 @@ class APIHandler:
                 self.logger.error(f"Error creating DOS policy group: {str(e)}")
                 return False
 
-    async def create_service_template(self, access_token: str, template_name: str, tenant: str) -> Optional[Any]:
+    async def create_service_template(
+        self, access_token: str, template_name: str, tenant: str
+    ) -> Optional[Any]:
         """Create a new service template."""
         url = f"{self.api_base_url}{self.endpoints['service_template']}"
         payload = {
@@ -269,7 +289,9 @@ class APIHandler:
                         response_text = await response.text()
 
                         if response.status in (200, 201):
-                            self.logger.debug(f"Successfully created service template: Name={template_name}, Tenant={tenant}.")
+                            self.logger.debug(
+                                f"Successfully created service template: Name={template_name}, Tenant={tenant}."
+                            )
                             return response.status
 
                         retries += 1
@@ -296,11 +318,15 @@ class APIHandler:
                         )
                         await asyncio.sleep(self.RETRY_DELAY * retries)
                         continue
-                    self.logger.error(f"Template creation failed permanently: Name={template_name}, Error='{str(e)}'.")
+                    self.logger.error(
+                        f"Template creation failed permanently: Name={template_name}, Error='{str(e)}'."
+                    )
                     sys.exit(1)
         return None
 
-    async def upload_item(self, item_type: str, data: List[Dict], access_token: str) -> Dict:
+    async def upload_item(
+        self, item_type: str, data: List[Dict], access_token: str
+    ) -> Dict:
         """Upload items of a specific type to the Versa API."""
 
         endpoint = self.endpoints["object_path"].get(item_type)
@@ -309,7 +335,9 @@ class APIHandler:
 
         return await self.batch_upload(data, item_type, access_token)
 
-    def _handle_interface_upload(self, endpoint: str, interface_data: Dict, access_token: str, template_name: str) -> Dict:
+    def _handle_interface_upload(
+        self, endpoint: str, interface_data: Dict, access_token: str, template_name: str
+    ) -> Dict:
         """Special handling for interface uploads."""
         # Interfaces need to be added to their respective zones
         zone_name = interface_data.get("interface", {}).get("zone")
@@ -337,7 +365,9 @@ class APIHandler:
 
         # Skip upload for service groups.
         if item_type == "service_group":
-            self.logger.warning("Service groups are not supported in Versa - skipping upload.")
+            self.logger.warning(
+                "Service groups are not supported in Versa - skipping upload."
+            )
             return default_result
 
         # Handle profile-related item types.
@@ -345,19 +375,29 @@ class APIHandler:
             # Remove the "profiles." prefix.
             item_type = item_type[9:]
 
-            is_supported = self.uploaders.get("profiles", {}).get("types", {}).get(item_type)
+            is_supported = (
+                self.uploaders.get("profiles", {}).get("types", {}).get(item_type)
+            )
 
             if is_supported is False:
-                self.logger.warning(f"Skipping upload for item type: {item_type} as per configuration.")
+                self.logger.warning(
+                    f"Skipping upload for item type: {item_type} as per configuration."
+                )
                 return default_result
 
             if item_type == "dos":
                 processed_items = []
                 for item in items:
-                    profile_type = item.pop("profile_type", "aggregate")  # Remove metadata
-                    profile_endpoint = self.endpoints["object_path"]["profiles"]["dos"][profile_type]
+                    profile_type = item.pop(
+                        "profile_type", "aggregate"
+                    )  # Remove metadata
+                    profile_endpoint = self.endpoints["object_path"]["profiles"]["dos"][
+                        profile_type
+                    ]
                     if profile_endpoint is None:
-                        self.logger.error(f"DOS profile endpoint for '{profile_type}' is not defined.")
+                        self.logger.error(
+                            f"DOS profile endpoint for '{profile_type}' is not defined."
+                        )
                         continue
 
                     processed_items.append(
@@ -372,21 +412,29 @@ class APIHandler:
                 endpoint = None  # Will be used from processed items
             else:
                 # Regular profile handling
-                profile_endpoint = self.endpoints["object_path"]["profiles"].get(item_type)
+                profile_endpoint = self.endpoints["object_path"]["profiles"].get(
+                    item_type
+                )
                 if profile_endpoint is None:
-                    self.logger.error(f"Profile endpoint for '{item_type}' is not defined.")
+                    self.logger.error(
+                        f"Profile endpoint for '{item_type}' is not defined."
+                    )
                     return default_result
                 endpoint = f"{base_path}/{profile_endpoint}"
 
         # Handle other item types.
         elif self.uploaders.get(item_type) is False:
-            self.logger.info(f"Skipping upload for item type: {item_type} as per configuration.")
+            self.logger.info(
+                f"Skipping upload for item type: {item_type} as per configuration."
+            )
             return default_result
 
         else:
             general_endpoint = self.endpoints["object_path"].get(item_type)
             if general_endpoint is None:
-                self.logger.error(f"Endpoint for item type '{item_type}' is not defined.")
+                self.logger.error(
+                    f"Endpoint for item type '{item_type}' is not defined."
+                )
                 return default_result
             endpoint = f"{base_path}/{general_endpoint}"
 
@@ -465,7 +513,9 @@ class APIHandler:
                             "error": str(e),
                         }
                         cast(List[Any], results["errors"]).append(error_details)
-                        self.logger.error(f"Item upload failed: Type={item_type}, Name={item_name}, Error='{str(e)}'.")
+                        self.logger.error(
+                            f"Item upload failed: Type={item_type}, Name={item_name}, Error='{str(e)}'."
+                        )
 
                 batch_duration = time.time() - batch_start
                 success_count = cast(int, results["successful"])
@@ -516,7 +566,9 @@ class APIHandler:
     def _log_upload_summary(self, results: Dict, item_type: str, template_name) -> None:
         """Log summary of upload operation."""
         total_duration = time.time() - results["start_time"]
-        avg_time_per_item = total_duration / results["total"] if results["total"] > 0 else 0
+        avg_time_per_item = (
+            total_duration / results["total"] if results["total"] > 0 else 0
+        )
 
         self.logger.info(
             f"Completed batch upload: (Type={item_type}, Total={results['total']}, "
@@ -526,5 +578,7 @@ class APIHandler:
         )
 
         if results["errors"]:
-            error_messages = "; ".join([f"{err['item_name']}: {err['error']}" for err in results["errors"]])
+            error_messages = "; ".join(
+                [f"{err['item_name']}: {err['error']}" for err in results["errors"]]
+            )
             self.logger.warning(f"Upload errors for {item_type}: {error_messages}.")

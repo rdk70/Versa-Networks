@@ -34,7 +34,9 @@ class DataProcessor:
             "include_shared": include_shared,
             "shared_only": shared_only,
         }
-        self.parsers = parser_factory.create_parsers(xml_content, device_name, device_group, include_shared, shared_only)
+        self.parsers = parser_factory.create_parsers(
+            xml_content, device_name, device_group, include_shared, shared_only
+        )
         self.transformers = transformer_factory.create_transformers()
         self._deduped_data: Dict[str, List] = {}
 
@@ -61,8 +63,13 @@ class DataProcessor:
         """Parse all configuration elements concurrently."""
         try:
             self.logger.debug(f"Starting parsing. Context: {self.log_context}")
-            parse_tasks = {name: asyncio.create_task(self._parse_item(name, parser)) for name, parser in self.parsers.items()}
-            results = await asyncio.gather(*parse_tasks.values(), return_exceptions=True)
+            parse_tasks = {
+                name: asyncio.create_task(self._parse_item(name, parser))
+                for name, parser in self.parsers.items()
+            }
+            results = await asyncio.gather(
+                *parse_tasks.values(), return_exceptions=True
+            )
 
             parsed_data: Dict[str, List[Any]] = {}
             for name, result in zip(parse_tasks.keys(), results):
@@ -71,8 +78,12 @@ class DataProcessor:
                 else:
                     parsed_data[name] = result
                     if isinstance(result, list):
-                        self.logger.debug(f"Successfully parsed '{name}' with {len(result)} items.")
-            self.logger.debug(f"Parsing completed. Summary: {', '.join([f'{k}: {len(v)}' for k, v in parsed_data.items()])}")
+                        self.logger.debug(
+                            f"Successfully parsed '{name}' with {len(result)} items."
+                        )
+            self.logger.debug(
+                f"Parsing completed. Summary: {', '.join([f'{k}: {len(v)}' for k, v in parsed_data.items()])}"
+            )
             return parsed_data
 
         except Exception as e:
@@ -82,7 +93,9 @@ class DataProcessor:
     async def _parse_item(self, name: str, parser: Any) -> List[Dict]:
         """Parse a single configuration element."""
         try:
-            self.logger.debug(f"Parsing '{name}' elements in {self._get_section_type()}. Context: {self.log_context}")
+            self.logger.debug(
+                f"Parsing '{name}' elements in {self._get_section_type()}. Context: {self.log_context}"
+            )
 
             return parser.parse()
         except Exception as e:
@@ -96,11 +109,17 @@ class DataProcessor:
         self.logger.debug(f"Deduplicating parsed data from section '{section_type}'.")
 
         for name, data in parsed_data.items():
-            self.logger.debug(f"Deduplicating '{name}' with {len(data)} items from '{section_type}'.")
+            self.logger.debug(
+                f"Deduplicating '{name}' with {len(data)} items from '{section_type}'."
+            )
             transformer = self.transformers.get(name)
             if transformer and hasattr(transformer, "remove_duplicates"):
-                deduped_data[name] = transformer.remove_duplicates(data, self.logger, name)
-                self.logger.debug(f"Deduplicated '{name}' to {len(deduped_data[name])} unique items.")
+                deduped_data[name] = transformer.remove_duplicates(
+                    data, self.logger, name
+                )
+                self.logger.debug(
+                    f"Deduplicated '{name}' to {len(deduped_data[name])} unique items."
+                )
             else:
                 deduped_data[name] = data
 
@@ -112,7 +131,9 @@ class DataProcessor:
 
     async def transform_item(self, item_type: str, data: List[Dict]) -> List[Dict]:
         """Transform configuration items of a specific type."""
-        self.logger.info(f"Starting transformation for '{item_type}' with {len(data)} items.")
+        self.logger.info(
+            f"Starting transformation for '{item_type}' with {len(data)} items."
+        )
         try:
             transformer = self.transformers.get(item_type)
             if not transformer:
@@ -140,7 +161,9 @@ class DataProcessor:
                 "profiles": lambda item: transformer.transform(item, self.logger),
             }
 
-            action = transformer_actions.get(item_type, lambda item: transformer.transform(item, self.logger))
+            action = transformer_actions.get(
+                item_type, lambda item: transformer.transform(item, self.logger)
+            )
             return [action(item) for item in data]
 
         except Exception as e:
