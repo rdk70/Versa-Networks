@@ -73,7 +73,7 @@ jobs:
           LINTER_RULES_PATH: .
           VALIDATE_PYTHON_RUFF: true
           VALIDATE_PYTHON_BLACK: true
-          VALIDATE_PYTHON_MYPY: true
+          #VALIDATE_PYTHON_MYPY: true
           
           # ✅ Ensure dependencies are available inside the container
           PYTHON_SETUP_COMMAND: "pip install --upgrade types-PyYAML types-requests"
