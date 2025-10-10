@@ -38,7 +38,6 @@
 ### [F-103] Sub-Element Verification Enhancement
 
 - **Description**: Improve verification of configuration dependencies and relationships between elements.
-
   - **Priority:** High
   - **Status:** Planning
   - **Owner:** Unassigned
@@ -56,7 +55,6 @@
 | rules              | address, service, address_group, application, application_group, application_filter, zone, schedule |
 
 - **Tasks:**
-
   - [ ] Implement dependency tracking
   - [ ] Add validation checks
   - [ ] Create error reporting
@@ -70,14 +68,12 @@
 ### [F-104] Decryption profile support
 
 - **Description**: Add support for decryption profile configuration migration.
-
   - **Priority:** High
   - **Status:** Planning
   - **Owner:** Unassigned
   - **Due Date**:
 
 - **Tasks:**
-
   - [ ] Before uploading Decryption Policy a Default-Policy most be made.
     - https://cloud-demo.versa-networks.com/versa/ncs-services/api/config/devices/template/Deleteme_shared_device.shared_group/config/orgs/org-services/RobK/security/decryption-policies
     - {"decryption-policy-group":{"name":"Default-Policy","description":"Desc","tag":["Tag"]}}
@@ -317,14 +313,12 @@ Introduce support for region-based configurations, including geolocation mapping
 ### [F-199] Template for TASKS.md
 
 - **Description**:
-
   - **Priority:**
   - **Status:**
   - **Owner:** Unassigned
   - **Due Date**:
 
 - **Tasks:**
-
   - [ ]
   - [ ]
 
@@ -369,7 +363,6 @@ Introduce support for region-based configurations, including geolocation mapping
 - **Owner**: RobK
 - **Due Date**:
 - **Tasks:**
-
   - [x] Extraction
   - [x] Deduplication
   - [x] Transformation
@@ -392,7 +385,6 @@ Introduce support for region-based configurations, including geolocation mapping
 - **Due Date**:
 
 - **Tasks:**
-
   - [x] Analysis of PAN DOS profile structure
   - [x] Design Versa mapping schema
   - [x] Implement extraction module
@@ -413,7 +405,6 @@ Introduce support for region-based configurations, including geolocation mapping
 - **Owner**: RobK
 - **Due Date**:
 - **Tasks:**
-
   - [ ] Design zone/interface data model
   - [ ] Implement zone extraction logic
   - [ ] Develop interface mapping logic
@@ -424,7 +415,6 @@ Introduce support for region-based configurations, including geolocation mapping
   - [ ] Document implementation
 
 - **Dependencies:**
-
   - Base transformation framework
   - XML parsing infrastructure
 

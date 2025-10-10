@@ -197,13 +197,11 @@ project_root/                                 # Root directory of the project
 ### Common Issues
 
 1. **OAuth Token Errors**
-
    - Verify credentials in `.env`.
    - Check network connectivity to Versa Director.
    - Confirm API ports are open.
 
 2. **XML Parsing Errors**
-
    - Ensure valid XML format and UTF-8 encoding.
    - Check file encoding (UTF-8 required).
    - Verify file permissions.
