@@ -32,6 +32,7 @@ class AddressTransformer(BaseTransformer):
             {
                 "name": str,              # Name of the address object
                 "ip-netmask": str,        # IP address with netmask (e.g., "192.168.1.0/24")
+                "fqdn": str,              # Optional FQDN
                 "description": str,        # Optional description
                 "source": str,            # Either "device-group" or "shared"
                 "tag": List[str]          # Optional list of tags
@@ -44,13 +45,14 @@ class AddressTransformer(BaseTransformer):
                 "name": "web_server",
                 "description": "Web Server",
                 "ipv4-prefix": "192.168.1.100/24"
+                "fqdn": "example.com"  # Optional, included if FQDN is provided
             }
         }
         """
         address = data
 
         logger.debug(
-            f"Initial address details: (Name={address['name']}, IP/Netmask={address['ip-netmask']}, Description={address.get('description', '')}"
+            f"Initial address details: (Name={address['name']}, IP/Netmask={address['ip-netmask']}, FQDN={address.get('fqdn', '')}, Description={address.get('description', '')}"
         )
 
         transformed = {
@@ -62,6 +64,9 @@ class AddressTransformer(BaseTransformer):
                 "ipv4-prefix": BaseTransformer.validate_ipv4_prefix(
                     address["ip-netmask"], logger
                 ),
+                "fqdn": BaseTransformer.validate_fqdn(
+                    address["fqdn"], logger
+                ) if BaseTransformer.is_fqdn(address["fqdn"], logger) else None,
             }
         }
 
