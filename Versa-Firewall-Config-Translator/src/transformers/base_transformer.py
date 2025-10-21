@@ -111,6 +111,29 @@ class BaseTransformer(ABC):
         return ip_prefix
 
     @staticmethod
+    def validate_fqdn(fqdn: str, logger: Logger) -> str:
+        """
+        Validate and ensure FQDN is properly formatted.
+
+        Args:
+            fqdn: Fully Qualified Domain Name to validate
+            logger: Logger instance for logging validation operations
+
+        Returns:
+            str: Validated FQDN
+
+        Raises:
+            ValueError: If the FQDN is invalid
+        """
+        original_fqdn = fqdn
+        if not re.match(r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.(?!-)[A-Za-z0-9-]{1,63}(?<!-)$", fqdn):
+            logger.debug(
+                f"FQDN validation: Invalid FQDN format '{original_fqdn}'"
+            )
+            raise ValueError(f"Invalid FQDN format: {fqdn}")
+        return fqdn
+
+    @staticmethod
     def remove_duplicates(items: List[T], logger: Logger, name: str) -> List[T]:
         """
         Remove duplicate items and handle duplicate names in a collection.
