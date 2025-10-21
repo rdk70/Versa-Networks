@@ -122,6 +122,7 @@ class AddressParser(BaseParser):
                         address_data = {
                             "name": entry.get("name"),
                             "ip-netmask": entry.findtext("ip-netmask", ""),
+                            "fqdn": entry.findtext("fqdn", ""),
                             "description": entry.findtext("description", ""),
                             "source": source_type,
                         }
@@ -132,9 +133,9 @@ class AddressParser(BaseParser):
                             )
                             continue
 
-                        if not address_data["ip-netmask"]:
+                        if not address_data["ip-netmask"] and not address_data["fqdn"]:
                             self.logger.warning(
-                                f"Skipping address '{address_data['name']}' with missing ip-netmask."
+                                f"Skipping address '{address_data['name']}' with missing both ip-netmask and fqdn."
                             )
                             continue
 
