@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+import re
 from dataclasses import dataclass
 from logging import Logger
 from typing import Dict, List, Optional
@@ -108,9 +109,11 @@ class TemplateManager:
         )
         prefix = template_config.get("prefix", "")
         postfix = template_config.get("postfix", "")
-
-        device_name = device_name or "shared_device"
-        group_name = group_name or "shared_group"
+        
+        device_name_unsanitized = device_name or "shared_device"
+        device_name = re.sub(r'[^a-zA-Z0-9_-]', '-', device_name_unsanitized.replace(' ', '_'))
+        group_name_unsanitized = group_name or "shared_group"
+        group_name = re.sub(r'[^a-zA-Z0-9_-]', '-', group_name_unsanitized.replace(' ', '_'))
 
         return format_string.format(
             prefix=prefix,

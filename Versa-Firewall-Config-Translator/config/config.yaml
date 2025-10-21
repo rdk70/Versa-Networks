@@ -1,8 +1,7 @@
 files:
   # Path to the Panorama configuration XML file to be translated.
   # This path is relative to the project root directory and compatible with both Windows and Linux.
-  xml_source_file: "./Source_Files/Panorama_Config_8-30-23.xml"
-
+  xml_source_file: "/home/robk/10-14-2025.xml"
 template:
   tenant: RobK
   description: Template for PAN to Versa Configuration Translation
@@ -32,7 +31,7 @@ template:
   # This example creates names like: DG_DeviceGroup1.Device1_Config
   #
   # Define your prefix and postfix below:
-  service_template_name_format: "{prefix}_{device_name}.{device_group_name}"
+  service_template_name_format: "{prefix}-{device_name}-{device_group_name}"
   prefix: Deleteme
   postfix: Post
   
@@ -40,7 +39,7 @@ template:
   # - True: Creates a shared template.
   # - False: Copies objects from the shared template to each service group.
   # Note: Ignored if `single_template` is True.
-  create_separate_shared_template: True  
+  create_separate_shared_template: False  
 
 logging:
   # Logging level for console output. Common levels: DEBUG, INFO, WARNING, ERROR, CRITICAL.
@@ -52,11 +51,11 @@ logging:
 upload:
   # Number of requests per second that the Versa Director can handle.
   # Recommended value: 20
-  requests_per_second: 30
+  requests_per_second: 50
 
   # Number of parallel requests that can be sent.
   # No recommended value, but tested up to 100.
-  batch_size: 100
+  batch_size: 200
 
 api_endpoints:
   # OAuth token endpoint.
