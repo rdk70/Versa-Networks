@@ -144,7 +144,8 @@ class DataProcessor:
                 "address_group": lambda item: transformer.transform(
                     item,
                     self.logger,
-                    existing_addresses=[addr["name"] for addr in data],
+                    existing_addresses = {addr.get('name') for addr in self._deduped_data.get("address", [])},
+                    existing_address_groups={ag.get('name') for ag in self._deduped_data.get("address_group", [])}
                 ),
                 "application_group": lambda item: transformer.transform(
                     item,

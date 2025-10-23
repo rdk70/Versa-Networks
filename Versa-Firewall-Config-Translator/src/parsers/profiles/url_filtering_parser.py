@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from src.parsers.base_parser import BaseParser
 
@@ -27,7 +27,7 @@ class URLFilteringParser(BaseParser):
 
     def validate(self, data: Dict) -> bool:
         """Validate URL Filtering profile data structure."""
-        required_fields = ["name", "description", "default_action"]
+        required_fields = ["name", "description"]
 
         if not all(field in data for field in required_fields):
             self.logger.warning(
@@ -35,15 +35,54 @@ class URLFilteringParser(BaseParser):
             )
             return False
 
-        # Validate default action
-        if (
-            not isinstance(data["default_action"], dict)
-            or "action" not in data["default_action"]
-        ):
-            self.logger.warning("Validation failed: Invalid default_action structure")
+        # Check for either old format (default_action) or new format (category actions)
+        has_default_action = "default_action" in data
+        has_category_actions = any(
+            key in data for key in ["allow", "alert", "block", "continue"]
+        )
+
+        if not has_default_action and not has_category_actions:
+            self.logger.warning(
+                "Validation failed: Must have either default_action or category actions (allow/alert/block/continue)"
+            )
             return False
 
-        # Validate custom categories if present
+        # Validate default action if present (old format)
+        if has_default_action:
+            if (
+                not isinstance(data["default_action"], dict)
+                or "action" not in data["default_action"]
+            ):
+                self.logger.warning(
+                    "Validation failed: Invalid default_action structure"
+                )
+                return False
+
+        # Validate category actions if present (new format)
+        for action_type in ["allow", "alert", "block", "continue"]:
+            if action_type in data:
+                if not isinstance(data[action_type], list):
+                    self.logger.warning(
+                        f"Validation failed: {action_type} must be a list"
+                    )
+                    return False
+
+        # Validate credential enforcement if present
+        if "credential_enforcement" in data:
+            if not isinstance(data["credential_enforcement"], dict):
+                self.logger.warning(
+                    "Validation failed: credential_enforcement must be a dict"
+                )
+                return False
+
+            cred_enf = data["credential_enforcement"]
+            if "mode" not in cred_enf:
+                self.logger.warning(
+                    "Validation failed: credential_enforcement must have mode"
+                )
+                return False
+
+        # Validate custom categories if present (old format)
         if "custom_categories" in data:
             if not isinstance(data["custom_categories"], list):
                 self.logger.warning(
@@ -58,7 +97,7 @@ class URLFilteringParser(BaseParser):
                     )
                     return False
 
-        # Validate overrides if present
+        # Validate overrides if present (old format)
         if "overrides" in data:
             if not isinstance(data["overrides"], list):
                 self.logger.warning("Validation failed: overrides must be a list")
@@ -77,6 +116,70 @@ class URLFilteringParser(BaseParser):
             f"Validation successful for URL Filtering profile '{data['name']}'"
         )
         return True
+
+    def _parse_member_list(self, element: ET.Element) -> List[str]:
+        """Parse a list of member elements and return their text values."""
+        members = []
+        if element is not None:
+            for member in element.findall("member"):
+                if member.text:
+                    members.append(member.text)
+        return members
+
+    def _parse_credential_enforcement(
+        self, element: ET.Element, profile_name: str
+    ) -> Optional[Dict]:
+        """Parse credential enforcement section of a URL Filtering profile."""
+        try:
+            cred_enf_element = element.find("credential-enforcement")
+            if cred_enf_element is None:
+                self.logger.debug(
+                    f"No credential enforcement found in profile '{profile_name}'"
+                )
+                return None
+
+            cred_enf = {}
+
+            # Parse mode
+            mode_element = cred_enf_element.find("mode")
+            if mode_element is not None:
+                # Check for different mode types
+                if mode_element.find("disabled") is not None:
+                    cred_enf["mode"] = "disabled"
+                elif mode_element.find("domain-credentials") is not None:
+                    cred_enf["mode"] = "domain-credentials"
+                elif mode_element.find("group-mapping") is not None:
+                    cred_enf["mode"] = "group-mapping"
+                elif mode_element.find("ip-user") is not None:
+                    cred_enf["mode"] = "ip-user"
+                else:
+                    cred_enf["mode"] = "disabled"
+            else:
+                cred_enf["mode"] = "disabled"
+
+            # Parse log severity
+            log_severity = cred_enf_element.findtext("log-severity")
+            if log_severity:
+                cred_enf["log_severity"] = log_severity
+
+            # Parse action lists
+            for action_type in ["allow", "alert", "block", "continue"]:
+                action_element = cred_enf_element.find(action_type)
+                if action_element is not None:
+                    members = self._parse_member_list(action_element)
+                    if members:
+                        cred_enf[action_type] = members
+
+            self.logger.debug(
+                f"Parsed credential enforcement with mode '{cred_enf['mode']}' in profile '{profile_name}'"
+            )
+            return cred_enf
+
+        except Exception as e:
+            self.logger.error(
+                f"Error parsing credential enforcement for profile '{profile_name}': {str(e)}"
+            )
+            return None
 
     def _parse_custom_categories(
         self, element: ET.Element, profile_name: str
@@ -160,6 +263,31 @@ class URLFilteringParser(BaseParser):
             )
             return overrides
 
+    def _parse_boolean_field(
+        self, element: ET.Element, field_name: str, default: str = "no"
+    ) -> str:
+        """Parse a boolean field (yes/no) from the element."""
+        value = element.findtext(field_name, default)
+        return value if value in ["yes", "no"] else default
+
+    def _parse_category_actions(
+        self, element: ET.Element, profile_name: str
+    ) -> Dict[str, List[str]]:
+        """Parse category action lists (allow, alert, block, continue) from a URL Filtering profile."""
+        category_actions = {}
+
+        for action_type in ["allow", "alert", "block", "continue", "override"]:
+            action_element = element.find(action_type)
+            if action_element is not None:
+                members = self._parse_member_list(action_element)
+                if members:
+                    category_actions[action_type] = members
+                    self.logger.debug(
+                        f"Parsed {len(members)} categories in '{action_type}' list for profile '{profile_name}'"
+                    )
+
+        return category_actions
+
     def _parse_section(
         self, sections: List[ET.Element], source_type: str
     ) -> List[Dict]:
@@ -186,35 +314,93 @@ class URLFilteringParser(BaseParser):
                             )
                             continue
 
-                        # Parse default action
-                        default_action_element = entry.find("default-action")
-                        if default_action_element is None:
-                            self.logger.warning(
-                                f"Missing default-action in profile '{name}'"
-                            )
-                            continue
-
+                        # Basic profile data
                         profile_data = {
                             "name": name,
                             "description": entry.findtext("description", ""),
-                            "default_action": {
-                                "action": default_action_element.findtext(
-                                    "action", "allow"
-                                )
-                            },
-                            "log_settings": entry.findtext("log-settings", "default"),
                             "source": source_type,
                         }
 
-                        # Parse custom categories
-                        custom_categories = self._parse_custom_categories(entry, name)
-                        if custom_categories:
-                            profile_data["custom_categories"] = custom_categories
+                        # Parse container page settings
+                        enable_container = self._parse_boolean_field(
+                            entry, "enable-container-page"
+                        )
+                        if enable_container:
+                            profile_data["enable_container_page"] = enable_container
 
-                        # Parse URL overrides
-                        overrides = self._parse_overrides(entry, name)
-                        if overrides:
-                            profile_data["overrides"] = overrides
+                        log_container_only = self._parse_boolean_field(
+                            entry, "log-container-page-only"
+                        )
+                        if log_container_only:
+                            profile_data[
+                                "log_container_page_only"
+                            ] = log_container_only
+
+                        # Parse HTTP header logging settings
+                        log_xff = self._parse_boolean_field(entry, "log-http-hdr-xff")
+                        if log_xff == "yes":
+                            profile_data["log_http_hdr_xff"] = log_xff
+
+                        log_ua = self._parse_boolean_field(
+                            entry, "log-http-hdr-user-agent"
+                        )
+                        if log_ua == "yes":
+                            profile_data["log_http_hdr_user_agent"] = log_ua
+
+                        log_referer = self._parse_boolean_field(
+                            entry, "log-http-hdr-referer"
+                        )
+                        if log_referer == "yes":
+                            profile_data["log_http_hdr_referer"] = log_referer
+
+                        # Parse inline categorization settings
+                        local_inline = self._parse_boolean_field(
+                            entry, "local-inline-cat"
+                        )
+                        if local_inline:
+                            profile_data["local_inline_cat"] = local_inline
+
+                        cloud_inline = self._parse_boolean_field(
+                            entry, "cloud-inline-cat"
+                        )
+                        if cloud_inline:
+                            profile_data["cloud_inline_cat"] = cloud_inline
+
+                        # Parse credential enforcement
+                        cred_enf = self._parse_credential_enforcement(entry, name)
+                        if cred_enf:
+                            profile_data["credential_enforcement"] = cred_enf
+
+                        # Check for old format (default-action)
+                        default_action_element = entry.find("default-action")
+                        if default_action_element is not None:
+                            profile_data["default_action"] = {
+                                "action": default_action_element.findtext(
+                                    "action", "allow"
+                                )
+                            }
+
+                            # Parse log settings for old format
+                            log_settings = entry.findtext("log-settings")
+                            if log_settings:
+                                profile_data["log_settings"] = log_settings
+
+                            # Parse custom categories (old format)
+                            custom_categories = self._parse_custom_categories(
+                                entry, name
+                            )
+                            if custom_categories:
+                                profile_data["custom_categories"] = custom_categories
+
+                            # Parse URL overrides (old format)
+                            overrides = self._parse_overrides(entry, name)
+                            if overrides:
+                                profile_data["overrides"] = overrides
+
+                        # Parse category actions (new format)
+                        category_actions = self._parse_category_actions(entry, name)
+                        if category_actions:
+                            profile_data.update(category_actions)
 
                         if self.validate(profile_data):
                             profiles.append(profile_data)

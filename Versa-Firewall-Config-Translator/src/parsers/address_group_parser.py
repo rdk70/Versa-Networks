@@ -203,9 +203,8 @@ class AddressGroupParser(BaseParser):
             for group in groups:
                 if not group["members"]:
                     self.logger.warning(
-                        f"Skipping empty address group '{group['name']}'."
+                        f"No address in this address group '{group['name']}'."
                     )
-                    continue
                 valid_groups.append(group)
 
             return valid_groups

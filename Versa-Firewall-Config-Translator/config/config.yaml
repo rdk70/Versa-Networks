@@ -113,7 +113,7 @@ token:
   refresh_url: "/auth/refresh"
 
 uploaders:
-  address: true
+  address: false
   address_group: true
   application: true
   application_filter: true
@@ -121,15 +121,15 @@ uploaders:
   interface: False              # !!Unable to create interfaces in next gen firewall service template!!
   rules: true                   # Firewall security rules
   schedule: true
-  service: true                # Turn off for testing
-  service_group: false          # Service groups are not supported at this time.
+  service: true                 # Turn off for testing
+  service_group: false          # Service groups are not supported by Versa at this time.
   zone: true
   dos_rules: true
   profiles:
     enabled: false
     types:
       antivirus: false          # Antivirus profiles are not supported at this time.
-      url-filtering: false      # url-filtering profiles are not supported at this time.
+      url-filtering: true       
       vulnerability: false      # vulnerability profiles are not supported at this time.
       file-blocking: false      # file-blocking profiles are not supported at this time.
       wildfire-analysis: false  # wildfire-analysis profiles are not supported at this time.
