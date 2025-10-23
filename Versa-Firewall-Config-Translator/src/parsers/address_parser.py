@@ -94,7 +94,7 @@ class AddressParser(BaseParser):
 
         # Validate ip-range if present
         if data.get("ip-range"):
-            if not self._validate_ip_range(data["ip-range"]):
+            if not self._validate_ipv4_range(data["ip-range"]):
                 self.logger.warning(
                     f"Validation failed: Invalid IP-range format for '{data['name']}'."
                 )
@@ -231,7 +231,7 @@ class AddressParser(BaseParser):
                     return False
                 
                 # Check if label contains only valid characters (alphanumeric and hyphens)
-                if not all(c.isalnum() or c == '-_' for c in label):
+                if not all(c.isalnum() or c in '-_' for c in label):
                     return False
                 
                 # Cannot start or end with hyphen
@@ -244,14 +244,14 @@ class AddressParser(BaseParser):
             return False
 
 
-    def _validate_ip_range(self, ip_range: str) -> bool:
+    def _validate_ipv4_range(self, ipv4_range: str) -> bool:
         """Validate IP range format (e.g., '192.168.1.1-192.168.1.254')."""
         try:
-            if not ip_range or '-' not in ip_range:
+            if not ipv4_range or '-' not in ipv4_range:
                 return False
             
             # Split the range into start and end IPs
-            parts = ip_range.split('-')
+            parts = ipv4_range.split('-')
             if len(parts) != 2:
                 return False
             

@@ -39,7 +39,7 @@ template:
   # - True: Creates a shared template.
   # - False: Copies objects from the shared template to each service group.
   # Note: Ignored if `single_template` is True.
-  create_separate_shared_template: False  
+  create_separate_shared_template: True  
 
 logging:
   # Logging level for console output. Common levels: DEBUG, INFO, WARNING, ERROR, CRITICAL.
@@ -51,7 +51,7 @@ logging:
 upload:
   # Number of requests per second that the Versa Director can handle.
   # Recommended value: 20
-  requests_per_second: 50
+  requests_per_second: 75
 
   # Number of parallel requests that can be sent.
   # No recommended value, but tested up to 100.
