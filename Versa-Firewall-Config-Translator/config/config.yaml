@@ -188,7 +188,7 @@ transformers:
   rules: true
   schedule: true
   service: true
-  service_group: true
+  service_group: false          # Service groups are not supported by Versa at this time.
   zone: true
   dos-rules: true
   profiles:

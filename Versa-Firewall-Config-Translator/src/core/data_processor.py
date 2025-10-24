@@ -150,13 +150,14 @@ class DataProcessor:
                 "application_group": lambda item: transformer.transform(
                     item,
                     self.logger,
-                    existing_applications=self._deduped_data.get("application", []),
-                    existing_services=self._deduped_data.get("service", []),
+                    existing_applications={app.get('name') for app in self._deduped_data.get("application", [])},
+                    existing_services={srv.get('name') for srv in self._deduped_data.get("service", [])},
                 ),
                 "service_group": lambda item: transformer.transform(
                     item,
                     self.logger,
-                    existing_services=self._deduped_data.get("service", []),
+                    existing_services={srv.get('name') for srv in self._deduped_data.get("service", [])},
+                    existing_service_groups={sg.get('name') for sg in self._deduped_data.get("service_group", [])}
                 ),
                 "rules": lambda item: transformer.transform(item, self.logger),
                 "profiles": lambda item: transformer.transform(item, self.logger),

@@ -61,13 +61,9 @@ class ApplicationGroupTransformer(BaseTransformer):
 
         return transformed
 
-    def _get_valid_names(self, items: List[Dict[str, Any]]) -> List[str]:
+    def _get_valid_names(self, items: List[str]) -> List[str]:
         """Extract valid names from items list, ensuring all names are strings."""
-        return [
-            str(item.get("name", ""))
-            for item in items
-            if isinstance(item.get("name"), str)
-        ]
+        return [item for item in items if isinstance(item, str)]
 
     def _process_members(
         self,
