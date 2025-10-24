@@ -8,12 +8,12 @@ class ServiceGroupTransformer(BaseTransformer):
     """Transforms PAN service group configurations to Versa format."""
 
     def transform(
-        self, 
-        data: Dict[str, Any], 
+        self,
+        data: Dict[str, Any],
         logger: Logger,
         existing_services: Set[str] = None,
         existing_service_groups: Set[str] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Transform service group entry to Versa format.
@@ -32,7 +32,7 @@ class ServiceGroupTransformer(BaseTransformer):
             existing_services = set()
         if existing_service_groups is None:
             existing_service_groups = set()
-            
+
         service_group = data
 
         logger.debug(
@@ -40,11 +40,11 @@ class ServiceGroupTransformer(BaseTransformer):
         )
 
         cleaned_members, skipped = self._process_members(
-            service_group["members"], 
+            service_group["members"],
             existing_services,
             existing_service_groups,
-            service_group["name"], 
-            logger
+            service_group["name"],
+            logger,
         )
 
         transformed = {

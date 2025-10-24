@@ -332,9 +332,7 @@ class URLFilteringParser(BaseParser):
                             entry, "log-container-page-only"
                         )
                         if log_container_only:
-                            profile_data[
-                                "log_container_page_only"
-                            ] = log_container_only
+                            profile_data["log_container_page_only"] = log_container_only
 
                         # Parse HTTP header logging settings
                         log_xff = self._parse_boolean_field(entry, "log-http-hdr-xff")

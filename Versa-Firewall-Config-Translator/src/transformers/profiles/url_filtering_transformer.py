@@ -145,14 +145,16 @@ class URLFilteringTransformer(BaseTransformer):
 
         # Add description if present
         if profile.get("description"):
-            transformed["url-filtering-profile"][
-                "description"
-            ] = BaseTransformer.clean_string(profile["description"], logger)
+            transformed["url-filtering-profile"]["description"] = (
+                BaseTransformer.clean_string(profile["description"], logger)
+            )
 
         # Handle cloud inline categorization settings
         cloud_lookup_mode = self._get_cloud_lookup_mode(profile, logger)
         if cloud_lookup_mode:
-            transformed["url-filtering-profile"]["cloud-lookup-mode"] = cloud_lookup_mode
+            transformed["url-filtering-profile"][
+                "cloud-lookup-mode"
+            ] = cloud_lookup_mode
 
         # Handle default action
         default_action = self._get_default_action(profile, logger)
@@ -403,9 +405,10 @@ class URLFilteringTransformer(BaseTransformer):
             # Check if this action already exists
             existing_action = None
             for cat_action in category_action_map.get("category-action", []):
-                if (
-                    cat_action.get("action", {}).get("predefined") == versa_action
-                    and "user-defined" in cat_action.get("url-categories", {})
+                if cat_action.get("action", {}).get(
+                    "predefined"
+                ) == versa_action and "user-defined" in cat_action.get(
+                    "url-categories", {}
                 ):
                     existing_action = cat_action
                     break
@@ -465,7 +468,10 @@ class URLFilteringTransformer(BaseTransformer):
                 "name": "credential-phishing-prevention",
                 "action": {"predefined": "block"},
                 "url-reputations": {
-                    "predefined": ["high_risk", "medium_risk"]  # Common risky reputations
+                    "predefined": [
+                        "high_risk",
+                        "medium_risk",
+                    ]  # Common risky reputations
                 },
             }
 
@@ -479,6 +485,6 @@ class URLFilteringTransformer(BaseTransformer):
                 f"(mode: {mode}, blocked categories: {len(blocked_categories)})"
             )
             logger.debug(
-                f"Note: Credential enforcement categories cannot be directly "
-                f"mapped to Versa reputation actions. Using risk-based blocking instead."
+                "Note: Credential enforcement categories cannot be directly "
+                "mapped to Versa reputation actions. Using risk-based blocking instead."
             )

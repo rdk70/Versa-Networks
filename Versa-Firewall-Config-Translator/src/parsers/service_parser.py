@@ -139,7 +139,9 @@ class ServiceParser(BaseParser):
                     if "-" in p:
                         # Port range within the list
                         start, end = map(int, p.split("-"))
-                        if not (0 <= start <= 65535 and 0 <= end <= 65535 and start <= end):
+                        if not (
+                            0 <= start <= 65535 and 0 <= end <= 65535 and start <= end
+                        ):
                             valid = False
                             break
                     else:
