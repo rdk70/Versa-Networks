@@ -126,25 +126,23 @@ class BaseTransformer(ABC):
             ValueError: If the FQDN is invalid
         """
         original_fqdn = fqdn
-        
+
         # Remove trailing dot if present
-        fqdn = fqdn.rstrip('.')
-        
+        fqdn = fqdn.rstrip(".")
+
         # Pattern for a valid label: 1-63 chars, alphanumeric/hyphen/underscore, can't start/end with hyphen
         # Match one or more labels separated by dots
         label_pattern = r"(?!-)[A-Za-z0-9_-]{1,63}(?<!-)"
         fqdn_pattern = rf"^{label_pattern}(\.{label_pattern})+$"
-        
+
         if not re.match(fqdn_pattern, fqdn):
-            logger.debug(
-                f"FQDN validation: Invalid FQDN format '{original_fqdn}'"
-            )
+            logger.debug(f"FQDN validation: Invalid FQDN format '{original_fqdn}'")
             raise ValueError(f"Invalid FQDN format: {fqdn}")
-        
+
         # Check total length
         if len(fqdn) > 253:
             raise ValueError(f"FQDN exceeds maximum length of 253 characters: {fqdn}")
-        
+
         return fqdn
 
     @staticmethod
@@ -163,17 +161,17 @@ class BaseTransformer(ABC):
             ValueError: If the IPv6 prefix is invalid
         """
         original_prefix = ip_prefix
-        
+
         # Remove brackets if present
-        ip_prefix = ip_prefix.strip('[]')
-        
+        ip_prefix = ip_prefix.strip("[]")
+
         # Check if CIDR notation is present
         if not re.search(r"/\d{1,3}$", ip_prefix):
             ip_prefix = f"{ip_prefix}/128"
             logger.debug(
                 f"IPv6 prefix validation: Added missing CIDR notation '{original_prefix}' → '{ip_prefix}'"
             )
-        
+
         # Validate the format
         if "/" in ip_prefix:
             ip, prefix_len = ip_prefix.split("/", 1)
@@ -183,17 +181,16 @@ class BaseTransformer(ABC):
                     raise ValueError(f"Invalid IPv6 prefix length: {prefix_len}")
             except ValueError:
                 raise ValueError(f"Invalid IPv6 prefix format: {ip_prefix}")
-            
+
             # Basic IPv6 validation
-            if not ":" in ip:
+            if ":" not in ip:
                 raise ValueError(f"Invalid IPv6 address format: {ip}")
-            
+
             # Check for multiple :: occurrences
             if ip.count("::") > 1:
                 raise ValueError(f"Invalid IPv6 address (multiple '::' found): {ip}")
-        
-        return ip_prefix
 
+        return ip_prefix
 
     @staticmethod
     def validate_ip_range(ip_range: str, logger: Logger) -> str:
@@ -211,49 +208,54 @@ class BaseTransformer(ABC):
             ValueError: If the IP range is invalid
         """
         original_range = ip_range
-        
+
         if not ip_range or "-" not in ip_range:
             raise ValueError(f"Invalid IP range format (missing hyphen): {ip_range}")
-        
+
         # Split and normalize spacing
         parts = ip_range.split("-")
         if len(parts) != 2:
             raise ValueError(f"Invalid IP range format (multiple hyphens): {ip_range}")
-        
+
         start_ip = parts[0].strip()
         end_ip = parts[1].strip()
-        
+
         # Normalize spacing
         normalized_range = f"{start_ip}-{end_ip}"
         if normalized_range != original_range:
             logger.debug(
                 f"IP range validation: Normalized spacing '{original_range}' → '{normalized_range}'"
             )
-        
+
         # Validate both IPs are valid IPv4
         for ip_label, ip in [("start", start_ip), ("end", end_ip)]:
             ip_parts = ip.split(".")
             if len(ip_parts) != 4:
                 raise ValueError(f"Invalid {ip_label} IP in range (not IPv4): {ip}")
-            
+
             try:
                 if not all(0 <= int(part) <= 255 for part in ip_parts):
-                    raise ValueError(f"Invalid {ip_label} IP in range (octet out of range): {ip}")
+                    raise ValueError(
+                        f"Invalid {ip_label} IP in range (octet out of range): {ip}"
+                    )
             except ValueError:
                 raise ValueError(f"Invalid {ip_label} IP in range: {ip}")
-        
+
         # Validate start <= end
         try:
-            start_int = sum(int(part) << (8 * (3 - i)) for i, part in enumerate(start_ip.split('.')))
-            end_int = sum(int(part) << (8 * (3 - i)) for i, part in enumerate(end_ip.split('.')))
-            
+            start_int = sum(
+                int(part) << (8 * (3 - i)) for i, part in enumerate(start_ip.split("."))
+            )
+            end_int = sum(
+                int(part) << (8 * (3 - i)) for i, part in enumerate(end_ip.split("."))
+            )
+
             if start_int > end_int:
                 raise ValueError(f"Invalid IP range (start > end): {normalized_range}")
         except (ValueError, AttributeError) as e:
             raise ValueError(f"Invalid IP range: {normalized_range} - {str(e)}")
-        
-        return normalized_range
 
+        return normalized_range
 
     @staticmethod
     def remove_duplicates(items: List[T], logger: Logger, name: str) -> List[T]:

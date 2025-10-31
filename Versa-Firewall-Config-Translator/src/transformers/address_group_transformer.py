@@ -72,7 +72,10 @@ class AddressGroupTransformer(BaseTransformer):
                 invalid_members.append(member)
                 continue
 
-            if cleaned_member not in existing_addresses and cleaned_member not in existing_address_groups:
+            if (
+                cleaned_member not in existing_addresses
+                and cleaned_member not in existing_address_groups
+            ):
                 logger.debug(
                     f"Address group '{address_group['name']}': "
                     f"Member '{cleaned_member}' not found in existing addresses - skipping"
