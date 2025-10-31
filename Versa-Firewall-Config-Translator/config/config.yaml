@@ -1,7 +1,7 @@
 files:
   # Path to the Panorama configuration XML file to be translated.
   # This path is relative to the project root directory and compatible with both Windows and Linux.
-  xml_source_file: "/home/robk/10-14-2025.xml"
+  xml_source_file: "C:/Users/rober/Downloads/10-14-2025.xml"
 template:
   tenant: RobK
   description: Template for PAN to Versa Configuration Translation
@@ -57,93 +57,6 @@ upload:
   # No recommended value, but tested up to 100.
   batch_size: 200
 
-api_endpoints:
-  # OAuth token endpoint.
-  oauth: "/auth/token"
-
-  # Base API path for device template configurations.
-  # Placeholders:
-  # - {template_name}: Name of the template.
-  # - {tenant}: Tenant identifier.
-  base_path: "api/config/devices/template/{template_name}/config/orgs/org-services/{tenant}"
-
-  # Endpoint for service templates.
-  service_template: "/vnms/template/serviceTemplate"
-
-  # Paths for various object types within the API.
-  object_path:
-    address: "objects/addresses"
-    address_group: "objects/address-groups"
-    service: "objects/services" 
-    application: "application-identification/user-defined-applications"
-    application_group: "application-identification/application-groups"
-    application_filter: "application-identification/application-filters"
-    rules: "security/access-policies/access-policy-group/Default-Policy/rules"
-    interface: "network/interfaces"
-    zone: "objects/zones"
-    schedule: "objects/schedules"
-    dos_rules: security/dos-policies/dos-policy-group/Default-Policy/rules
-    profiles:
-        antivirus: "security/profiles/antivirus"
-        #data-filtering: "security/profiles/data-filtering"
-        decryption: "security/profiles/decryption"
-        #dns-security: "security/profiles/dns-security"
-        dos:
-          aggregate: "security/profiles/dos/aggregate"
-          classified: "security/profiles/dos/classified"
-        file-blocking: "security/profiles/file-blocking"
-        file-filtering: "security/profiles/file-filtering"
-        ips: "security/profiles/ips"
-        #mobile-security:
-        #pcap:
-        #sctp-protection:
-        #spyware:
-        url-filtering: "security/profiles/url-filtering"
-        vulnerability: "security/profiles/ips"
-        #wildfire-analysis: 
-
-token:
-  # Token expiry time in seconds.
-  expiry: 3600
-
-  # Enables or disables token refresh functionality.
-  refresh_enabled: true
-
-  # Endpoint URL for refreshing tokens.
-  refresh_url: "/auth/refresh"
-
-uploaders:
-  address: false
-  address_group: true
-  application: true
-  application_filter: true
-  application_group: true
-  interface: False              # !!Unable to create interfaces in next gen firewall service template!!
-  rules: true                   # Firewall security rules
-  schedule: true
-  service: true                 # Turn off for testing
-  service_group: false          # Service groups are not supported by Versa at this time.
-  zone: true
-  dos_rules: true
-  profiles:
-    enabled: false
-    types:
-      antivirus: false          # Antivirus profiles are not supported at this time.
-      url-filtering: true       
-      vulnerability: false      # vulnerability profiles are not supported at this time.
-      file-blocking: false      # file-blocking profiles are not supported at this time.
-      wildfire-analysis: false  # wildfire-analysis profiles are not supported at this time.
-      data-filtering: false     # data-filtering profiles are not supported at this time.
-      dos: true
-      spyware: false            # spyware profiles are not supported at this time.
-      sctp-protection: false    # sctp-protection profiles are not supported at this time.
-      mobile-security: false    # mobile-security profiles are not supported at this time.
-      decryption: false         # decryption profiles are not supported at this time. 
-      dns-security: false       # dns-security profiles are not supported at this time.
-      pcap: false               # pcap profiles are not supported at this time.
-      ips: false                # ips profiles are not supported at this time.
-
-# The following parsers are not currently in use but may be implemented in future updates.
 parsers:
   address: true
   address_group: true
@@ -209,6 +122,37 @@ transformers:
       pcap: false               # pcap profiles are not supported at this time.
       ips: false                # ips profiles are not supported at this time.
 
+uploaders:
+  address: true
+  address_group: true
+  application: true
+  application_filter: true
+  application_group: true
+  interface: False              # !!Unable to create interfaces in next gen firewall service template!!
+  rules: true                   # Firewall security rules
+  schedule: true
+  service: true                 # Turn off for testing
+  service_group: false          # Service groups are not supported by Versa at this time.
+  zone: true
+  dos_rules: true
+  profiles:
+    enabled: false
+    types:
+      antivirus: false          # Antivirus profiles are not supported at this time.
+      url-filtering: true       
+      vulnerability: false      # vulnerability profiles are not supported at this time.
+      file-blocking: false      # file-blocking profiles are not supported at this time.
+      wildfire-analysis: false  # wildfire-analysis profiles are not supported at this time.
+      data-filtering: false     # data-filtering profiles are not supported at this time.
+      dos: true
+      spyware: false            # spyware profiles are not supported at this time.
+      sctp-protection: false    # sctp-protection profiles are not supported at this time.
+      mobile-security: false    # mobile-security profiles are not supported at this time.
+      decryption: false         # decryption profiles are not supported at this time. 
+      dns-security: false       # dns-security profiles are not supported at this time.
+      pcap: false               # pcap profiles are not supported at this time.
+      ips: false                # ips profiles are not supported at this time.
+
 defaults:
   # Default risk level (scale: 1-5).
   risk: 3
@@ -218,3 +162,58 @@ defaults:
 
   # Default productivity setting (scale: 1-5).
   productivity: 3
+
+api_endpoints:
+  # OAuth token endpoint.
+  oauth: "/auth/token"
+
+  # Base API path for device template configurations.
+  # Placeholders:
+  # - {template_name}: Name of the template.
+  # - {tenant}: Tenant identifier.
+  base_path: "api/config/devices/template/{template_name}/config/orgs/org-services/{tenant}"
+
+  # Endpoint for service templates.
+  service_template: "/vnms/template/serviceTemplate"
+
+  # Paths for various object types within the API.
+  object_path:
+    address: "objects/addresses"
+    address_group: "objects/address-groups"
+    service: "objects/services" 
+    application: "application-identification/user-defined-applications"
+    application_group: "application-identification/application-groups"
+    application_filter: "application-identification/application-filters"
+    rules: "security/access-policies/access-policy-group/Default-Policy/rules"
+    interface: "network/interfaces"
+    zone: "objects/zones"
+    schedule: "objects/schedules"
+    dos_rules: security/dos-policies/dos-policy-group/Default-Policy/rules
+    profiles:
+        antivirus: "security/profiles/antivirus"
+        #data-filtering: "security/profiles/data-filtering"
+        decryption: "security/profiles/decryption"
+        #dns-security: "security/profiles/dns-security"
+        dos:
+          aggregate: "security/profiles/dos/aggregate"
+          classified: "security/profiles/dos/classified"
+        file-blocking: "security/profiles/file-blocking"
+        file-filtering: "security/profiles/file-filtering"
+        ips: "security/profiles/ips"
+        #mobile-security:
+        #pcap:
+        #sctp-protection:
+        #spyware:
+        url-filtering: "security/profiles/url-filtering"
+        vulnerability: "security/profiles/ips"
+        #wildfire-analysis: 
+
+token:
+  # Token expiry time in seconds.
+  expiry: 3600
+
+  # Enables or disables token refresh functionality.
+  refresh_enabled: true
+
+  # Endpoint URL for refreshing tokens.
+  refresh_url: "/auth/refresh"
