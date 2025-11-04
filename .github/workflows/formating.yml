@@ -11,9 +11,9 @@ jobs:
       checks: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Ensures at least one previous commit is available
+          fetch-depth: 0  # Ensures at least one previous commit is available
 
       # ✅ Cache Python & Node dependencies to speed up workflow
       - name: Cache Python packages
@@ -40,8 +40,7 @@ jobs:
           
       # ✅ Auto-fix Python files and explicitly log failures
       - name: Auto-fix Python files
-        run: |
-          echo "Running Black..."
+        run: |          echo "Running Black..."
           black . || echo "Black failed, but continuing..."
           echo "Running Isort..."
           isort . || echo "Isort failed, but continuing..."
