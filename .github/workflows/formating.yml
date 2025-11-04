@@ -40,7 +40,8 @@ jobs:
           
       # ✅ Auto-fix Python files and explicitly log failures
       - name: Auto-fix Python files
-        run: |          echo "Running Black..."
+        run: |          
+          echo "Running Black..."
           black . || echo "Black failed, but continuing..."
           echo "Running Isort..."
           isort . || echo "Isort failed, but continuing..."
