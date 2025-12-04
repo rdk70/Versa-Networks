@@ -127,7 +127,7 @@ transformers:
       ips: false                # ips profiles are not supported at this time.
 
 uploaders:
-  address: false
+  address: true
   address_group: true
   application: true
   application_filter: true
