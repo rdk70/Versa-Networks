@@ -1,7 +1,7 @@
 files:
   # Path to the Panorama configuration XML file to be translated.
   # This path is relative to the project root directory and compatible with both Windows and Linux.
-  xml_source_file: "C:/Users/rober/Downloads/10-14-2025.xml"
+  xml_source_file: "/home/robk/10-14-2025.xml"
 template:
   tenant: RobK
   description: Template for PAN to Versa Configuration Translation
