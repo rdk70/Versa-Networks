@@ -41,7 +41,7 @@ template:
   # - True: Creates a shared template.
   # - False: Copies objects from the shared template to each service group.
   # Note: Ignored if `single_template` is True.
-  create_separate_shared_template: True  
+  create_separate_shared_template: false  
 
 logging:
   # Logging level for console output. Common levels: DEBUG, INFO, WARNING, ERROR, CRITICAL.
@@ -105,7 +105,7 @@ transformers:
   rules: true
   schedule: true
   service: true
-  service_group: false          # Service groups are not supported by Versa at this time.
+  service_group: true          # Service groups are not supported by Versa at this time.
   zone: true
   dos-rules: true
   profiles:
@@ -127,7 +127,7 @@ transformers:
       ips: false                # ips profiles are not supported at this time.
 
 uploaders:
-  address: true
+  address: false
   address_group: true
   application: true
   application_filter: true
