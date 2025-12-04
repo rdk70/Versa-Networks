@@ -48,6 +48,16 @@ class RulesTransformer(BaseTransformer):
 
     def _create_match_section(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Create match section of Versa rule."""
+
+        # Build destination.address separately so we can conditionally add 'negate'
+        dest_address: Dict[str, Any] = {
+            "address-list": data.get("destination", []),
+        }
+
+        if data.get("negate-destination") == "yes":
+            # Include negate with an empty string
+            dest_address["negate"] = ""
+
         return {
             "source": {
                 "zone": {"zone-list": data.get("from", [])},
@@ -60,15 +70,13 @@ class RulesTransformer(BaseTransformer):
             },
             "destination": {
                 "zone": {"zone-list": data.get("to", [])},
-                "address": {
-                    "address-list": data.get("destination", []),
-                    "negate": "true" if data.get("negate-destination") == "yes" else "",
-                },
+                "address": dest_address,
             },
             "application": {"predefined-application-list": data.get("application", [])},
             "services": {"predefined-services-list": data.get("service", [])},
             "ip-version": "ipv4",
         }
+
 
     def _create_set_section(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Create set section of Versa rule."""
