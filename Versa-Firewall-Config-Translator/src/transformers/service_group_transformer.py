@@ -13,6 +13,7 @@ class ServiceGroupTransformer(BaseTransformer):
         logger: Logger,
         existing_services: Set[str] = None,
         existing_service_groups: Set[str] = None,
+        service_mapping: Dict[str, str] = None,
         **kwargs: Any,
     ) -> Dict[str, Any]:
         """
@@ -45,6 +46,7 @@ class ServiceGroupTransformer(BaseTransformer):
             existing_service_groups,
             service_group["name"],
             logger,
+            service_mapping, 
         )
 
         transformed = {
@@ -66,25 +68,59 @@ class ServiceGroupTransformer(BaseTransformer):
         existing_service_groups: Set[str],
         group_name: str,
         logger: Logger,
-    ) -> Tuple[List[str], List[str]]:
-        """Process and validate group members."""
+        service_mapping: Dict[str, str] = None,
+    ) -> tuple[List[str], List[str]]:
+        """Process and validate group members, mapping PAN names to Versa names if needed."""
         cleaned_members: List[str] = []
         skipped_members: List[str] = []
+        mapped_count = 0
+        
+        if service_mapping is None:
+            service_mapping = {}
 
         for member in members:
             cleaned = self.clean_string(member, logger)
 
-            # Ensure cleaned is always a string, even if clean_string returned a list
+            # Ensure cleaned is always a string
             if isinstance(cleaned, list):
                 cleaned = " ".join(cleaned)
 
+            # ✅ Fast path: Check if it exists as-is (handles ~80% of cases)
             if cleaned in existing_services or cleaned in existing_service_groups:
                 cleaned_members.append(cleaned)
-                logger.debug(f"Added member '{cleaned}' to group '{group_name}'")
-            else:
-                skipped_members.append(cleaned)
-                logger.warning(
-                    f"Member '{cleaned}' not found in services or service groups for group '{group_name}'"
+                logger.debug(f"Found member '{cleaned}' in group '{group_name}'")
+                continue
+
+            # ❌ Not found: Try mapping to Versa name
+            mapped = service_mapping.get(cleaned, cleaned)
+            
+            if mapped != cleaned:  # Only if mapping actually changed it
+                logger.debug(
+                    f"Mapping '{cleaned}' → '{mapped}' in group '{group_name}'"
                 )
+                mapped_count += 1
+                
+                if mapped in existing_services or mapped in existing_service_groups:
+                    cleaned_members.append(mapped)
+                    logger.debug(f"Mapped member '{cleaned}' → '{mapped}' accepted")
+                    continue
+                else:
+                    logger.debug(
+                        f"Mapped member '{mapped}' still not found in services or groups"
+                    )
+
+            # Still not found - skip it
+            skipped_members.append(cleaned)
+            logger.debug(
+                f"Skipping invalid member '{cleaned}' in group '{group_name}'"
+            )
+
+        # Log statistics
+        logger.debug(
+            f"Service group '{group_name}': "
+            f"{len(cleaned_members)} members found, "
+            f"{mapped_count} required mapping, "
+            f"{len(skipped_members)} skipped"
+        )
 
         return cleaned_members, skipped_members

@@ -2,6 +2,8 @@ files:
   # Path to the Panorama configuration XML file to be translated.
   # This path is relative to the project root directory and compatible with both Windows and Linux.
   xml_source_file: "/home/robk/10-14-2025.xml"
+  services_mapping: "mapping_files/services-versa_to_palo_mapping.csv"  # Add this
+  applications_mapping: "mapping_files/applications-versa_to_palo_mapping.csv"
 template:
   tenant: RobK
   description: Template for PAN to Versa Configuration Translation
@@ -91,6 +93,8 @@ parsers:
 transformers:
   # Removes duplicate objects during the transformation process.
   remove_duplicates: true
+  rename_services_palo_predefined_to_versa_per_mapping_file: true
+  rename_applications_palo_predefined_to_versa_per_mapping_file: true
   
   address: true
   address_group: true
