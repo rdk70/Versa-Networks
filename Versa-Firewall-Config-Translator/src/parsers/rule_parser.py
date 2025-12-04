@@ -151,13 +151,13 @@ class FirewallRuleParser(BaseParser):
                 if not self.shared_only:
                     dg_element = self.get_config_element(rulebase.value)
                     if dg_element is not None:
-                        dg_rules = self._parse_section([dg_element], "device-group")
+                        dg_rules = self._parse_section(dg_element, "device-group")
                         rules.extend(dg_rules)
 
                 if self.include_shared:
                     shared_element = self.get_shared_element(rulebase.value)
                     if shared_element is not None:
-                        shared_rules = self._parse_section([shared_element], "shared")
+                        shared_rules = self._parse_section(shared_element, "shared")
                         rules.extend(shared_rules)
 
             self.logger.debug(
