@@ -8,10 +8,7 @@ class ApplicationGroupTransformer(BaseTransformer):
     """Transformer for PAN application group configurations to Versa format."""
 
     def transform(
-        self,
-        data: Dict[str, Any],
-        logger: Logger,
-        **kwargs: Any
+        self, data: Dict[str, Any], logger: Logger, **kwargs: Any
     ) -> Dict[str, Any]:
         """
         Transform an application group entry to Versa format.
@@ -87,7 +84,7 @@ class ApplicationGroupTransformer(BaseTransformer):
         skipped_members: List[str] = []
         app_mapped_count = 0
         service_mapped_count = 0
-        
+
         if application_mapping is None:
             application_mapping = {}
         if service_mapping is None:
@@ -114,10 +111,12 @@ class ApplicationGroupTransformer(BaseTransformer):
                     f"Mapping application '{cleaned}' → '{app_mapped}' in group '{group_name}'"
                 )
                 app_mapped_count += 1
-                
+
                 if app_mapped in valid_apps:
                     cleaned_members.append(app_mapped)
-                    logger.debug(f"Mapped application '{cleaned}' → '{app_mapped}' accepted")
+                    logger.debug(
+                        f"Mapped application '{cleaned}' → '{app_mapped}' accepted"
+                    )
                     continue
 
             # Try service mapping
@@ -127,17 +126,17 @@ class ApplicationGroupTransformer(BaseTransformer):
                     f"Mapping service '{cleaned}' → '{service_mapped}' in group '{group_name}'"
                 )
                 service_mapped_count += 1
-                
+
                 if service_mapped in valid_services:
                     cleaned_members.append(service_mapped)
-                    logger.debug(f"Mapped service '{cleaned}' → '{service_mapped}' accepted")
+                    logger.debug(
+                        f"Mapped service '{cleaned}' → '{service_mapped}' accepted"
+                    )
                     continue
 
             # Still not found - skip it
             skipped_members.append(cleaned)
-            logger.debug(
-                f"Skipping invalid member '{cleaned}' in group '{group_name}'"
-            )
+            logger.debug(f"Skipping invalid member '{cleaned}' in group '{group_name}'")
 
         # Log statistics
         total_mapped = app_mapped_count + service_mapped_count

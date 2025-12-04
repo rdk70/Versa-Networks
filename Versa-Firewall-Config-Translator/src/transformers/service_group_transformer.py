@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Set
 
 from .base_transformer import BaseTransformer
 
@@ -46,7 +46,7 @@ class ServiceGroupTransformer(BaseTransformer):
             existing_service_groups,
             service_group["name"],
             logger,
-            service_mapping, 
+            service_mapping,
         )
 
         transformed = {
@@ -74,7 +74,7 @@ class ServiceGroupTransformer(BaseTransformer):
         cleaned_members: List[str] = []
         skipped_members: List[str] = []
         mapped_count = 0
-        
+
         if service_mapping is None:
             service_mapping = {}
 
@@ -93,13 +93,13 @@ class ServiceGroupTransformer(BaseTransformer):
 
             # ❌ Not found: Try mapping to Versa name
             mapped = service_mapping.get(cleaned, cleaned)
-            
+
             if mapped != cleaned:  # Only if mapping actually changed it
                 logger.debug(
                     f"Mapping '{cleaned}' → '{mapped}' in group '{group_name}'"
                 )
                 mapped_count += 1
-                
+
                 if mapped in existing_services or mapped in existing_service_groups:
                     cleaned_members.append(mapped)
                     logger.debug(f"Mapped member '{cleaned}' → '{mapped}' accepted")
@@ -111,9 +111,7 @@ class ServiceGroupTransformer(BaseTransformer):
 
             # Still not found - skip it
             skipped_members.append(cleaned)
-            logger.debug(
-                f"Skipping invalid member '{cleaned}' in group '{group_name}'"
-            )
+            logger.debug(f"Skipping invalid member '{cleaned}' in group '{group_name}'")
 
         # Log statistics
         logger.debug(

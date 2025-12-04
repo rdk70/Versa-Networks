@@ -60,7 +60,6 @@ async def process_template(
             parser_factory=parser_factory,
             transformer_factory=transformer_factory,
             config=config,
-            
         )
 
         # Parsing data

@@ -1,9 +1,9 @@
 import asyncio
+import csv
 import uuid
 from logging import Logger
-from typing import Any, Dict, List, Set, Tuple
 from pathlib import Path
-import csv
+from typing import Any, Dict, List, Set
 
 from src.core.factories import ParserFactory, TransformerFactory
 
@@ -21,7 +21,7 @@ class DataProcessor:
         logger: Logger,
         parser_factory: ParserFactory,
         transformer_factory: TransformerFactory,
-        config: Dict,  
+        config: Dict,
     ):
         self.task_id = str(uuid.uuid4())
         self.xml_content = xml_content
@@ -43,22 +43,29 @@ class DataProcessor:
         )
         self.transformers = transformer_factory.create_transformers()
         self._deduped_data: Dict[str, List] = {}
-        
+
         # Load predefined Versa services and applications
         self.predefined_versa_services = self._load_predefined_versa_services()
         self.predefined_versa_applications = self._load_predefined_versa_applications()
-        
-        # Load service mapping and check config setting
-        self.rename_services_enabled = self.config.get('transformers', {}).get(  # ← Use self.config
-            'rename_services_palo_predefined_to_versa_per_mapping_file', False
-        )
-        self.service_mapping = self._load_service_mapping() if self.rename_services_enabled else {}
-        # Load application mapping and check config setting
-        self.rename_applications_enabled = self.config.get('transformers', {}).get(  # ← Use self.config
-            'rename_applications_palo_predefined_to_versa_per_mapping_file', False
-        )
-        self.application_mapping = self._load_application_mapping() if self.rename_applications_enabled else {}
 
+        # Load service mapping and check config setting
+        self.rename_services_enabled = self.config.get(
+            "transformers", {}
+        ).get(  # ← Use self.config
+            "rename_services_palo_predefined_to_versa_per_mapping_file", False
+        )
+        self.service_mapping = (
+            self._load_service_mapping() if self.rename_services_enabled else {}
+        )
+        # Load application mapping and check config setting
+        self.rename_applications_enabled = self.config.get(
+            "transformers", {}
+        ).get(  # ← Use self.config
+            "rename_applications_palo_predefined_to_versa_per_mapping_file", False
+        )
+        self.application_mapping = (
+            self._load_application_mapping() if self.rename_applications_enabled else {}
+        )
 
         self.logger.debug(
             f"DataProcessor initialized for {self._get_section_type()} "
@@ -82,49 +89,55 @@ class DataProcessor:
             exc_info=True,
         )
         raise error
-    
+
     def _load_application_mapping(self) -> Dict[str, str]:
         """
         Load Palo Alto to Versa application name mappings from CSV.
-        
+
         Returns:
             Dict[str, str]: Dictionary mapping Palo application names to Versa application names
         """
         try:
-            csv_path = Path(__file__).parent.parent.parent / "mapping_files" / "applications-versa_to_palo_mapping.csv"
-            
+            csv_path = (
+                Path(__file__).parent.parent.parent
+                / "mapping_files"
+                / "applications-versa_to_palo_mapping.csv"
+            )
+
             if not csv_path.exists():
                 self.logger.warning(
                     f"Application mapping file not found at {csv_path}. "
                     "Application renaming will be skipped."
                 )
                 return {}
-            
+
             palo_to_versa_mapping = {}
             skipped_na_count = 0
-            
-            with open(csv_path, 'r', encoding='utf-8') as f:
+
+            with open(csv_path, "r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    versa_app_name = row.get('Versa Application', '').strip()
-                    palo_apps_str = row.get('Palo Alto Application(s)', '').strip()
-                    
+                    versa_app_name = row.get("Versa Application", "").strip()
+                    palo_apps_str = row.get("Palo Alto Application(s)", "").strip()
+
                     # Skip if Versa app is N/A or empty
-                    if not versa_app_name or versa_app_name.upper() == 'N/A':
+                    if not versa_app_name or versa_app_name.upper() == "N/A":
                         if palo_apps_str:  # Only count if there were Palo apps listed
-                            skipped_na_count += len([s for s in palo_apps_str.split(';') if s.strip()])
+                            skipped_na_count += len(
+                                [s for s in palo_apps_str.split(";") if s.strip()]
+                            )
                         continue
-                    
+
                     if not palo_apps_str:
                         continue
-                    
+
                     # Split by semicolon for multiple Palo apps mapping to one Versa app
-                    palo_apps = [s.strip() for s in palo_apps_str.split(';')]
-                    
+                    palo_apps = [s.strip() for s in palo_apps_str.split(";")]
+
                     for palo_app in palo_apps:
                         if not palo_app:
                             continue
-                        
+
                         if palo_app in palo_to_versa_mapping:
                             existing_versa = palo_to_versa_mapping[palo_app]
                             if existing_versa != versa_app_name:
@@ -134,56 +147,58 @@ class DataProcessor:
                                 )
                                 self.logger.warning(msg)
                             continue
-                        
+
                         palo_to_versa_mapping[palo_app] = versa_app_name
-            
+
             self.logger.info(
                 f"Loaded {len(palo_to_versa_mapping)} Palo Alto to Versa application mappings from CSV "
                 f"({skipped_na_count} N/A mappings skipped)"
             )
             return palo_to_versa_mapping
-            
+
         except Exception as e:
-            self.logger.error(
-                f"Error loading application mapping from CSV: {str(e)}"
-            )
+            self.logger.error(f"Error loading application mapping from CSV: {str(e)}")
             return {}
 
     def _load_service_mapping(self) -> Dict[str, str]:
         """
         Load Palo Alto to Versa service name mappings from CSV.
-        
+
         Returns:
             Dict[str, str]: Dictionary mapping Palo service names to Versa service names
         """
         try:
-            csv_path = Path(__file__).parent.parent.parent / "mapping_files" / "services-versa_to_palo_mapping.csv"
-            
+            csv_path = (
+                Path(__file__).parent.parent.parent
+                / "mapping_files"
+                / "services-versa_to_palo_mapping.csv"
+            )
+
             if not csv_path.exists():
                 self.logger.warning(
                     f"Service mapping file not found at {csv_path}. "
                     "Service renaming will be skipped."
                 )
                 return {}
-            
+
             palo_to_versa_mapping = {}
-            
-            with open(csv_path, 'r', encoding='utf-8') as f:
+
+            with open(csv_path, "r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    versa_service_name = row.get('Versa Service Name', '').strip()
-                    palo_services_str = row.get('Palo Alto Service(s)', '').strip()
-                    
+                    versa_service_name = row.get("Versa Service Name", "").strip()
+                    palo_services_str = row.get("Palo Alto Service(s)", "").strip()
+
                     if not versa_service_name or not palo_services_str:
                         continue
-                    
+
                     # Split by semicolon for multiple Palo services mapping to one Versa service
-                    palo_services = [s.strip() for s in palo_services_str.split(';')]
-                    
+                    palo_services = [s.strip() for s in palo_services_str.split(";")]
+
                     for palo_service in palo_services:
                         if not palo_service:
                             continue
-                        
+
                         # Check if this Palo service already maps to a different Versa service
                         if palo_service in palo_to_versa_mapping:
                             existing_versa = palo_to_versa_mapping[palo_service]
@@ -195,88 +210,87 @@ class DataProcessor:
                                 )
                                 self.logger.warning(msg)  # Goes to both screen and file
                             continue  # Keep the first mapping
-                        
+
                         palo_to_versa_mapping[palo_service] = versa_service_name
-            
+
             self.logger.info(
                 f"Loaded {len(palo_to_versa_mapping)} Palo Alto to Versa service mappings from CSV"
             )
             return palo_to_versa_mapping
-            
-        except Exception as e:
-            self.logger.error(
-                f"Error loading service mapping from CSV: {str(e)}"
-            )
-            return {}
 
+        except Exception as e:
+            self.logger.error(f"Error loading service mapping from CSV: {str(e)}")
+            return {}
 
     def _rename_services_to_versa(self, services: List[Dict]) -> List[Dict]:
         """
         Rename Palo Alto predefined services to Versa equivalents based on mapping file.
-        
+
         Args:
             services: List of service dictionaries
-            
+
         Returns:
             List[Dict]: Services with renamed names where mappings exist
         """
         if not self.rename_services_enabled:
             self.logger.debug("Service renaming is disabled in config")
             return services
-        
+
         if not services:
             return services
-        
+
         renamed_count = 0
-        
+
         for service in services:
-            original_name = service.get('name')
+            original_name = service.get("name")
             if original_name and original_name in self.service_mapping:
                 versa_name = self.service_mapping[original_name]
-                self.logger.debug(
-                    f"Renamed service '{original_name}' → '{versa_name}'"
-                )
-                service['name'] = versa_name
+                self.logger.debug(f"Renamed service '{original_name}' → '{versa_name}'")
+                service["name"] = versa_name
                 renamed_count += 1
-        
+
         if renamed_count > 0:
             self.logger.info(
                 f"Renamed {renamed_count} Palo Alto services to Versa equivalents"
             )
-        
+
         return services
-    
+
     def _load_predefined_versa_applications(self) -> Set[str]:
         """
         Load predefined Versa application names from the mapping CSV file.
-        
+
         Returns:
             Set[str]: Set of predefined Versa application names
         """
         try:
-            csv_path = Path(__file__).parent.parent.parent / "mapping_files" / "applications-versa_to_palo_mapping.csv"
-            
+            csv_path = (
+                Path(__file__).parent.parent.parent
+                / "mapping_files"
+                / "applications-versa_to_palo_mapping.csv"
+            )
+
             if not csv_path.exists():
                 self.logger.warning(
                     f"Versa applications mapping file not found at {csv_path}. "
                     "Application group validation will only use parsed applications."
                 )
                 return set()
-            
+
             predefined_applications = set()
-            
-            with open(csv_path, 'r', encoding='utf-8') as f:
+
+            with open(csv_path, "r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    app_name = row.get('Versa Application', '').strip()
+                    app_name = row.get("Versa Application", "").strip()
                     if app_name:
                         predefined_applications.add(app_name)
-            
+
             self.logger.info(
                 f"Loaded {len(predefined_applications)} predefined Versa applications from CSV"
             )
             return predefined_applications
-            
+
         except Exception as e:
             self.logger.error(
                 f"Error loading predefined Versa applications from CSV: {str(e)}"
@@ -286,39 +300,44 @@ class DataProcessor:
     def _load_predefined_versa_services(self) -> Set[str]:
         """
         Load predefined Versa service names from the mapping CSV file.
-        
+
         Returns:
             Set[str]: Set of predefined Versa service names
         """
         try:
-            csv_path = Path(__file__).parent.parent.parent / "mapping_files" / "services-versa_to_palo_mapping.csv"
-            
+            csv_path = (
+                Path(__file__).parent.parent.parent
+                / "mapping_files"
+                / "services-versa_to_palo_mapping.csv"
+            )
+
             if not csv_path.exists():
                 self.logger.warning(
                     f"Versa services mapping file not found at {csv_path}. "
                     "Service group validation will only use parsed services."
                 )
                 return set()
-            
+
             predefined_services = set()
-            
-            with open(csv_path, 'r', encoding='utf-8') as f:
+
+            with open(csv_path, "r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    service_name = row.get('Versa Service Name', '').strip()
+                    service_name = row.get("Versa Service Name", "").strip()
                     if service_name:
                         predefined_services.add(service_name)
-            
+
             self.logger.info(
                 f"Loaded {len(predefined_services)} predefined Versa services from CSV"
             )
             return predefined_services
-            
+
         except Exception as e:
             self.logger.error(
                 f"Error loading predefined Versa services from CSV: {str(e)}"
             )
             return set()
+
     async def parse_all_async(self) -> Dict[Any, Any]:
         """Parse all configuration elements concurrently."""
         try:
@@ -417,8 +436,10 @@ class DataProcessor:
                     item,
                     self.logger,
                     existing_applications={
-                        app.get("name") for app in self._deduped_data.get("application", [])
-                    } | self.predefined_versa_applications,  # ← Combine parsed + predefined applications
+                        app.get("name")
+                        for app in self._deduped_data.get("application", [])
+                    }
+                    | self.predefined_versa_applications,  # ← Combine parsed + predefined applications
                     existing_services={
                         srv.get("name") for srv in self._deduped_data.get("service", [])
                     },
@@ -430,7 +451,8 @@ class DataProcessor:
                     self.logger,
                     existing_services={
                         srv.get("name") for srv in self._deduped_data.get("service", [])
-                    } | self.predefined_versa_services,  # ← Combine parsed + predefined services
+                    }
+                    | self.predefined_versa_services,  # ← Combine parsed + predefined services
                     existing_service_groups={
                         sg.get("name")
                         for sg in self._deduped_data.get("service_group", [])
