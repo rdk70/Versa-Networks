@@ -77,7 +77,6 @@ class RulesTransformer(BaseTransformer):
             "ip-version": "ipv4",
         }
 
-
     def _create_set_section(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Create set section of Versa rule."""
         return {
