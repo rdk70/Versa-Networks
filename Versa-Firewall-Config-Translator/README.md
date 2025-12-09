@@ -8,6 +8,11 @@ An asynchronous Python utility for translating Palo Alto Networks (PAN) firewall
 
 This script attempts to convert a Palo Alto Firewall configuration as completely and acurately as possible. It is NOT going to convert perfectly, please verify everything.
 
+### TESTED ON
+
+From: Palo Alto CFG version 11, 10, 9
+TO: Versa Director 22.1.4
+
 ---
 
 ## Table of Contents
