@@ -21,7 +21,7 @@ class DataProcessor:
         logger: Logger,
         parser_factory: ParserFactory,
         transformer_factory: TransformerFactory,
-        config: Dict,
+        config: Dict[str, Any],
     ):
         self.task_id = str(uuid.uuid4())
         self.xml_content = xml_content
@@ -30,7 +30,7 @@ class DataProcessor:
         self.include_shared = include_shared
         self.shared_only = shared_only
         self.logger = logger
-        self.config = config  # ← Store config
+        self.config = config
         self.log_context = {
             "task_id": self.task_id,
             "device_name": device_name or "shared",
@@ -51,7 +51,7 @@ class DataProcessor:
         # Load service mapping and check config setting
         self.rename_services_enabled = self.config.get(
             "transformers", {}
-        ).get(  # ← Use self.config
+        ).get(  
             "rename_services_palo_predefined_to_versa_per_mapping_file", False
         )
         self.service_mapping = (
@@ -60,7 +60,7 @@ class DataProcessor:
         # Load application mapping and check config setting
         self.rename_applications_enabled = self.config.get(
             "transformers", {}
-        ).get(  # ← Use self.config
+        ).get(
             "rename_applications_palo_predefined_to_versa_per_mapping_file", False
         )
         self.application_mapping = (
@@ -96,6 +96,10 @@ class DataProcessor:
 
         Returns:
             Dict[str, str]: Dictionary mapping Palo application names to Versa application names
+
+        Raises:
+            FileNotFoundError: If mapping file is required but not found
+            Exception: For any other errors during CSV loading
         """
         try:
             csv_path = (
@@ -105,11 +109,18 @@ class DataProcessor:
             )
 
             if not csv_path.exists():
-                self.logger.warning(
-                    f"Application mapping file not found at {csv_path}. "
-                    "Application renaming will be skipped."
-                )
-                return {}
+                if self.rename_applications_enabled:
+                    error_msg = (
+                        f"Application mapping file required but not found at {csv_path}. "
+                        "Either disable 'rename_applications_palo_predefined_to_versa_per_mapping_file' "
+                        "in config or provide the mapping file."
+                    )
+                    raise FileNotFoundError(error_msg)
+                else:
+                    self.logger.debug(
+                        f"Application mapping file not found at {csv_path}, but renaming is disabled."
+                    )
+                    return {}
 
             palo_to_versa_mapping = {}
             skipped_na_count = 0
@@ -156,9 +167,12 @@ class DataProcessor:
             )
             return palo_to_versa_mapping
 
+        except FileNotFoundError:
+            # Re-raise FileNotFoundError with context
+            raise
         except Exception as e:
-            self.logger.error(f"Error loading application mapping from CSV: {str(e)}")
-            return {}
+            # Any other error is fatal - use consistent error handling
+            self._log_and_raise(e, "loading application mapping from CSV")
 
     def _load_service_mapping(self) -> Dict[str, str]:
         """
@@ -221,41 +235,7 @@ class DataProcessor:
         except Exception as e:
             self.logger.error(f"Error loading service mapping from CSV: {str(e)}")
             return {}
-
-    def _rename_services_to_versa(self, services: List[Dict]) -> List[Dict]:
-        """
-        Rename Palo Alto predefined services to Versa equivalents based on mapping file.
-
-        Args:
-            services: List of service dictionaries
-
-        Returns:
-            List[Dict]: Services with renamed names where mappings exist
-        """
-        if not self.rename_services_enabled:
-            self.logger.debug("Service renaming is disabled in config")
-            return services
-
-        if not services:
-            return services
-
-        renamed_count = 0
-
-        for service in services:
-            original_name = service.get("name")
-            if original_name and original_name in self.service_mapping:
-                versa_name = self.service_mapping[original_name]
-                self.logger.debug(f"Renamed service '{original_name}' → '{versa_name}'")
-                service["name"] = versa_name
-                renamed_count += 1
-
-        if renamed_count > 0:
-            self.logger.info(
-                f"Renamed {renamed_count} Palo Alto services to Versa equivalents"
-            )
-
-        return services
-
+    
     def _load_predefined_versa_applications(self) -> Set[str]:
         """
         Load predefined Versa application names from the mapping CSV file.
@@ -338,7 +318,7 @@ class DataProcessor:
             )
             return set()
 
-    async def parse_all_async(self) -> Dict[Any, Any]:
+    async def parse_all_async(self) -> Dict[str, List[Dict[str, Any]]]:
         """Parse all configuration elements concurrently."""
         try:
             self.logger.debug(f"Starting parsing. Context: {self.log_context}")
@@ -367,7 +347,6 @@ class DataProcessor:
 
         except Exception as e:
             self._log_and_raise(e, "parse_all_async")
-            return {}
 
     async def _parse_item(self, name: str, parser: Any) -> List[Dict]:
         """Parse a single configuration element."""
@@ -379,7 +358,6 @@ class DataProcessor:
             return parser.parse()
         except Exception as e:
             self._log_and_raise(e, f"Parsing item '{name}'")
-            return []
 
     def deduplicate_all(self, parsed_data: Dict[str, List]) -> Dict[str, List]:
         """Remove duplicates from parsed data."""
