@@ -49,18 +49,14 @@ class DataProcessor:
         self.predefined_versa_applications = self._load_predefined_versa_applications()
 
         # Load service mapping and check config setting
-        self.rename_services_enabled = self.config.get(
-            "transformers", {}
-        ).get(  
+        self.rename_services_enabled = self.config.get("transformers", {}).get(
             "rename_services_palo_predefined_to_versa_per_mapping_file", False
         )
         self.service_mapping = (
             self._load_service_mapping() if self.rename_services_enabled else {}
         )
         # Load application mapping and check config setting
-        self.rename_applications_enabled = self.config.get(
-            "transformers", {}
-        ).get(
+        self.rename_applications_enabled = self.config.get("transformers", {}).get(
             "rename_applications_palo_predefined_to_versa_per_mapping_file", False
         )
         self.application_mapping = (
@@ -235,7 +231,7 @@ class DataProcessor:
         except Exception as e:
             self.logger.error(f"Error loading service mapping from CSV: {str(e)}")
             return {}
-    
+
     def _load_predefined_versa_applications(self) -> Set[str]:
         """
         Load predefined Versa application names from the mapping CSV file.
