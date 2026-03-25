@@ -9,10 +9,13 @@ from typing import Dict, List, Optional
 class DeviceGroupInfo:
     device_name: str
     group_name: str
+
+
 class ConfigError(Exception):
     """Custom exception for configuration errors."""
 
     pass
+
 
 class TemplateManager:
     def __init__(self, xml_content: str, config: Dict, logger: Logger):
@@ -128,17 +131,16 @@ class TemplateManager:
             device_name=device_name,
             postfix=postfix,
         )
-    
+
     def _get_common_template_name(
         self, device_name: Optional[str] = None, group_name: Optional[str] = None
     ) -> str:
         """Generate a template name based on configuration and optional device/group information."""
         template_config = self.config.get("template", {})
         tenant_name = template_config.get("tenant", "")
-        
 
-        return (f"{tenant_name}-DataStore")
-            
+        return f"{tenant_name}-DataStore"
+
     def get_template_targets(self) -> List[Dict]:
         """
         Get a list of templates to be created based on configuration.
@@ -178,7 +180,7 @@ class TemplateManager:
                 raise ConfigError(
                     "create_separate_shared_template must be True, False, or Common"
                 )
-        
+
             if shared_mode == "true" and self.has_shared_config:
                 shared_template_name = self._get_template_name()
                 self.logger.info(
@@ -211,7 +213,6 @@ class TemplateManager:
                 include_shared = False
             else:
                 include_shared = True
-            
 
             for dg in self.device_groups:
                 template_name = self._get_template_name(dg.device_name, dg.group_name)

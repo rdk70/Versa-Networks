@@ -72,7 +72,9 @@ class Config:
 
     @property
     def should_create_shared_template(self) -> str:
-        raw_value = self.config["template"].get("create_separate_shared_template", False)
+        raw_value = self.config["template"].get(
+            "create_separate_shared_template", False
+        )
 
         if isinstance(raw_value, bool):
             return "true" if raw_value else "false"

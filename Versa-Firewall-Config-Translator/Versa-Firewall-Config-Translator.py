@@ -100,7 +100,9 @@ async def process_template(
             )
 
             if not template_response:
-                raise Exception(f"Failed to create service template: '{template['name']}'.")
+                raise Exception(
+                    f"Failed to create service template: '{template['name']}'."
+                )
 
         # Create DOS policy group if DOS rules are enabled
         if config["uploaders"].get("dos_rules"):
