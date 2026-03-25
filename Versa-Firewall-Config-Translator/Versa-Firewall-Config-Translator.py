@@ -92,13 +92,15 @@ async def process_template(
         )
 
         # Create service template
-        template_response = await api_handler.create_service_template(
-            access_token,
-            template["name"],
-            config["template"]["tenant"],
-        )
-        if not template_response:
-            raise Exception(f"Failed to create service template: '{template['name']}'.")
+        if not template.get("name", "").endswith("-DataStore"):
+            template_response = await api_handler.create_service_template(
+                access_token,
+                template["name"],
+                config["template"]["tenant"],
+            )
+
+            if not template_response:
+                raise Exception(f"Failed to create service template: '{template['name']}'.")
 
         # Create DOS policy group if DOS rules are enabled
         if config["uploaders"].get("dos_rules"):

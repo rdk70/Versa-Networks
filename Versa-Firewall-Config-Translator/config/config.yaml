@@ -39,9 +39,10 @@ template:
   
   # Determines whether to create a separate shared template.
   # - True: Creates a shared template.
-  # - False: Copies objects from the shared template to each service group.
+  # - False: Copies objects from the shared template to each service group template.
+  # - Common: Places objects from shared into the tenants common template
   # Note: Ignored if `single_template` is True.
-  create_separate_shared_template: true  
+  create_separate_shared_template: Common  
 
 logging:
   # Logging level for console output. Common levels: DEBUG, INFO, WARNING, ERROR, CRITICAL.

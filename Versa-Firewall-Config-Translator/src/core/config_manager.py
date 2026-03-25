@@ -71,5 +71,17 @@ class Config:
         return self.config["files"]["xml_source_file"]
 
     @property
-    def should_create_shared_template(self) -> bool:
-        return self.config["template"]["create_separate_shared_template"]
+    def should_create_shared_template(self) -> str:
+        raw_value = self.config["template"].get("create_separate_shared_template", False)
+
+        if isinstance(raw_value, bool):
+            return "true" if raw_value else "false"
+
+        if isinstance(raw_value, str):
+            normalized = raw_value.strip().lower()
+            if normalized in {"true", "false", "common"}:
+                return normalized
+
+        raise ConfigError(
+            "template.create_separate_shared_template must be True, False, or Common"
+        )

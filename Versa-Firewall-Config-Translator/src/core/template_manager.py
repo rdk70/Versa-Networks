@@ -9,7 +9,10 @@ from typing import Dict, List, Optional
 class DeviceGroupInfo:
     device_name: str
     group_name: str
+class ConfigError(Exception):
+    """Custom exception for configuration errors."""
 
+    pass
 
 class TemplateManager:
     def __init__(self, xml_content: str, config: Dict, logger: Logger):
@@ -125,7 +128,17 @@ class TemplateManager:
             device_name=device_name,
             postfix=postfix,
         )
+    
+    def _get_common_template_name(
+        self, device_name: Optional[str] = None, group_name: Optional[str] = None
+    ) -> str:
+        """Generate a template name based on configuration and optional device/group information."""
+        template_config = self.config.get("template", {})
+        tenant_name = template_config.get("tenant", "")
+        
 
+        return (f"{tenant_name}-DataStore")
+            
     def get_template_targets(self) -> List[Dict]:
         """
         Get a list of templates to be created based on configuration.
@@ -150,10 +163,23 @@ class TemplateManager:
                     }
                 ]
 
-            create_separate_shared = template_config.get(
-                "create_separate_shared_template", False
-            )
-            if create_separate_shared and self.has_shared_config:
+            raw_value = template_config.get("create_separate_shared_template", False)
+
+            if isinstance(raw_value, bool):
+                shared_mode = "true" if raw_value else "false"
+            elif isinstance(raw_value, str):
+                shared_mode = raw_value.strip().lower()
+            else:
+                raise ConfigError(
+                    "create_separate_shared_template must be True, False, or Common"
+                )
+
+            if shared_mode not in {"true", "false", "common"}:
+                raise ConfigError(
+                    "create_separate_shared_template must be True, False, or Common"
+                )
+        
+            if shared_mode == "true" and self.has_shared_config:
                 shared_template_name = self._get_template_name()
                 self.logger.info(
                     f"Adding template '{shared_template_name}' for shared element."
@@ -167,8 +193,25 @@ class TemplateManager:
                         "shared_only": True,
                     }
                 )
-
-            include_shared = not create_separate_shared
+                include_shared = False
+            elif shared_mode == "common" and self.has_shared_config:
+                shared_template_name = self._get_common_template_name()
+                self.logger.info(
+                    f"Placing shared config items into common template '{shared_template_name}'."
+                )
+                templates.append(
+                    {
+                        "name": shared_template_name,
+                        "device_name": None,
+                        "device_group": None,
+                        "include_shared": True,
+                        "shared_only": True,
+                    }
+                )
+                include_shared = False
+            else:
+                include_shared = True
+            
 
             for dg in self.device_groups:
                 template_name = self._get_template_name(dg.device_name, dg.group_name)
